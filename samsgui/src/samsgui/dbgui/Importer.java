@@ -198,15 +198,24 @@ public class Importer {
 									}
 								});
 								
-								progressBar.setMaximum(importer.getEstimatedFiles());
+								progressBar.setMaximum(importer.getEstimatedFiles() +2);
 								progressBar.setIndeterminate(false);
 								progressBar.setString(null); //display % string
 								
 								importer.importFiles();
 								
+								// a)
+								task_message.append("\nUpdating database...");
+								progressBar.setValue(progressBar.getMaximum() -2);
+								db.save();
+								
+								// b)
+								task_message.append("\nUpdating display...");
+								progressBar.setValue(progressBar.getMaximum() -1);
+								dbgui.setDatabase(db);
+
 								progressBar.setValue(progressBar.getMaximum());
 								
-								dbgui.setDatabase(db);
 								task_isDone = true;
 								task_message.append("\nDone. " +successful+ " files successfully imported");
 								btnAccept.setText("Close");
@@ -434,7 +443,8 @@ public class Importer {
 							try {
 								int ii = 1; // to make names
 								List sigs = getSignaturesFromAsciiFile(filename);
-								progressBar.setMaximum(sigs.size());
+								// +2 : see a), b) below
+								progressBar.setMaximum(sigs.size() +2);
 								progressBar.setIndeterminate(false);
 								progressBar.setString(null); //display % string
 								
@@ -445,11 +455,19 @@ public class Importer {
 									task_message.append("\nimporting " +path);
 									progressBar.setValue(ii++);
 								}
+								
+								// a)
+								task_message.append("\nUpdating database...");
+								progressBar.setValue(progressBar.getMaximum() -2);
 								db.save();
+								
+								// b)
+								task_message.append("\nUpdating display...");
+								progressBar.setValue(progressBar.getMaximum() -1);
+								dbgui.setDatabase(db);
 								
 								progressBar.setValue(progressBar.getMaximum());
 								
-								dbgui.setDatabase(db);
 								task_isDone = true;
 								task_message.append("\nDone. " +ii+ " signatures successfully imported");
 								btnAccept.setText("Close");
