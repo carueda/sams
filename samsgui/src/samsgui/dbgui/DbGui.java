@@ -4,8 +4,6 @@ import samsgui.SamsGui;
 
 import samscore.ISamsDb;
 import samscore.Sams;
-import sfsys.ISfsys;
-import sfsys.ISfsys.*;
 import sig.Signature;
 import sigoper.*;
 
@@ -28,7 +26,6 @@ import java.util.*;
 public class DbGui extends JPanel {
 	JFrame parentFrame;  // accesible to Plot
 	private ISamsDb db;
-	private ISfsys fs;
 	private Tree tree;
 	private Plot plot;
 	private Table table;
@@ -117,7 +114,6 @@ public class DbGui extends JPanel {
 	public void setDatabase(ISamsDb db) throws Exception {
 		this.db = db;
 		table.setDatabase(db);
-		fs = null;
 		tree.setInfo();
 		table.revalidate();
 		plot.reset();
