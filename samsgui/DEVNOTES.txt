@@ -2,6 +2,9 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 09/19/03 - version 3.0
+ 	- izshortcut.xml fixed: the one for unix was deleted.
+	
  09/11/03 - version 3.0
  	- izpack installer specification updated to work on unix
 	  targets.

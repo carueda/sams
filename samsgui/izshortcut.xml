@@ -21,20 +21,6 @@
      <createForPack name="System"/>
    </shortcut>
 
-  <shortcut
-     name="SAMS"
-     programGroup="yes"
-     desktop="no"
-     applications="no"
-     startMenu="no"
-     startup="no"
-     target="$INSTALL_PATH/bin/sams"
-     commandLine=""
-     description="Launch the Spectral Analysis and Management System"
-     initialState="noShow">
-     <createForPack name="System"/>
-   </shortcut>
-
    <shortcut
      name="Uninstall SAMS"
      programGroup="yes"
