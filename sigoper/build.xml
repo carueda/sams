@@ -8,7 +8,7 @@
 	<property name="sig" value="../../_GENERATED/DIST/sig.jar"/>
 	
 	<!-- the 'bsh' library -->
-	<property name="bsh" value="../../_GENERATED/DIST/bsh-1.2b5.jar"/>
+	<property name="bsh" value="../../_GENERATED/DIST/bsh-1.3b2.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
