@@ -3,7 +3,8 @@ Carlos A. Rueda.
 $Id$
 
 07/21/03
-	- Why computed elements get displayed as ``\computed\foo.txt'' ? 
+	- Now on single- and binary- operations ...
+	  See Compute.SingleForm.go()
 	
 07/10/03
 	- Import from directory
