@@ -3,7 +3,7 @@
 	Carlos A. Rueda
 	$Id$
 -->
-<project name="samsgui" default="samsgui.jar" >
+<project name="sams" default="sams.jar" >
 	<!-- Version -->
 	<property name="VERSION" value="3.0"/>
 
@@ -16,12 +16,16 @@
 	<property name="envifile"  value="../../_GENERATED/DIST/envifile.jar"/>
 	<property name="specfile"  value="../../_GENERATED/DIST/specfile.jar"/>
 	<property name="sfsys"     value="../../_GENERATED/DIST/sfsys.jar"/>
+	<property name="kunststoff"     value="../../_GENERATED/DIST/kunststoff.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
 
 	<!-- Directory to put distribution -->
 	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<!-- The nanoInstaller compiler to make the installer: -->
+	<property name="nic" value="nic.jar"/>
 
 	<property name="src.dir" value="src/samsgui"/>
 	<property name="dest.dir" value="${build}/classes"/>
@@ -30,11 +34,13 @@
 		<tstamp/>
 		<echo message="VERSION = ${VERSION}"/>
 		<mkdir dir="${build}/classes"/>
+		<delete file="${dest.dir}/samsgui/info.properties"/>
+		<delete file="${dest.dir}/samsgui/copyright.txt"/>
     </target>
 
-    <target name="samsgui.jar" depends="compile, info, license, img"
-    description="Makes executable samsgui.jar">
-        <jar jarfile="${dist}/samsgui.jar" manifest="samsgui.manifest"
+    <target name="sams.jar" depends="compile, info, license, img"
+    description="Makes executable sams.jar">
+        <jar jarfile="${dist}/sams.jar" manifest="samsgui.manifest"
          	basedir="${build}/classes"
 			includes="samsgui/**"
 		/>
@@ -68,12 +74,52 @@
         </copy>
     </target>
 
+    <target name="installer"  depends="sams.jar, prepare-inst, nanoproperties"
+     description="Makes an executable installer for SAMS">
+	   <java jar="${nic}" fork="true">
+            <arg value="${dist}/tmp.properties"/>
+			<arg value="${dist}/base_dist"/>
+			<arg value="${dist}/install-sams-${VERSION}.jar"/>
+       </java>
+	   <delete file="${dist}/tmp.properties"/>
+    </target>
+
+    <target name="prepare-inst"  depends="sams.jar">
+		<delete dir="${dist}/base_dist"/>
+		<copy todir="${dist}/base_dist">
+			<fileset dir="base_dist"/> 
+		</copy>
+        <copy file="${dist}/sams.jar" todir="${dist}/base_dist/bin"/>
+		<copy file="${plotapplication}" todir="${dist}/base_dist/lib"/>
+		<copy file="${samscore}" todir="${dist}/base_dist/lib"/>
+		<copy file="${fileutils}" todir="${dist}/base_dist/lib"/>
+		<copy file="${sig}" todir="${dist}/base_dist/lib"/>
+		<copy file="${sigoper}" todir="${dist}/base_dist/lib"/>
+		<copy file="${envifile}" todir="${dist}/base_dist/lib"/>
+		<copy file="${specfile}" todir="${dist}/base_dist/lib"/>
+		<copy file="${sfsys}" todir="${dist}/base_dist/lib"/>
+		<copy file="${kunststoff}" todir="${dist}/base_dist/lib"/>
+    </target>
+
+  <target name="nanoproperties" depends="init">
+        <copy file="ni.properties" tofile="${dist}/tmp.properties"/>
+		<replace file="${dist}/tmp.properties">
+			<replacefilter token="@VERSION@" value="${VERSION}"/>
+			<replacefilter token="@BUILD@"   value="${DSTAMP}"/>
+		</replace>
+  </target>
+
+
+	<target name="install" depends="installer">
+		<java jar="${dist}/install-sams-${VERSION}.jar" fork="true"/>
+	</target>
+
     <target name="clean">
 		<delete dir="${build}/classes/samsgui"/>
     </target>
 
     <target name="clean-dist" depends="clean">
-		<delete file="${dist}/samsgui.jar"/>
+		<delete file="${dist}/sams.jar"/>
     </target>
 
 </project>
