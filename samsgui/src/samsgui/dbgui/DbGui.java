@@ -302,10 +302,9 @@ public class DbGui extends JPanel {
 	}
 	
 	public void removeGrouping(MyNode grp_node) {
-		String groupBy = grp_node.getName();
-		assert groupBy.endsWith(":");
+		assert grp_node.isGroupingNode();
 		tree.removeNode(grp_node);
-		_props_removeGroupBy(groupBy);
+		_props_removeGroupBy(grp_node.getName());
 	}
 	
 	public Tree getTree() {
@@ -1072,7 +1071,6 @@ public class DbGui extends JPanel {
 		MyNode grp_node = node.getGroupingNode();
 		if ( grp_node.getName().equals("location:") )
 			return;  // "location:" grouping should be always updated.
-		String[] attrNames = grp_node.getName().split(":");
 		tree.updateReadOnlyGroupings();
 		MyNode scrollNode = grp_node;
 		if ( grp_node.getChildCount() > 0 )

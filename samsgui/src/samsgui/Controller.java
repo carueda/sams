@@ -363,7 +363,7 @@ public class Controller {
 				MyNode grp_node = (MyNode) iter.next();
 				if ( !grp_node.underGrouping("location:") ) {
 					// check if it is a grouping root:
-					if ( grp_node.getName().endsWith(":") ) {
+					if ( grp_node.isGroupingNode() ) {
 						dbgui.removeGrouping(grp_node);
 						continue;
 					}

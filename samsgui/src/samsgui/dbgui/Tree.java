@@ -505,6 +505,11 @@ public class Tree extends JPanel {
 			return node_path.length >= 2 ? (MyNode) node_path[1] : null;
 		}
 		
+		/** tells is this is a grouping node. */
+		public boolean isGroupingNode() {
+			return getPath().length == 2;
+		}
+		
 		/** tells if this node is under (or equal to) the given grouping. */
 		public boolean underGrouping(String grouping_name) {
 			MyNode grp_node = getGroupingNode();

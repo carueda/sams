@@ -14,6 +14,7 @@ import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.util.*;
 
 /**
@@ -227,13 +228,17 @@ public abstract class Table extends JPanel {
 		JPanel controls;
 		JComboBox sort_cb;
 		JComboBox filter_cb;
+		JLabel status;
 		
 		ControlPanel() {
 			super(new FlowLayout(FlowLayout.LEFT));
-			add(new JLabel("Sort field"));
+			add(new JLabel("Sort"));
 			add(sort_cb = new JComboBox(new DefaultComboBoxModel()));
-			add(new JLabel("Filter condition"));
+			add(new JLabel("Filter"));
 			add(filter_cb = new JComboBox(new DefaultComboBoxModel()));
+			add(status = new JLabel());
+			status.setFont(status.getFont().deriveFont(Font.ITALIC));
+			status.setForeground(Color.red);			
 			sort_cb.setEditable(true);
 			filter_cb.setEditable(true);
 			sort_cb.addActionListener(this);
@@ -254,9 +259,10 @@ public abstract class Table extends JPanel {
 				if ( ((DefaultComboBoxModel) cb.getModel()).getIndexOf(str) < 0 )
 					cb.insertItemAt(str, 0);
 				cb.setSelectedItem(str);
+				status.setText("");
 			}
 			catch(Exception ex) {
-				SamsGui.message(ex.getMessage());
+				status.setText(ex.getMessage());
 			}
 		}
 	}
