@@ -148,8 +148,12 @@ public class EnviStandardFile {
 			)
 		);
 		String line = br.readLine();
-		if ( ! line.equalsIgnoreCase("ENVI") )
-			throw new InvalidEnviFormatException(header_filename+ " doesn't start with ENVI");
+		if ( ! line.trim().equalsIgnoreCase("ENVI") ) {
+			throw new InvalidEnviFormatException(
+				header_filename+ " doesn't start with ENVI\n" +
+				"First line=[" +line+ "]"
+			);
+		}
 		
 		Map map = new HashMap();
 		int c;
