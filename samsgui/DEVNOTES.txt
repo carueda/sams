@@ -21,6 +21,8 @@ $Id$
 	  2*fwhm and applied in the same units as the wavelength in
 	  the operated signature.
 	  
+	- New base_dist/README.txt file for end users.
+	
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message
 	  telling about the number of signatures imported.
