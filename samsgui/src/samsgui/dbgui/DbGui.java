@@ -1083,6 +1083,11 @@ public class DbGui extends JPanel {
 		if ( grp_node.getName().equals("location:") )
 			return;  // "location:" grouping should be always updated.
 		String[] attrNames = grp_node.getName().split(":");
-		tree.updateReadOnlyGroupingBy(attrNames);
+		//tree.updateReadOnlyGroupingBy(attrNames);
+		tree.updateReadOnlyGroupings();
+		MyNode scrollNode = grp_node;
+		if ( grp_node.getChildCount() > 0 )
+			scrollNode = (MyNode) grp_node.getChildAt(0);
+		tree.scrollToVisible(scrollNode);
 	}
 }

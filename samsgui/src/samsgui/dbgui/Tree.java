@@ -110,6 +110,27 @@ public class Tree extends JPanel {
 		updateReadOnlyGroupingBy(a_attrNames);
 	}
 	
+	/** Refreshes all non-location groupings. */
+	public void updateReadOnlyGroupings() {
+		ISamsDb db = dbgui.getDatabase();
+		if ( db == null )
+			return;
+		
+		for ( int i = 0; i < rootNode.getChildCount(); i++ ) {
+			MyNode gby_node = (MyNode) rootNode.getChildAt(i);
+			if ( !gby_node.getName().equals("location:") ) {
+				gby_node.removeAllChildren();
+				try {
+					createGroupNode(gby_node, db.getGroupingBy(gby_node.getName().split(":")));
+				}
+				catch(Exception ex) {
+					ex.printStackTrace();  // shouldn't happen
+				}
+			}
+		}
+		treeModel.reload();
+	}		
+	
 	public void updateReadOnlyGroupingBy(String[] attrNames) {
 		StringBuffer sb = new StringBuffer("");
 		for ( int i = 0; i < attrNames.length; i++ )
