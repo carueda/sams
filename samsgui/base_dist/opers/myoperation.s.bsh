@@ -1,8 +1,8 @@
-// An example of a SAMS scripted operation
+// Example of a 1-to-1 operation: simple scaling
 // $Id$
 
 // This identifies this operation:
-name = "Scales each reflectance by a factor";
+name = "Scaling";
 
 // A description:
 description = "Scales a signature multiplying by a given factor";

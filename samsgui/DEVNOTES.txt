@@ -4,7 +4,8 @@ $Id$
 
  08/29/03 - version 3.0
  	- New Info.getSAMSDirectory() (based on "sams.dir" system property).
-	- Initialization with getSAMSDirectory()/opers/
+	- Initialization with getSAMSDirectory()/opers/ (now with only two
+	  simple examples).
  	- izpack now used to build installer, which allows for
 	  shortcuts (among many other things).
 	

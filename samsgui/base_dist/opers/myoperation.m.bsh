@@ -1,0 +1,58 @@
+// Example of a "multi" operation: simple average
+// $Id$
+
+// This identifies this operation:
+name = "avg";
+
+// A description:
+description = "Point wise average of selected signatures";
+
+addParameterInfo("missing_value", "Missing value indicator", "0");
+
+// This performs the operation:
+operate(sigs) {
+	missing_value = getDoubleParameter("missing_value");
+	new_sig = new Signature();
+
+	if ( sigs == null || sigs.length == 0 )
+		return new_sig;
+
+	if ( sigs.length == 1 )
+		return sigs[0];
+
+	// take the min size and check domains:
+	int size = OpUtil.minSize(sigs);
+	OpUtil.checkDomains(sigs, size);
+	
+	IndexIterator ii = new IndexIterator(sigs, 0, missing_value);
+	
+	for ( int i = 0; i < size; i++ ) {
+		double sum = 0.0;  
+		int count = 0;     // denominator
+		
+		// read from the first signature just to take the abscissa for i:
+		Signature.Datapoint dp = sigs[0].getDatapoint(i);
+		double x = dp.x;
+
+		ii.reset(i);
+		while ( ii.hasNext() ) {
+			double y = ii.next();				
+			sum += y;
+			count++;
+		}
+
+		if ( count > 0 )
+			new_sig.addDatapoint(x, sum / count);
+		else {
+			// count == 0 means that either a missing_value was given,
+			// or all values were NaN. In any case, putting missing_value
+			// seems to be appropiate.
+			new_sig.addDatapoint(x, missing_value);
+		}
+	}
+
+	return sig;
+}
+
+
+
