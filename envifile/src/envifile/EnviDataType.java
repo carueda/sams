@@ -78,19 +78,90 @@ public abstract class EnviDataType {
 	/** returns a mnemonic name of this type */
 	public abstract String toString();
 	
-	/** sets the byte order 
-	  * @throws IOException if byte_order == 0, which is not
-	  *          currently supported.
+	/** sets the byte order.
+	  * @param byte_order 0=little endian; 1=big endian
 	  */
-	public void setByteOrder(int byte_order) 
-	throws IOException {
-		if ( byte_order == 0 )
-			throw new IOException("Sorry, currently byte order = 0 is not supported");
-		
+	public void setByteOrder(int byte_order) {
 		this.byte_order = byte_order;
 	}
 	
+	protected short _readInt16(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readShort();
+		}
+		else {
+			int c0 = dis.readUnsignedByte();
+			int c1 = dis.readUnsignedByte();
+			return (short) ( (c1 << 8) | c0 );
+		}
+	}
 	
+	protected int _readUInt16(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readUnsignedShort();
+		}
+		else {
+			int c0 = dis.readUnsignedByte();
+			int c1 = dis.readUnsignedByte();
+			return (c1 << 8) | c0 ;
+		}
+	}
+	
+	protected int _readInt32(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readInt();
+		}
+		else {
+			int c0 = dis.readUnsignedByte();
+			int c1 = dis.readUnsignedByte();
+			int c2 = dis.readUnsignedByte();
+			int c3 = dis.readUnsignedByte();
+			return (c3 << 24) | (c2 << 16) | (c1 << 8) | c0 ;
+		}
+	}
+	
+	protected long _readUInt32(DataInputStream dis)
+	throws IOException {
+		return 0xFFFFFFFFL & _readInt32(dis);
+	}
+	
+	protected long _readInt64(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readLong();
+		}
+		else {
+			long c0 = _readUInt32(dis);
+			long c1 = _readUInt32(dis);
+			return (c1 << 32) |  c0 ;
+		}
+	}
+	
+	protected float readFloat(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readFloat();
+		}
+		else {
+			return Float.intBitsToFloat(_readInt32(dis));
+		}
+	}
+
+	protected double readDouble(DataInputStream dis)
+	throws IOException {
+		if ( byte_order == 1 ) {
+			return dis.readDouble();
+		}
+		else {
+			return Double.longBitsToDouble(_readInt64(dis));
+		}
+	}
+	
+	///////////////// the types ///////////////////////////
+
 	private static class BYTE extends EnviDataType {
 		public String toString() { return "Byte"; }
 		public int code() { return 1; }
@@ -120,7 +191,7 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readShort();
+			return (double) _readInt16(dis);
 		}
 	}
 	private static class INT32 extends EnviDataType {
@@ -136,7 +207,7 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readInt();
+			return (double) _readInt32(dis);
 		}
 	}
 	private static class FLOAT32 extends EnviDataType {
@@ -152,7 +223,7 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readFloat();
+			return (double) readFloat(dis);
 		}
 	}
 	private static class FLOAT64 extends EnviDataType {
@@ -167,7 +238,7 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readDouble();
+			return (double) readDouble(dis);
 		}
 	}
 	private static class UINT16 extends EnviDataType {
@@ -183,7 +254,7 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readUnsignedShort();
+			return (double) _readUInt16(dis);
 		}
 	}
 	private static class UINT32 extends EnviDataType {
@@ -199,8 +270,29 @@ public abstract class EnviDataType {
 		
 		public double read(DataInputStream dis)
 		throws IOException {
-			return (double) dis.readLong();
+			return (double) _readUInt32(dis);
 		}
+	}
+	
+	/** a test program. See createbinaryfile.cc */
+	public static void main(String[] args) throws Exception {
+		String filename = "binary.data";
+		System.out.println("reading " +filename);
+		DataInputStream dis = new DataInputStream(
+			new java.io.FileInputStream(filename)
+		);
+		
+		// first, read the byte order in the file:
+		int byte_order = dis.readByte();
+		System.out.println("byte order = " +byte_order);
+
+		int data_type;
+		while ( dis.available() > 0 && (data_type = dis.readByte()) > 0 ) {
+			EnviDataType type = EnviDataType.get(data_type);
+			type.setByteOrder(byte_order);
+			System.out.println(type.read(dis)+ " " +type);
+		}
+		dis.close();
 	}
 }
 
