@@ -80,7 +80,13 @@
 	
     <target name="installer"  depends="sams.jar, prepare-inst"
      description="Makes an executable installer for SAMS">
-        <ant antfile="izbuild.xml"/>
+		<taskdef name="izpack" classpath="${izdir}/lib/compiler.jar"
+			classname="com.izforge.izpack.ant.IzPackTask"/>
+		<izpack input="izinstall.xml"
+			output="${dist}/install-sams-${VERSION}.jar"
+			installerType="standard-kunststoff"
+			basedir="${dist}/base_dist"
+			izPackDir="${izdir}/"/>
     </target>
 
     <target name="prepare-inst"  depends="sams.jar">
