@@ -123,7 +123,9 @@ public class SamsGui {
 		if ( frame.filename == null || NO_DB_NAME.equals(frame.filename) )
 			return;
 		Prefs.set(Prefs.RECENT, frame.filename);
-		Prefs.setRectangle(Prefs.MAIN_RECT, new Rectangle(frame.getLocationOnScreen(), frame.getSize()));
+		Point loc = frame.getLocationOnScreen();
+		if ( loc != null )
+			Prefs.setRectangle(Prefs.MAIN_RECT, new Rectangle(loc, frame.getSize()));
 	}
 	
 	/** Closes all open databases and quits the application. */
@@ -423,4 +425,26 @@ public class SamsGui {
 	public static Border createTitledBorder(String title) {
 		return BorderFactory.createTitledBorder(title);
 	}
+
+	public static void showLegendsWindow() {
+		if ( focusedDbGui != null )
+			focusedDbGui.showLegendsWindow();
+	}
+	public static void clearPlot() {
+		if ( focusedDbGui != null )
+			focusedDbGui.clearPlot();
+	}
+	public static void printPlot() {
+		if ( focusedDbGui != null )
+			focusedDbGui.printPlot();
+	}
+	public static void formatPlot() {
+		if ( focusedDbGui != null )
+			focusedDbGui.formatPlot();
+	}
+	public static void plotSelectedSignatures(boolean b) {
+		if ( focusedDbGui != null )
+			focusedDbGui.plotSelectedSignatures(b);
+	}
+
 }

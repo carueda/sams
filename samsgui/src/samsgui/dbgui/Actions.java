@@ -184,22 +184,48 @@ public final class Actions {
 			"Sets the focused signature as the reference for reference-based operations", 0, "alt ENTER")
 		);
 		actions.put("print-plot", new BaseAction("Print",
-			"Prints the plot", KeyEvent.VK_P, "control P")
+			"Prints the plot", KeyEvent.VK_P, "control P") {
+				public void run() {
+					Controller.printPlot();
+				}
+			}
 		);
 		
 		actions.put("range-plot", new BaseAction("Range", "Changes the displayed X-range"));
 		actions.put("export-plot", new BaseAction("Export", "Exporting options"));
 		actions.put("analysis", new BaseAction("Analysis", "Operations on spectra"));
-		actions.put("format-plot", new BaseAction("Format", "Sets the plot format", KeyEvent.VK_F));
+		actions.put("format-plot", new BaseAction("Format", "Sets the plot format", KeyEvent.VK_F) {
+				public void run() {
+					Controller.formatPlot();
+				}
+			}
+		);
 		actions.put("plot-selected-only", new BaseAction("Plot",
-			"Plots only the selected signatures", KeyEvent.VK_P, "ENTER")
+			"Plots only the selected signatures", KeyEvent.VK_P, "ENTER") {
+				public void run() {
+					Controller.plotSelectedSignatures(true);
+				}
+			}
 		);
 		actions.put("plot-selected-add", new BaseAction("Add to plot",
-			"Adds the selected signatures to the plot", KeyEvent.VK_A, "control ENTER")
+			"Adds the selected signatures to the plot", KeyEvent.VK_A, "control ENTER") {
+				public void run() {
+					Controller.plotSelectedSignatures(false);
+				}
+			}
 		);
-		actions.put("clear-plot", new BaseAction("Clear", "Clears the plot", KeyEvent.VK_C));
+		actions.put("clear-plot", new BaseAction("Clear", "Clears the plot", KeyEvent.VK_C) {
+				public void run() {
+					Controller.clearPlot();
+				}
+			}
+		);
 		actions.put("plot-window-legends", new BaseAction("Legends window",
-			"Shows the plot legends in a floating window", KeyEvent.VK_L)
+			"Shows the plot legends in a floating window", KeyEvent.VK_L) {
+				public void run() {
+					Controller.showLegendsWindow();
+				}
+			}
 		);
 		
 	}

@@ -104,6 +104,24 @@ public class Controller {
 			SamsGui.quit();
 	}
 
+	public static void clearPlot() {
+		SamsGui.clearPlot();
+	}
+	
+	public static void printPlot() {
+		SamsGui.printPlot();
+	}
+	public static void formatPlot() {
+		SamsGui.formatPlot();
+	}
+	public static void plotSelectedSignatures(boolean b) {
+		SamsGui.plotSelectedSignatures(b);
+	}
+	
+	public static void showLegendsWindow() {
+		SamsGui.showLegendsWindow();
+	}
+	
 	/** Dialog utilities. */
 	public static class Dialogs {
 		public static String selectDatabaseDirectory(String title) {
@@ -118,9 +136,11 @@ public class Controller {
 		public static String selectImportDirectory(String title) {
 			String basedir = Prefs.get(Prefs.IMPORT_DIR); 
 			File file = selectDirectory(title, basedir);
-			if ( file != null )
+			if ( file != null ) {
 				Prefs.set(Prefs.IMPORT_DIR, file.getParent());
-			return file.getAbsolutePath();
+				return file.getAbsolutePath();
+			}
+			return null;
 		}
 			
 		public static File selectDirectory(String title, String basedir) {
@@ -137,9 +157,11 @@ public class Controller {
 		public static String selectImportFile(String title) {
 			String basedir = Prefs.get(Prefs.IMPORT_DIR); 
 			File file = selectFile(title, basedir);
-			if ( file != null )
+			if ( file != null ) {
 				Prefs.set(Prefs.IMPORT_DIR, file.getParent());
-			return file.getAbsolutePath();
+				return file.getAbsolutePath();
+			}
+			return null;
 		}
 		
 		public static File selectFile(String title, String basedir) {

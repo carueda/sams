@@ -103,8 +103,71 @@ public class DbGui extends JPanel {
 			fs = db.getGroupingBy(new String[] {"location"});
 		tree.setInfo(fs);
 		table.revalidate();
+		plot.reset();
+		plot.repaint();
 	}
 	
+	public void showLegendsWindow() {
+		plot.showLegendsWindow();
+	}
+	
+	public void clearPlot() {
+		plot.clearSignatures();
+		plot.repaint();
+	}
+	
+	public void formatPlot() {
+		plot.showPlotFormatter();
+	}
+		
+	public void plotSelectedSignatures(boolean only) {
+		if ( db == null )
+			return;
+		Collection sids = new ArrayList();
+		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		if ( selectedSpectra != null ) {
+			for ( Iterator it = selectedSpectra.iterator(); it.hasNext(); ) {
+				DefaultMutableTreeNode n = (DefaultMutableTreeNode) it.next();
+				IFile s = (IFile) n.getUserObject();
+				String path = s.getPath();
+				sids.add(path);
+			}
+		}
+		plotSignatures(sids, only);
+		plot.repaint();
+	}
+	public void plotSignatures(Collection paths, boolean only) {
+		if ( db == null )
+			return;
+		
+		if ( only )
+			plot.clearSignatures();
+
+		try {
+			for ( Iterator it = paths.iterator(); it.hasNext(); ) {
+				String path = (String) it.next();
+				Signature sig = db.getSignature(path);
+				String legend = path;
+				plot.addSignature(sig, legend);
+			}
+		}
+		catch ( Exception ex ) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
+	}
+	
+	public void printPlot() {
+		try {
+			//plot.printPtolemyVersion();
+			
+			// alternative way -- under testing
+			plot.print(); 
+		}
+		catch (Exception ex) {
+			SamsGui.message("Printing failed:\n" + ex.toString());
+		}
+		parentFrame.toFront();
+	}
 	public JFrame getFrame() {
 		return parentFrame;
 	}

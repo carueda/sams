@@ -11,7 +11,7 @@ import java.awt.Font;
 import java.awt.font.*;
 import java.awt.Color;
 import java.awt.event.*;
-import java.util.Iterator;
+import java.util.*;
 
 /** 
  * Tree display.
@@ -93,4 +93,22 @@ public class Tree extends JPanel {
 				throw new RuntimeException("Unexpected object type");
 		}
 	}
+	
+	public List getSelectedNodes(Class clazz) {
+		List list = null;
+		TreePath[] paths = tree.getSelectionPaths(); 
+		if ( paths != null ) {
+			for ( int i = 0; i < paths.length; i++ ) {
+				DefaultMutableTreeNode n = (DefaultMutableTreeNode) paths[i].getLastPathComponent();
+				Object obj = n.getUserObject();
+				if ( clazz.isInstance(obj) ) {
+					if ( list == null )
+						list = new ArrayList();
+					list.add(n);
+				}
+			}
+		}
+		return list;
+	}
+	
 }
