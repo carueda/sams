@@ -66,12 +66,12 @@ public class DbGui extends JPanel {
 		table.setMinimumSize(new Dimension(80, 130));
 
 		tree.getJTree().addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				int selRow = tree.getJTree().getRowForLocation(e.getX(), e.getY());
-				TreePath selPath = tree.getJTree().getPathForLocation(e.getX(), e.getY());
+			public void mousePressed(MouseEvent me) {
+				JTree jtree = tree.getJTree();
+				int selRow = jtree.getRowForLocation(me.getX(), me.getY());
 				if ( selRow != -1 ) {
-					Tree.MyNode n = (Tree.MyNode) selPath.getLastPathComponent();
-					click(n, e);
+					TreePath treePath = jtree.getPathForLocation(me.getX(), me.getY());
+					click(treePath, me);
 				}
 			}
 		});
@@ -256,18 +256,26 @@ public class DbGui extends JPanel {
 		loc_label.setText("x=" +x+ "  y=" +y);
 	}
 	
-	protected void click(Tree.MyNode n, MouseEvent e) {
-		if ( n.isGroup() )
-			clickGroup(n, e);
-		else if ( n.isSpectrum() )
-			clickSpectrum(n, e);
+	protected void click(TreePath treePath, MouseEvent me) {
+		JTree jtree = tree.getJTree();
+		if ( !jtree.isPathSelected(treePath) && (me.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
+			if ( me.isControlDown() )
+				jtree.addSelectionPath(treePath);
+			else
+				jtree.setSelectionPath(treePath);
+		}
+		Tree.MyNode node = (Tree.MyNode) treePath.getLastPathComponent();
+		if ( node.isGroup() )
+			clickGroup(node, me);
+		else if ( node.isSpectrum() )
+			clickSpectrum(node, me);
 	}
 	
-	public void clickSpectrum(Tree.MyNode n, MouseEvent e) {
-		if ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
+	public void clickSpectrum(Tree.MyNode n, MouseEvent me) {
+		if ( (me.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
 			JPopupMenu popup = getPopupMenuSpectrum();
-			Component c = (Component) e.getSource();
-			popup.show(c, e.getX(), e.getY());
+			Component c = (Component) me.getSource();
+			popup.show(c, me.getX()+5, me.getY());
 			return;
 		}
 		String path = n.getStringPath();
@@ -275,7 +283,7 @@ public class DbGui extends JPanel {
 		try {
 			sig = db.getSignature(path);
 			String legend = path;
-			if ( e.isControlDown() )
+			if ( me.isControlDown() )
 				plot.toggleSignature(sig, legend);
 			else
 				plot.setSignature(sig, legend);
@@ -286,11 +294,11 @@ public class DbGui extends JPanel {
 		plot.repaint();
 	}
 
-	public void clickGroup(Tree.MyNode n, MouseEvent e) {
-		if ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
+	public void clickGroup(Tree.MyNode n, MouseEvent me) {
+		if ( (me.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
 			JPopupMenu popup = getPopupMenuGroup();
-			Component c = (Component) e.getSource();
-			popup.show(c, e.getX(), e.getY());
+			Component c = (Component) me.getSource();
+			popup.show(c, me.getX()+5, me.getY());
 			return;
 		}
 	}

@@ -2,6 +2,11 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/28/03
+	- 
+	- clipboard interaction improvement: right-click now updates 
+	  selection. See DbGui.click()
+	  
 07/25/03
 	- Pending:
 		- where to allow for creation of subgroups .... See Actions
