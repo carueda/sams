@@ -223,49 +223,41 @@ public abstract class Table extends JPanel {
 		return tmp;
 	}
 
-	private class ControlPanel extends JPanel {
-		final String[] empty_string_array = new String[0];
+	private class ControlPanel extends JPanel implements ActionListener {
 		JPanel controls;
-		JComboBox sort_tf;
-		JComboBox filter_tf;
+		JComboBox sort_cb;
+		JComboBox filter_cb;
 		
 		ControlPanel() {
 			super(new FlowLayout(FlowLayout.LEFT));
 			add(new JLabel("Sort field"));
-			add(sort_tf = new JComboBox(empty_string_array));
+			add(sort_cb = new JComboBox(new DefaultComboBoxModel()));
 			add(new JLabel("Filter condition"));
-			add(filter_tf = new JComboBox(empty_string_array));
-			sort_tf.setEditable(true);
-			filter_tf.setEditable(true);
-			
-			sort_tf.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
-						String str = ((String) sort_tf.getSelectedItem()).trim();
-						sort(str);
-						sort_tf.removeItem(str);
-						sort_tf.insertItemAt(str, 0);
-						sort_tf.setSelectedItem(str);
-					}
-					catch(Exception ex) {
-						SamsGui.message(ex.getMessage());
-					}
-				}
-			});
-			filter_tf.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
-						String str = ((String) filter_tf.getSelectedItem()).trim();
-						filter(str);
-						filter_tf.removeItem(str);
-						filter_tf.insertItemAt(str, 0);
-						filter_tf.setSelectedItem(str);
-					}
-					catch(Exception ex) {
-						SamsGui.message(ex.getMessage());
-					}
-				}
-			});
+			add(filter_cb = new JComboBox(new DefaultComboBoxModel()));
+			sort_cb.setEditable(true);
+			filter_cb.setEditable(true);
+			sort_cb.addActionListener(this);
+			filter_cb.addActionListener(this);
+		}
+		
+		public void actionPerformed(ActionEvent e) {
+			JComboBox cb = (JComboBox) e.getSource();
+			String str = (String) cb.getSelectedItem();
+			if ( str == null )
+				return;
+			str = str.trim();
+			try {
+				if ( cb == sort_cb )
+					sort(str);
+				else
+					filter(str);
+				if ( ((DefaultComboBoxModel) cb.getModel()).getIndexOf(str) < 0 )
+					cb.insertItemAt(str, 0);
+				cb.setSelectedItem(str);
+			}
+			catch(Exception ex) {
+				SamsGui.message(ex.getMessage());
+			}
 		}
 	}
 }
