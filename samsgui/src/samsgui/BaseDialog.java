@@ -147,7 +147,6 @@ public class BaseDialog extends JDialog {
 	public boolean areComponentsEnabled() {
 		return componentsEnabled;
 	}
-	
 	public void setComponentsEnabled(boolean enabled) {
 		componentsEnabled = enabled;
 		for ( int i = 0; i < components.length; i++ )
