@@ -33,6 +33,8 @@ import java.util.*;
  */
 public class DbGui extends JPanel {
 	private static final String PROP_PREFIX = "samsgui";
+	/** List of grouping specificactions.
+	 * Each grouping spec is a list of expressions */
 	private static final String PROP_GROUPINGS = PROP_PREFIX+ ".groupings";
 	
 	JFrame parentFrame;  // accesible to Plot
@@ -71,19 +73,6 @@ public class DbGui extends JPanel {
 					return null;
 				}
 			}
-			
-			/*{{{ TO BE ELIMINATED -- enough is the option to make groupings directly.
-			// also (re)creates read-only grouping branch in tree:
-			public void sort(String orderBy) throws Exception {
-				super.sort(orderBy);
-				if ( orderBy != null && orderBy.trim().length() > 0 ) {
-					orderBy = orderBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
-					String[] attrNames = orderBy.split(",");
-					tree.updateReadOnlyGroupingBy(attrNames);
-					_props_addGroupBy(orderBy);
-				}
-			}
-			}}}*/
 		};
 
 		JSplitPane splitPane2 = _createJSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -191,19 +180,15 @@ public class DbGui extends JPanel {
 		final BaseDialog form = new BaseDialog(getFrame(), diag_title, array) {
 			public boolean dataOk() {
 				String msg = null;
-				String groupBy = f_groupBy.getText().trim();
-				if ( groupBy.length() == 0 )
+				String groupBy_text = f_groupBy.getText().trim();
+				if ( groupBy_text.length() == 0 )
 					msg = "Specify one or more attribute names";
 				else {
-					groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
-					String[] attrNames = groupBy.split(",");
-					for ( int i = 0; i < attrNames.length; i++ ) {
-						if ( !attrNames[i].equals("location")
-						&&   !attrNames[i].equals("name")
-						&&   db.getMetadata().get(attrNames[i]) == null ) {
-							msg = attrNames[i]+ ": undefined attribute";
-							break;
-						}
+					try {
+						db.createOrder(groupBy_text);
+					}
+					catch(Exception ex) {
+						msg = ex.getMessage();
 					}
 				}
 				if ( msg == null ) {
@@ -222,12 +207,11 @@ public class DbGui extends JPanel {
 		form.setLocationRelativeTo(getFrame());
 		form.setVisible(true);
 		if ( form.accepted() ) {
-			String groupBy = f_groupBy.getText().trim();
+			String groupBy_text = f_groupBy.getText().trim();
 			try {
-				groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
-				String[] attrNames = groupBy.split(",");
-				tree.updateReadOnlyGroupingBy(attrNames);
-				_props_addGroupBy(groupBy);
+				IOrder groupBy = db.createOrder(groupBy_text);
+				tree.updateReadOnlyGroupingBy(groupBy);
+				_props_addGroupBy(groupBy.toString());
 			}
 			catch(Exception ex) {
 				SamsGui.message("Error: " +ex.getMessage());
@@ -236,16 +220,18 @@ public class DbGui extends JPanel {
 		}
 	}
 
+	/* Notes on _props_* routines:
+		'@' used to separate groupBys in properties
+		';' used to separate expressions within a groupBy (as given by IOrder.toString) */
 	private List _props_getGroupBysFromProps() {
 		List groupBys = new ArrayList();
 		Properties db_props = db.getInfoProperties();
 		String str = db_props.getProperty(PROP_GROUPINGS);
 		if ( str != null && str.trim().length() > 0 )
-			groupBys.addAll(Arrays.asList(str.split(";")));
+			groupBys.addAll(Arrays.asList(str.split("@")));
 		return groupBys;
 	}
 	private void _props_addGroupBy(String groupBy) {
-		groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
 		List groupBys = _props_getGroupBysFromProps();
 		if ( !groupBys.contains(groupBy) ) {
 			groupBys.add(groupBy);
@@ -253,7 +239,6 @@ public class DbGui extends JPanel {
 		}
 	}
 	private void _props_removeGroupBy(String groupBy) {
-		groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
 		List groupBys = _props_getGroupBysFromProps();
 		if ( groupBys.contains(groupBy) ) {
 			groupBys.remove(groupBy);
@@ -266,16 +251,20 @@ public class DbGui extends JPanel {
 		// first, get names to be deleted:
 		for ( int i = 0; i < groupBys.size(); i++ ) {
 			String groupBy = (String) groupBys.get(i);
-			groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
-			String[] attrNames = groupBy.split(",");
-			for ( int j = 0; j < attrNames.length; j++ ) {
-				if ( attrNames[j].equals(attrName) ) {
-					removed_groupBys.add(groupBy);
-					break;
+			String[] expressions = groupBy.split(":");
+			check:for ( int j = 0; j < expressions.length; j++ ) {
+				// FIXME: must check for true attribute names!!!
+				// say an attribute is "substring" and expressions[j] == "foo.substring(5)".
+				String[] tokens = expressions[j].split("\\W+");
+				for ( int k = 0; k < tokens.length; k++ ) {
+					if ( tokens[k].equals(attrName) ) {
+						removed_groupBys.add(groupBy);
+						break check;
+					}
 				}
 			}
 		}
-		// now, make deleteon:
+		// now, make deletion:
 		for ( int i = 0; i < removed_groupBys.size(); i++ ) {
 			String groupBy = (String) removed_groupBys.get(i);
 			groupBys.remove(groupBy);
@@ -288,7 +277,7 @@ public class DbGui extends JPanel {
 		for ( int i = 0; i < groupBys.size(); i++ ) {
 			String groupBy = (String) groupBys.get(i);
 			if ( i > 0 )
-				sb.append(";");
+				sb.append("@");
 			sb.append(groupBy);
 		}
 		Properties db_props = db.getInfoProperties();
@@ -302,7 +291,8 @@ public class DbGui extends JPanel {
 		if ( db != null ) {
 			List groupBys = _props_getGroupBysFromProps();
 			for ( int i = 0; i < groupBys.size(); i++ ) {
-				String groupBy = (String) groupBys.get(i);
+				String groupBy_text = (String) groupBys.get(i);
+				IOrder groupBy = db.createOrder(groupBy_text);
 				tree.updateReadOnlyGroupingBy(groupBy);
 			}
 		}
@@ -1083,7 +1073,6 @@ public class DbGui extends JPanel {
 		if ( grp_node.getName().equals("location:") )
 			return;  // "location:" grouping should be always updated.
 		String[] attrNames = grp_node.getName().split(":");
-		//tree.updateReadOnlyGroupingBy(attrNames);
 		tree.updateReadOnlyGroupings();
 		MyNode scrollNode = grp_node;
 		if ( grp_node.getChildCount() > 0 )

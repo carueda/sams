@@ -1,6 +1,7 @@
 package samsgui.dbgui;
 
 import samscore.ISamsDb;
+import samscore.ISamsDb.*;
 import sfsys.ISfsys;
 
 import javax.swing.*;
@@ -105,11 +106,6 @@ public class Tree extends JPanel {
 		treeModel.reload();
 	}		
 		
-	public void updateReadOnlyGroupingBy(String attrNames) {
-		String[] a_attrNames = attrNames.split("(,|\\s)+");
-		updateReadOnlyGroupingBy(a_attrNames);
-	}
-	
 	/** Refreshes all non-location groupings. */
 	public void updateReadOnlyGroupings() {
 		ISamsDb db = dbgui.getDatabase();
@@ -121,7 +117,8 @@ public class Tree extends JPanel {
 			if ( !gby_node.getName().equals("location:") ) {
 				gby_node.removeAllChildren();
 				try {
-					createGroupNode(gby_node, db.getGroupingBy(gby_node.getName().split(":")));
+					IOrder orderBy = db.createOrder(gby_node.getName());
+					createGroupNode(gby_node, orderBy.getGroupingBy());
 				}
 				catch(Exception ex) {
 					ex.printStackTrace();  // shouldn't happen
@@ -131,11 +128,8 @@ public class Tree extends JPanel {
 		treeModel.reload();
 	}		
 	
-	public void updateReadOnlyGroupingBy(String[] attrNames) {
-		StringBuffer sb = new StringBuffer("");
-		for ( int i = 0; i < attrNames.length; i++ )
-			sb.append(attrNames[i].toLowerCase()+ ":");
-		String gby_name = sb.toString();
+	public void updateReadOnlyGroupingBy(IOrder groupBy) {
+		String gby_name = groupBy.toString();
 		if ( gby_name.equals("location:") || gby_name.equals("location:name:") ) {
 			// maybe do something here later.
 			return;
@@ -159,14 +153,11 @@ public class Tree extends JPanel {
 			treeModel.reload();
 		}
 		
-		ISamsDb db = dbgui.getDatabase();
-		if ( db != null ) {
-			try {
-				createGroupNode(gby_node, db.getGroupingBy(attrNames));
-			}
-			catch(Exception ex) {
-				ex.printStackTrace();  // shouldn't happen
-			}
+		try {
+			createGroupNode(gby_node, groupBy.getGroupingBy());
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();  // shouldn't happen
 		}
 		if ( gby_node.getChildCount() > 0 ) {
 			// scroll to first child:

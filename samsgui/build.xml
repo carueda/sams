@@ -9,14 +9,15 @@
 
 	<!-- Required libraries -->
 	<property name="plotapplication" value="../../_GENERATED/DIST/plotapplication.jar"/>
-	<property name="samscore" value="../../_GENERATED/DIST/samscore.jar"/>
-	<property name="fileutils" value="../../_GENERATED/DIST/fileutils.jar"/>
-	<property name="sig"       value="../../_GENERATED/DIST/sig.jar"/>
-	<property name="sigoper"   value="../../_GENERATED/DIST/sigoper.jar"/>
-	<property name="envifile"  value="../../_GENERATED/DIST/envifile.jar"/>
-	<property name="specfile"  value="../../_GENERATED/DIST/specfile.jar"/>
-	<property name="sfsys"     value="../../_GENERATED/DIST/sfsys.jar"/>
-	<property name="kunststoff"     value="../../_GENERATED/DIST/kunststoff.jar"/>
+	<property name="samscore"        value="../../_GENERATED/DIST/samscore.jar"/>
+	<property name="fileutils"       value="../../_GENERATED/DIST/fileutils.jar"/>
+	<property name="sig"             value="../../_GENERATED/DIST/sig.jar"/>
+	<property name="sigoper"         value="../../_GENERATED/DIST/sigoper.jar"/>
+	<property name="envifile"        value="../../_GENERATED/DIST/envifile.jar"/>
+	<property name="specfile"        value="../../_GENERATED/DIST/specfile.jar"/>
+	<property name="sfsys"           value="../../_GENERATED/DIST/sfsys.jar"/>
+	<property name="kunststoff"      value="../../_GENERATED/DIST/kunststoff.jar"/>
+	<property name="bsh"             value="../../_GENERATED/DIST/bsh-1.2b5.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
@@ -99,6 +100,7 @@
 		<copy file="${specfile}" todir="${dist}/base_dist/lib"/>
 		<copy file="${sfsys}" todir="${dist}/base_dist/lib"/>
 		<copy file="${kunststoff}" todir="${dist}/base_dist/lib"/>
+		<copy file="${bsh}" todir="${dist}/base_dist/lib"/>
     </target>
 
   <target name="nanoproperties" depends="init">
