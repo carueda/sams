@@ -1,7 +1,9 @@
 package sfsys;
 
 /**
- * A simple filesystem
+ * A simple filesystem.
+ * File separator is always '/'; that means any '\\' and ':' is
+ * interpreted (and possibly stored) as '/'.
  * @author Carlos A. Rueda
  * @version $Id$
  */
