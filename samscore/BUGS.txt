@@ -1,0 +1,8 @@
+SAMS Core Known bugs
+Carlos A. Rueda.
+$Id$
+
+- CorrectionOperation: check operation when forward=false, additive=false
+  (it's giving out a "reflection"--check sign in correction variable)
+		
+

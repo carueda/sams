@@ -2,21 +2,8 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
- Pending features:
- 	- F1, help window, maybe html documentation
- 	- make plot legends optional
-	- allow to show legends only in legend window
-	- clipboard operations to work also on groups as units
-	- import a region or an entire Envi image (?)
-	- new grouping by filename (?)
-		
- Pending bugs:
-	- CorrectionOperation: check operation when forward=false, additive=false
-	  (it's giving out a "reflection"--check sign in correction variable)
-		
- Pending design aspects:
- 	- who should define special groups? (like imported/ computed/)
-	  it should move from samscore to samsgui ...
+ 08/23/03 - version 3.0
+ 	- TO-DO.txt, BUGS.txt added.
 	
  08/21/03 - version 3.0
  	- comboboxes for table control panel.

@@ -1,0 +1,6 @@
+SAMS GUI Known bugs
+Carlos A. Rueda.
+$Id$
+
+none		
+

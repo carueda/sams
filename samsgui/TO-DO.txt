@@ -1,0 +1,17 @@
+SAMS GUI TO-DO
+Carlos A. Rueda.
+$Id$
+
+(Some may involve the core, of course.)
+
+- F1, help window, maybe html documentation
+- make plot legends optional
+- allow to show legends only in legend window
+- clipboard operations to work also on groups as units
+- import a region or an entire Envi image (?)
+		
+Design aspects:
+- who should define special groups? (like imported/ computed/)
+  it should move from samscore to samsgui ...
+	
+

@@ -2,6 +2,9 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 08/23/03 - version 3.0
+ 	- TO-DO.txt, BUGS.txt added.
+	
  08/21/03 - version 3.0
  	- Evaluator: fake_big_value defined to prevent runtime errors during
 	  semantic checking.
