@@ -10,7 +10,10 @@ import java.io.*;
 public class Main
 {
 	static ISfsys mount(String filename) throws Exception {
-		return Sfsys.create(filename);
+		if ( filename == null )
+			return Sfsys.createMem();
+		else
+			return Sfsys.createDir(filename);
 	}
 	
 	public static void main(String[] args) throws Exception {

@@ -13,14 +13,16 @@ import java.io.*;
  */
 public class DirSfsys implements ISfsys {
 	File basedir;
+	String file_ext;
 	IDirectory root;
 	NodeMan nodeMan;
 	
-	private DirSfsys(String dirname) throws Exception {
+	private DirSfsys(String dirname, String file_ext) throws Exception {
 		basedir = new File(dirname).getCanonicalFile();
 		if ( !basedir.isDirectory() )
 			throw new Exception("Not a directory");
 		
+		this.file_ext = file_ext;
 		nodeMan = new NodeMan();
 		root = nodeMan.getDirectory("/");
 	}
@@ -38,7 +40,11 @@ public class DirSfsys implements ISfsys {
 	}
 	
     public static ISfsys createSfsys(String dirname) throws Exception {
-		return new DirSfsys(dirname);
+		return new DirSfsys(dirname, null);
+    }
+
+    public static ISfsys createSfsys(String dirname, String file_ext) throws Exception {
+		return new DirSfsys(dirname, file_ext);
     }
 
     public void save(String filename) throws java.io.IOException {
@@ -149,8 +155,10 @@ public class DirSfsys implements ISfsys {
 						children.add(dir);
 					}
 					else if ( a[i].isFile() ) {
-						IFile file = getFile(subpath);
-						children.add(file);
+						if ( file_ext == null || a[i].getName().endsWith(file_ext) ) { 
+							IFile file = getFile(subpath);
+							children.add(file);
+						}
 					}
 				}
 				return children;

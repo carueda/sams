@@ -6,28 +6,25 @@ package sfsys;
  * @version $Id$
  */
 public class Sfsys {
-	/**
-	 * Creates an ISfsys.
-	 * @param filename  
-	 *	If null, a memory-based, new fs is created
-	 *	If filename is an existing file, a memory-based fs is loaded
-	 *      from that file.
-	 *	If filename is a directory, a directory-based fs is created
-	 *      with root in that directory.
-	 */
-	public static ISfsys create(String filename) throws Exception {
-		if ( filename == null )
-			return sfsys.impl.MemSfsys.createSfsys();
-		
-		java.io.File file = new java.io.File(filename);
-		if ( !file.exists() )
-			throw new Exception(filename+ ": no such file or directory");
-		
-		if ( file.isDirectory() )
-			return sfsys.impl.DirSfsys.createSfsys(filename);
-		else
-			return sfsys.impl.MemSfsys.createSfsys(filename);
+	/** Creates a directory-based fs with root in that directory. */
+	public static ISfsys createDir(String dirname) throws Exception {
+		return sfsys.impl.DirSfsys.createSfsys(dirname);
 	}
 
+	/** Creates a directory-based fs with root in that directory. */
+	public static ISfsys createDir(String dirname, String file_ext) throws Exception {
+		return sfsys.impl.DirSfsys.createSfsys(dirname, file_ext);
+	}
+
+	/** Creates an empty memory-based ISfsys. */
+	public static ISfsys createMem() throws Exception {
+		return sfsys.impl.MemSfsys.createSfsys();
+	}
+	
+	/** Creates a memory-based ISfsys loaded from a file. */
+	public static ISfsys createMem(String filename) throws Exception {
+		return sfsys.impl.MemSfsys.createSfsys(filename);
+	}
+	
 	private Sfsys() {}
 }
