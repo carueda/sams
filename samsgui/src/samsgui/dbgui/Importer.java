@@ -209,17 +209,17 @@ public class Importer {
 								dbgui.setDatabase(db);
 
 								progressBar.setValue(progressBar.getMaximum());
-								
-								task_isDone = true;
+							}
+							catch(Exception ex) {
+								progressBar.setString("Error: see below");
+								task_message.append("\nError: " +ex.getMessage());
+							}
+							finally {
 								task_message.append("\nDone. " +successful+ " files imported");
+								task_isDone = true;
 								btnAccept.setText("Close");
 								btnAccept.setEnabled(true);
 							}
-							catch(Exception ex) {
-								task_message.append("\nError: " +ex.getMessage());
-								task_isDone = true;
-							}
-							
 						}
 					});
 					
@@ -372,34 +372,32 @@ public class Importer {
 	
 							PrintWriter writer = new PrintWriter(System.out, true);
 							SamsDbManager dbman = new SamsDbManager(db, writer);
-							try {
-								int ii = 0;
-								progressBar.setMaximum(selectedFiles.length +1);
-								progressBar.setIndeterminate(false);
-								progressBar.setString(null); //display % string
-								
-								for ( int i = 0; i < selectedFiles.length; i++ ) {
-									File file = selectedFiles[i];
-									String filename = file.getAbsolutePath();
-									task_message.append("\nimporting " +file.getName());
-									String path = dbman.importFile(filename, tryfiletype, grp_loc);
-									dbgui.getTree().addChild(grp_node, file.getName(), true, false);
-									progressBar.setValue(++ii);
-								}
-								
-								dbgui.getTree().scrollToVisible(grp_node);
-								progressBar.setValue(progressBar.getMaximum());
-								
-								task_isDone = true;
-								task_message.append("\nDone. " +ii+ " signatures imported");
-								btnAccept.setText("Close");
-								btnAccept.setEnabled(true);
-							}
-							catch(Exception ex) {
-								task_message.append("\nError: " +ex.getMessage());
-								task_isDone = true;
-							}
+							progressBar.setMaximum(selectedFiles.length);
+							progressBar.setIndeterminate(false);
+							progressBar.setString(null); //display % string
 							
+							int successful = 0;
+							for ( int i = 0; i < selectedFiles.length; i++ ) {
+								File file = selectedFiles[i];
+								String filename = file.getAbsolutePath();
+								task_message.append("\nimporting " +file.getName());
+								try {
+									String path = dbman.importFile(filename, tryfiletype, grp_loc);
+									successful++;
+									dbgui.getTree().addChild(grp_node, file.getName(), true, false);
+								}
+								catch(Exception ex) {
+									task_message.append("\nError: " +ex.getMessage());
+								}
+								finally {
+									progressBar.setValue(i+1);
+								}
+							}
+							dbgui.getTree().scrollToVisible(grp_node);
+							task_message.append("\nDone. " +successful+ " signatures imported");
+							task_isDone = true;
+							btnAccept.setText("Close");
+							btnAccept.setEnabled(true);
 						}
 					});
 					
@@ -616,8 +614,8 @@ public class Importer {
 							PrintWriter writer = new PrintWriter(System.out, true);
 							SamsDbManager dbman = new SamsDbManager(db, writer);
 							String basefilename = new File(filename).getName();
+							int ii = 1; // to make names
 							try {
-								int ii = 1; // to make names
 								List sigs = getSignaturesFromAsciiFile(filename);
 								// +2 : see a), b) below
 								progressBar.setMaximum(sigs.size() +2);
@@ -643,17 +641,17 @@ public class Importer {
 								dbgui.setDatabase(db);
 								
 								progressBar.setValue(progressBar.getMaximum());
-								
-								task_isDone = true;
+							}
+							catch(Exception ex) {
+								progressBar.setString("Error: see below");
+								task_message.append("\nError: " +ex.getMessage());
+							}
+							finally {
 								task_message.append("\nDone. " +ii+ " signatures imported");
+								task_isDone = true;
 								btnAccept.setText("Close");
 								btnAccept.setEnabled(true);
 							}
-							catch(Exception ex) {
-								task_message.append("\nError: " +ex.getMessage());
-								task_isDone = true;
-							}
-							
 						}
 					});
 					
