@@ -575,17 +575,18 @@ public class SamsGui {
 		 * splash window will be closed in at most one second approx.
 		 */
 		public void status(String status_text) {
-			if ( status_text != null ) {
+			if ( status_text != null )
 				status_label.setText(status_text);
-				return;
-			}
-			new Thread(getWaitRunner(1000)).start();
+			else
+				new Thread(getWaitRunner(1000)).start();
 		}
 		 
 		/** Creates a splash window. */
-		private Splash(String text, Frame f, int waitTime) {
+		private Splash(String text, Frame f) {
 			super(f);
-			Color bg_color = null;//new Color(210,255,255);
+			final Color bg_color = null;//new Color(210,255,255);
+			setContentPane(new JPanel(new BorderLayout()));
+			((JPanel) getContentPane()).setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
 			getContentPane().setBackground(bg_color);
 			ImageIcon ii = info.getIcon(SPLASH_FILENAME);
 			MouseListener ml = new MouseAdapter()  {
@@ -605,7 +606,7 @@ public class SamsGui {
 			
 			JLabel text_label = new JLabel(text);
 			text_label.setFont(text_label.getFont().deriveFont(Font.BOLD));
-			text_label.setHorizontalAlignment(JLabel.RIGHT);
+			text_label.setHorizontalAlignment(JLabel.CENTER);
 			text_label.setBackground(bg_color);
 			text_label.setOpaque(true);
 			text_label.addMouseListener(ml);
@@ -613,7 +614,7 @@ public class SamsGui {
 			
 			status_label = new JLabel("Starting...", JLabel.CENTER);
 			status_label.setFont(status_label.getFont().deriveFont(10f));
-			status_label.setHorizontalAlignment(JLabel.LEFT);
+			status_label.setHorizontalAlignment(JLabel.CENTER);
 			status_label.setBackground(bg_color);
 			status_label.setOpaque(true);
 			status_label.addMouseListener(ml);
@@ -626,7 +627,7 @@ public class SamsGui {
 			if ( locy < 0 )
 				locy = 0;
 			setLocation( (screenSize.width - labelSize.width)/2, locy);
-			Runnable waitRunner = getWaitRunner(waitTime); 
+			Runnable waitRunner = getWaitRunner(30*1000); 
 			setVisible(true);
 			new Thread(waitRunner, "SplashThread").start();
 		}
@@ -653,7 +654,7 @@ public class SamsGui {
 		
 		/** Displays the splash window. */
 		static Splash showSplash(JFrame frame) {
-			return new Splash("SAMS"+ "  " +info.getVersion(), frame, 30*1000);
+			return new Splash("Version " +info.getVersion()+ " (" +info.getBuild()+ ")", frame);
 		}
 	}
 
