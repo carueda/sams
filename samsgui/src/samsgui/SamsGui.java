@@ -43,6 +43,7 @@ public class SamsGui {
 	
 	public static void init(String operdirname) throws Exception {
 		info = new Info();
+		System.out.println("Starting from " +info.getSAMSDirectory());
 		nextFrame = new DbFrame();
 		Splash splash = Splash.showSplash(nextFrame);
 		Sams.init(operdirname);
@@ -669,7 +670,6 @@ public class SamsGui {
 		String name = "SAMS";
 		String version = "v";
 		String build = "b";
-		String samsDir = "samsDir";
 		
 		String licenseText = null;  // License text (loaded on demand):
 		
@@ -695,7 +695,6 @@ public class SamsGui {
 				name    = props.getProperty("sams.name");
 				version = props.getProperty("sams.version");
 				build   = props.getProperty("sams.build");
-				samsDir  = props.getProperty("sams.dir");
 			}
 		}
 
@@ -716,7 +715,7 @@ public class SamsGui {
 		}
 		
 		public String getSAMSDirectory() {
-			return samsDir;
+			return System.getProperty("sams.dir");
 		}
 		
 		public String getLicense() {
