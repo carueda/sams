@@ -241,7 +241,6 @@ public abstract class Table extends JPanel {
 						sort(sort_tf.getText());
 					}
 					catch(Exception ex) {
-						ex.printStackTrace();
 						SamsGui.message(ex.getMessage());
 					}
 				}

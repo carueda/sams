@@ -1,2 +1,2 @@
 Main-class: samsgui.Main
-Class-path: ../lib/plotapplication.jar ../lib/samscore.jar ../lib/sig.jar ../lib/specfile.jar ../lib/sfsys.jar ../lib/sigoper.jar ../lib/bsh-1.2b5.jar ../lib/fileutils.jar ../lib/envifile.jar ../lib/kunststoff.jar 
+Class-path: ../lib/plotapplication.jar ../lib/samscore.jar ../lib/sig.jar ../lib/specfile.jar ../lib/sfsys.jar ../lib/sigoper.jar ../lib/bsh-1.3b2.jar ../lib/fileutils.jar ../lib/envifile.jar ../lib/kunststoff.jar 
