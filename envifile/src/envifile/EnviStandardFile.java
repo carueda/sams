@@ -10,7 +10,11 @@ import java.util.*;
  * @version $Id$
  */
 public class EnviStandardFile {
+	/** Header for a envi file. */
 	public static class Header {
+		/** The map used to create this header. Can be null. */
+		public Map map;
+		
 		public String description;
 		public int samples;
 		public int lines;
@@ -29,7 +33,8 @@ public class EnviStandardFile {
 		
 		/** Creates a header by taking values from a map.*/
 		public Header(Map map) throws InvalidEnviFormatException{
-			try{
+			this.map = map;
+			try {
 				if ( map.get("description") != null )
 					description = (String) map.get("description");
 				samples = Integer.parseInt((String) map.get("samples"));
