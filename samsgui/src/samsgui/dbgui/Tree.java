@@ -235,6 +235,11 @@ public class Tree extends JPanel {
 		jtree.scrollPathToVisible(new TreePath(parent.getPath()));
 	}
 	
+	/** Unconditionally removes a node. */
+	public void removeNode(MyNode node) {
+		treeModel.removeNodeFromParent(node);
+	}
+	
 	public MyNode getImportedNode() {
 		return importedNode;
 	}

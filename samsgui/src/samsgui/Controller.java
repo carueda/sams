@@ -360,6 +360,11 @@ public class Controller {
 			for ( Iterator iter = selectedGroups.iterator(); iter.hasNext(); ) {
 				MyNode grp_node = (MyNode) iter.next();
 				if ( !grp_node.underGrouping("location:") ) {
+					// check if it is a grouping root:
+					if ( grp_node.getName().endsWith(":") ) {
+						dbgui.getTree().removeNode(grp_node);
+						continue;
+					}
 					SamsGui.message("Only groups under location grouping can be deleted.");
 					return;
 				}
@@ -375,6 +380,9 @@ public class Controller {
 			SamsGui.message("Please use the location grouping to select the elements to be deleted.");
 			return;
 		}
+		
+		if ( collect_paths.size() == 0 )
+			return;
 		
 		if ( !SamsGui.confirm(confirm_msg) )
 			return;

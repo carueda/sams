@@ -18,6 +18,8 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/10/03
+ 	- Controller.delete() now allows to delete virtual groupings.
+	  This is done inmmediately without confirmation.
  	- Tree.getSelectedSpectraPaths() won't be deleted. It now assures the
 	  returned list doesn't have duplicate location paths.
 	- Splash, initialization progress.
