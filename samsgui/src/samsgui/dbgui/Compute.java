@@ -477,10 +477,16 @@ public class Compute {
 								// update GUI
 								Controller.doUpdate(new Runnable() {
 									public void run() {
-										if ( r_inplace.isSelected() )
-											dbgui.plotSelectedSignatures(true);
-										else
+										if ( r_inplace.isSelected() ) {
+											int selNodes = dbgui.getTree().getSelectedSpectraNodes().size();
+											if ( selNodes <= 21 )  // a magic limit :-) 
+												dbgui.plotSelectedSignatures(true);
+											else
+												dbgui.clearPlot();
+										}
+										else {
 											dbgui.refreshTable();
+										}
 									}
 								});
 								progressBar.setValue(progressBar.getMaximum());

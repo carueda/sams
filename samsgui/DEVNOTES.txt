@@ -5,6 +5,13 @@ $Id$
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message
 	  telling about the number of signatures imported.
+	  
+	- Compute.java: Previously all selected signatures were
+	  displayed right after an in-place operation were
+	  performed regardless of the number of signatures
+	  actually displayed in the plot panel. Now this is only
+	  done if the number of selected signatures is rather
+	  small.
 
  03/17/05 - version 3.2
  	- Exporter now allows the user to specify the data type
