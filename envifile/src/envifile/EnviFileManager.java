@@ -42,12 +42,22 @@ public final class EnviFileManager {
 				"(" +line+ "," +pixel+ ") invalid"
 			);
 		}
-		
-		if ( header.data_type != 4 )
-			throw new InvalidEnviFormatException("Expected data type = 4");
-		if ( ! header.interleave.equals("bip") )
-			throw new InvalidEnviFormatException("Sorry: Only interleave 'bip' is supported now");
 
+		EnviDataType type = EnviDataType.get(header.data_type);		
+		if ( type == null ) {
+			throw new InvalidEnviFormatException(
+				"SAMS does not support ENVI data type " +header.data_type+ " yet."
+			);
+		}
+		
+		if ( ! header.interleave.equals("bip") ) {
+			throw new InvalidEnviFormatException(
+				"SAMS only supports 'bip' interleave"
+			);
+		}
+
+		type.setByteOrder(header.byte_order);
+		
 		// translate point according to (x_start, y_start):
 		line -= header.y_start;
 		pixel -= header.x_start;
@@ -57,14 +67,13 @@ public final class EnviFileManager {
 
 		try {
 			// skip to point (line,pixel):
-			int skip = (line * header.samples + pixel) * header.bands * 4;
+			int skip = (line * header.samples + pixel) * header.bands * type.size();
 			dis.skipBytes(skip);
 			
 			// read the signature;
 			Signature sig = new Signature();
-			for ( int k = 0; k < header.bands; k++ )
-			{
-				float data = dis.readFloat();
+			for ( int k = 0; k < header.bands; k++ ) {
+				double data = type.read(dis);
 				sig.addDatapoint(header.wavelengths[k], data);
 			}
 			

@@ -25,6 +25,9 @@ $Id$
 	
 	- New build.properties; adjustments in build.xml; and
 	  samsgui.manifest removed.
+	  
+	- envifile module now supports reading from various envi
+	  data types (thou only byte order 1 is supported now)
 	
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message

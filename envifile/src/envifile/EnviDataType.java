@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.IOException;
 import java.io.DataOutputStream;
+import java.io.DataInputStream;
 
 /**
  * Some of the Envi data types.
@@ -47,6 +48,8 @@ public abstract class EnviDataType {
 		return null;
 	}
 	
+	protected int byte_order = 1;
+	
 	/** returns the numeric Envi code of this type */
 	public abstract int code();
 	
@@ -66,8 +69,26 @@ public abstract class EnviDataType {
 	public abstract void write(double val, DataOutputStream dos)
 	throws IOException;
 	
+	/** reads a value from an input stream.
+	  * @param dis The input stream.
+	  */
+	public abstract double read(DataInputStream dis)
+	throws IOException;
+	
 	/** returns a mnemonic name of this type */
 	public abstract String toString();
+	
+	/** sets the byte order 
+	  * @throws IOException if byte_order == 0, which is not
+	  *          currently supported.
+	  */
+	public void setByteOrder(int byte_order) 
+	throws IOException {
+		if ( byte_order == 0 )
+			throw new IOException("Sorry, currently byte order = 0 is not supported");
+		
+		this.byte_order = byte_order;
+	}
 	
 	
 	private static class BYTE extends EnviDataType {
@@ -80,6 +101,11 @@ public abstract class EnviDataType {
 			int v = (byte) Math.round(val);
 			dos.writeByte(v);
 		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readUnsignedByte();
+		}
 	}
 	private static class INT16 extends EnviDataType {
 		public String toString() { return "Int16"; }
@@ -90,6 +116,11 @@ public abstract class EnviDataType {
 		throws IOException {
 			int v = (short) Math.round(val);
 			dos.writeShort(v);
+		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readShort();
 		}
 	}
 	private static class INT32 extends EnviDataType {
@@ -102,6 +133,11 @@ public abstract class EnviDataType {
 			int v = (int) Math.round(val);
 			dos.writeInt(v);
 		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readInt();
+		}
 	}
 	private static class FLOAT32 extends EnviDataType {
 		public String toString() { return "Float32"; }
@@ -113,6 +149,11 @@ public abstract class EnviDataType {
 			float v = (float) val;
 			dos.writeFloat(v);
 		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readFloat();
+		}
 	}
 	private static class FLOAT64 extends EnviDataType {
 		public String toString() { return "Float64"; }
@@ -122,6 +163,11 @@ public abstract class EnviDataType {
 		public void write(double val, DataOutputStream dos)
 		throws IOException {
 			dos.writeDouble(val);
+		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readDouble();
 		}
 	}
 	private static class UINT16 extends EnviDataType {
@@ -134,6 +180,11 @@ public abstract class EnviDataType {
 			int v = (short) Math.round(val);
 			dos.writeShort(v);
 		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readUnsignedShort();
+		}
 	}
 	private static class UINT32 extends EnviDataType {
 		public String toString() { return "UInt32"; }
@@ -144,6 +195,11 @@ public abstract class EnviDataType {
 		throws IOException {
 			int v = (int) Math.round(val);
 			dos.writeInt(v);
+		}
+		
+		public double read(DataInputStream dis)
+		throws IOException {
+			return (double) dis.readLong();
 		}
 	}
 }
