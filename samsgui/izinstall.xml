@@ -40,7 +40,9 @@
         <pack name="System" required="yes">
             <description>The complete system</description>
             <file src="." targetdir="$INSTALL_PATH"/>
+			<parsable targetfile="$INSTALL_PATH/bin/sams"/>
 			<parsable targetfile="$INSTALL_PATH/bin/sams.bat"/>
+			<executable targetfile="$INSTALL_PATH/bin/sams" stage="never"/>
         </pack>
     </packs>
 </installation>
