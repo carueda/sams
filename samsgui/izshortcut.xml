@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 
+<!--
+	Installer shortcut specification 
+	Carlos A. Rueda
+	$Id$
+-->
 <shortcuts>
   <programGroup defaultName="SAMS" location="applications"/>
-  
   <shortcut
      name="SAMS"
      programGroup="yes"
-     desktop="yes"
+     desktop="no"
      applications="no"
      startMenu="no"
      startup="no"
      target="$INSTALL_PATH\bin\sams.bat"
      commandLine=""
-     description="Spectral Analysis and Manegement System"
+     description="Launch the Spectral Analysis and Management System"
      initialState="noShow">
      <createForPack name="System"/>
    </shortcut>
 
    <shortcut
-     name="Uninstaller"
+     name="Uninstall SAMS"
      programGroup="yes"
      desktop="no"
      applications="no"
