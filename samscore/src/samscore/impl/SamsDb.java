@@ -589,6 +589,10 @@ class SamsDb implements ISamsDb {
 	
 	/** An evaluator of expression */ 
 	class Evaluator {
+		// fake values should be "big" enough to minimize the chance for
+		// RuntimeExceptions during semantic checking (eg StringIndexOutOfBoundsException)
+		private final String fake_big_value = new String(new char[1024]).intern();
+		
 		private bsh.Interpreter bsh;
 		private String src;
 		private Class returnType;
@@ -660,9 +664,6 @@ class SamsDb implements ISamsDb {
 			// check semantics:
 			try {
 				bindFakeValues();
-				Object obj = bsh.eval(src);
-				if ( obj != null ) 
-					returnType = obj.getClass();
 			}
 			catch(bsh.EvalError ex) {
 				throw new Exception("bind error: " +ex.getMessage());
@@ -681,12 +682,12 @@ class SamsDb implements ISamsDb {
 		
 		Evaluator bindFakeValues() throws Exception {
 			try {
-				bsh.set("name", "name");
-				bsh.set("location", "location");
+				bsh.set("name", fake_big_value);
+				bsh.set("location", fake_big_value);
 				for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
 					IAttributeDef def = (IAttributeDef) iter.next();
 					String name = def.getName();
-					bsh.set(name+ "_", "val_" +name);
+					bsh.set(name+ "_", fake_big_value);
 				}
 				return this;
 			}

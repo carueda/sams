@@ -2,6 +2,9 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 08/21/03 - version 3.0
+ 	- Evaluator: fake_big_value defined to prevent runtime errors during
+	  semantic checking.
  08/20/03 - version 3.0
  	- more beanshell (Evaluator) processing
 	
