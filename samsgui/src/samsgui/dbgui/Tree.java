@@ -99,7 +99,7 @@ public class Tree extends JPanel {
 		treeModel.reload();
 	}		
 		
-	MyNode findNode(String path, boolean isSpectrum) {
+	private MyNode findNode(String path, boolean isSpectrum) {
 		if ( path.length() == 0 )
 			return isSpectrum ? null : rootNode;
 		
@@ -118,7 +118,7 @@ public class Tree extends JPanel {
 		return null;
 	}
 	
-	MyNode findChildNode(MyNode parent, String name, boolean isSpectrum) {
+	private MyNode findChildNode(MyNode parent, String name, boolean isSpectrum) {
 		for ( int i = 0; i < parent.getChildCount(); i++ ) {
 			MyNode n = (MyNode) parent.getChildAt(i);
 			if ( name.equals(n.getName()) ) {

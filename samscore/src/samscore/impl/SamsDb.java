@@ -16,9 +16,9 @@ import java.util.*;
  * Notes:
  * <ul>
  *	<li> Never use a path ending with '/'
- *	<li> Previous returned ISfsys (or INode) objects are not automatically updated
- *		after a modification (say, addSpectrum); you have to retrieve
- *		a new ISfsys object (e.g getGroupingBy).	 
+ *	<li> Previous returned ISfsys.INode objects are not automatically updated
+ *		after a modification (say, addSpectrum); you have to retrieve them
+ *		again (e.g getGroupingBy) NOTE: TO BE REVISED	 
  * </ul>
  * @author Carlos A. Rueda
  * @version $Id$ 
@@ -135,46 +135,44 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public INode getGroupingUnderLocation(String subpath) throws Exception {
-		INode inode = getGroupingLocation().getNode(subpath);
-		if ( inode.isDirectory() )
-			return inode;
+		INode node = getGroupingLocation().findNode(subpath);
+		if ( node.isDirectory() )
+			return node;
 		else
 			return null;
 	}
 	
-	public ISfsys getGroupingLocation() throws Exception {
-		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true);
+	public INode getGroupingLocation() throws Exception {
+		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true).getRoot();
 	}
 	
-	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
-		ISfsys fs = null;
+	public INode getGroupingBy(String[] attrNames) throws Exception {
+		INode dir = null;
 		if ( attrNames.length == 1 && attrNames[0].equals("location") )
-			fs = getGroupingLocation();
+			dir = getGroupingLocation();
 		else
-			fs = _makeGroupingBy(attrNames);
+			dir = _makeGroupingBy(attrNames);
 		
-		return fs;
+		return dir;
 	}
 
-	private ISfsys _makeGroupingBy(String[] attrNames) throws Exception {
+	private INode _makeGroupingBy(String[] attrNames) throws Exception {
 		ISfsys fs = Sfsys.createMem();
-
 		for ( Iterator it = getAllPaths(); it.hasNext(); ) {
 			String path = (String) it.next();
 			ISpectrum s = getSpectrum(path);
-			 
 			ISfsys.INode base = fs.getRoot();
 			for ( int i = 0; i < attrNames.length; i++ ) {
 				String attrName = attrNames[i];
 				String attrVal = s.getString(attrName);
-				ISfsys.INode val_dir = base.getNode(attrVal);
+				ISfsys.INode val_dir = base.getChild(attrVal);
 				if ( val_dir == null )
 					val_dir = base.createDirectory(attrVal);
 				base = val_dir;
 			}
 			base.createFile(path);
 		}
-		return fs;
+		return fs.getRoot();
 	}
 	
 	public IMetadataDef getMetadata() {

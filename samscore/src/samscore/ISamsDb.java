@@ -63,10 +63,10 @@ public interface ISamsDb {
 	public INode getGroupingUnderLocation(String path) throws Exception;
 
 	/** gets a grouping structure according to attribute values. */
-	public ISfsys getGroupingBy(String[] attrNames) throws Exception;
+	public INode getGroupingBy(String[] attrNames) throws Exception;
 	
 	/** gets the grouping by getLocation()". */
-	public ISfsys getGroupingLocation() throws Exception;
+	public INode getGroupingLocation() throws Exception;
 	
 	/** Represents an element in this database. */
 	public interface ISpectrum {

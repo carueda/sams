@@ -30,10 +30,6 @@ public class MemSfsys implements ISfsys {
 		return root;
 	}
 
-	public INode getNode(String path) {
-		return root.findNode(path);
-	}
-	
 	public static ISfsys createSfsys() {
 		return new MemSfsys();
 	}
@@ -67,6 +63,10 @@ public class MemSfsys implements ISfsys {
 		
 		Node(String name){
 			this.name = name;
+		}
+		
+		public ISfsys getSfsys() {
+			return MemSfsys.this;
 		}
 		
 		public boolean isFile() {
@@ -114,7 +114,7 @@ public class MemSfsys implements ISfsys {
 		public INode createFile(String filename) {
 			throw new UnsupportedOperationException();
 		}
-		public INode getNode(String name) {
+		public INode getChild(String name) {
 			throw new UnsupportedOperationException();
 		}
 		public INode findNode(String path) {
@@ -183,7 +183,7 @@ public class MemSfsys implements ISfsys {
 			return super.getPath()+ "/";
 		}
 		
-		public INode getNode(String name) {
+		public INode getChild(String name) {
 			for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
 				INode node = (INode) iter.next();
 				if ( name.equals(node.getName()) )
@@ -204,7 +204,7 @@ public class MemSfsys implements ISfsys {
 			INode dir = from;
 			INode node = dir;
 			for ( int i = 0; i < apath.length; i++ ) {
-				node = dir.getNode(apath[i]);
+				node = dir.getChild(apath[i]);
 				if ( node == null )
 					return null;
 				

@@ -836,7 +836,7 @@ public class DbGui extends JPanel {
 				String newname = f_newname.getText().trim();
 				if ( newname.length() == 0 )
 					msg = "Specify the new name";
-				INode node = dir.getNode(newname);
+				INode node = dir.getChild(newname);
 				if ( node != null && node.isFile() )
 					msg = "Name already exists";
 				if ( msg == null ) {
@@ -903,7 +903,7 @@ public class DbGui extends JPanel {
 				String newname = f_newname.getText().trim();
 				if ( newname.length() == 0 )
 					msg = "Specify a name";
-				INode node = dir.getNode(newname);
+				INode node = dir.getChild(newname);
 				if ( node != null && node.isDirectory() )
 					msg = "A group with this name already exists";
 				if ( msg == null ) {

@@ -9,6 +9,7 @@ import sigoper.OpUtil;
 import fileutils.Files;
 import sfsys.Shell;
 import sfsys.ISfsys;
+import sfsys.ISfsys.INode;
 import java.util.*;
 import java.io.*;
 
@@ -215,11 +216,11 @@ public class Interpreter {
 	public void grouping(String[] args) throws Exception {
 		String[] attrNames = new String[args.length - 1];
 		System.arraycopy(args, 1, attrNames, 0, attrNames.length);
-		ISfsys fs = dbman.getDatabase().getGroupingBy(attrNames);
+		INode dir = dbman.getDatabase().getGroupingBy(attrNames);
 		if ( current_grouping_shell == null )
-			current_grouping_shell = new Shell(fs, br, pw);
+			current_grouping_shell = new Shell(dir, br, pw);
 		else
-			current_grouping_shell.setSfsys(fs);
+			current_grouping_shell.setDirectory(dir);
 	}
 	
 	public void grouping_command(String[] args) throws Exception {

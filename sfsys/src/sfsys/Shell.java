@@ -11,14 +11,13 @@ import java.io.*;
  * @version $Id$
  */
 public class Shell {
-	ISfsys fs;
 	INode curr;
 	BufferedReader br;
 	PrintWriter pw;
 	Run run;
 	
-	public Shell(ISfsys fs, Reader r, Writer w) {
-		setSfsys(fs);
+	public Shell(INode curr, Reader r, Writer w) {
+		setDirectory(curr);
 		if ( r instanceof BufferedReader )
 			br = (BufferedReader) r;
 		else
@@ -31,9 +30,8 @@ public class Shell {
 		run = null;
 	}
 
-	public void setSfsys(ISfsys fs) {
-		this.fs = fs;
-		curr = fs.getRoot();
+	public void setDirectory(INode curr) {
+		this.curr = curr;
 	}
 	
 	public Runnable getRunnable() {
@@ -44,7 +42,7 @@ public class Shell {
 	}
 	
 	public void info()  { 
-		pw.println(fs.getInfo()); 
+		pw.println(curr.getSfsys().getInfo()); 
 	}
 	
 	public void pwd() { 
@@ -78,7 +76,7 @@ public class Shell {
 	
 	public void save(String filename) throws java.io.IOException {
 		try {
-			fs.save(filename);
+			curr.getSfsys().save(filename);
 			pw.println("saved");
 		}
 		catch(UnsupportedOperationException ex) {

@@ -13,9 +13,6 @@ public interface ISfsys {
 	/** Gets the root directory. */
 	public INode getRoot();
 	
-	/** Gets a node. */
-	public INode getNode(String path);
-	
 	/** Optional operation */
     public void save(String filename) throws java.io.IOException;
 
@@ -28,14 +25,20 @@ public interface ISfsys {
 		public boolean isDirectory();
 		public boolean isFile();
 		public boolean isLink();
+		public ISfsys getSfsys();
 		
 		// when isDirectory:
 		public INode createDirectory(String name);
 		public INode createFile(String name);
-		public INode getNode(String name);
+		
+		public java.util.List getChildren();
+		
+		/** gets a child */
+		public INode getChild(String name);
+		
 		/** Finds a node given its path. */
 		public INode findNode(String path);
-		public java.util.List getChildren();
+		
 		/** Optional operation */
 		public INode createLink(String name, String path);
 

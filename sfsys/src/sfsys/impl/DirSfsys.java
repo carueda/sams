@@ -37,10 +37,6 @@ public class DirSfsys implements ISfsys {
 		return root;
 	}
 
-	public INode getNode(String path) {
-		return root.findNode(path);
-	}
-	
     public static ISfsys createSfsys(String dirname) throws Exception {
 		return new DirSfsys(dirname, null, false);
     }
@@ -85,6 +81,10 @@ public class DirSfsys implements ISfsys {
 				if ( path == null || !path.startsWith("/") )
 					throw new IllegalArgumentException();
 				this.path = path;
+			}
+			
+			public ISfsys getSfsys() {
+				return DirSfsys.this;
 			}
 			
 			public Object accept(IVisitor v, Object obj) {
@@ -133,7 +133,7 @@ public class DirSfsys implements ISfsys {
 			public INode createFile(String filename) {
 				throw new UnsupportedOperationException();
 			}
-			public INode getNode(String name) {
+			public INode getChild(String name) {
 				throw new UnsupportedOperationException();
 			}
 			public INode findNode(String path) {
@@ -231,7 +231,7 @@ public class DirSfsys implements ISfsys {
 			}
 			
 			
-			public INode getNode(String name) {
+			public INode getChild(String name) {
 				for ( Iterator iter = getChildren().iterator(); iter.hasNext(); ) {
 					INode node = (INode) iter.next();
 					if ( name.equals(node.getName()) )

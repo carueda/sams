@@ -29,7 +29,7 @@ public class Main
 			fs = args.length == 0 ? mount(null) : mount(args[0]);
 		}
 		
-		new Shell(fs, new InputStreamReader(System.in), new PrintWriter(System.out)) {
+		new Shell(fs.getRoot(), new InputStreamReader(System.in), new PrintWriter(System.out)) {
 			public boolean process(String[] toks) throws Exception {
 				if ( super.process(toks) )
 					return true;
@@ -39,12 +39,12 @@ public class Main
 						pw.println("mount: expected argument");
 						return true;
 					}
-					setSfsys(mount(toks[1]));
+					setDirectory(mount(toks[1]).getRoot());
 					info();
 					return true;
 				}
 				else if ( toks[0].equals("newfs") ) {
-					setSfsys(mount(null));
+					setDirectory(mount(null).getRoot());
 					info();
 					return true;
 				}
