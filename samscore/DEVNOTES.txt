@@ -2,6 +2,10 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 08/14/03
+ 	- SamsDb._makeGroupingBy(): string values are put in single quotes.
+	  (note: currently string is the only data type supported.)
+	
  08/10/03
  	- Bug fixed: Sometimes allowed for duplicate definitions.
 	

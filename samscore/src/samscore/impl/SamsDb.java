@@ -180,7 +180,12 @@ class SamsDb implements ISamsDb {
 			ISfsys.INode base = fs.getRoot();
 			for ( int i = 0; i < attrNames.length; i++ ) {
 				String attrName = attrNames[i];
-				String attrVal = s.getString(attrName);
+				String attrVal;
+				// assign attrVal depending on type:
+				if ( true )  // true: only string is supported now
+					attrVal = "'" +s.getString(attrName)+ "'";
+				//else other types... PENDING FEATURE
+				
 				ISfsys.INode val_dir = base.getChild(attrVal);
 				if ( val_dir == null )
 					val_dir = base.createDirectory(attrVal);
