@@ -34,9 +34,7 @@ public final class Actions {
 
 	/**
 	 * Gets the list of actions on selected signatures.
-	 *
 	 * @param selectedSpectra    The list of selected signatures.
-	 *
 	 * @return A list (Action) containing the actions.
 	 */
 	public static List getSelectedSpectraActions(List selectedSpectra) {
@@ -64,9 +62,7 @@ public final class Actions {
 
 	/**
 	 * Gets the list of actions on groups.
-	 *
 	 * @param selectedSpectra    The list of selected signatures.
-	 *
 	 * @return A list (Action) containing the actions.
 	 */
 	public static List getGroupActions(List selectedGroups) {
@@ -375,6 +371,5 @@ public final class Actions {
 			Controller.export(format);
 		}
 	}
-	
 }
 
