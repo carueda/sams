@@ -15,11 +15,9 @@
         <url>http://www.cstars.ucdavis.edu/software/sams</url>
     </info>
     
-    <guiprefs width="640" height="480" resizable="no"/>
+    <guiprefs width="640" height="480" resizable="yes"/>
     
-    <locale>
-        <langpack iso3="eng"/>
-    </locale>
+    <locale> <langpack iso3="eng"/> </locale>
     
     <resources>
 		<res id="Installer.image" src="img/splash.png" />
@@ -45,5 +43,4 @@
 			<parsable targetfile="$INSTALL_PATH/bin/sams.bat"/>
         </pack>
     </packs>
-    
 </installation>
