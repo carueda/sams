@@ -161,24 +161,6 @@ public class Files {
 		}
 	}
 
-	static public String selectSaveFile(JFrame frame, String title, int mode, FileFilter ff, String dir)
-	{
-		JFileChooser chooser = new JFileChooser(dir);
-		chooser.setDialogTitle(title);
-		chooser.setFileSelectionMode(mode);
-		chooser.setFileFilter(ff);
-
-		int retval = chooser.showSaveDialog(frame);
-		if ( retval == JFileChooser.APPROVE_OPTION ) {
-			File theFile = chooser.getSelectedFile();
-			if ( theFile != null ) {
-				String sel = chooser.getSelectedFile().getAbsolutePath();
-				return sel;
-			}
-		}
-		return null;
-	}
-
 	// a test program
 	public static void main(String[] args) throws Exception {
 		System.out.println("listFiles test");
