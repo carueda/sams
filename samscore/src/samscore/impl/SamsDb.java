@@ -631,9 +631,7 @@ class SamsDb implements ISamsDb {
 						"A condition must have one of these forms:\n"+
 						"  1) <attribute-name> = <attribute-value>\n"+
 						"  2) <attribute-name> = \n"+
-						"  3) (empty text)\n"+
-						" \n"+
-						"(This syntax may change in a future version.)\n"
+						"  3) (empty text)\n"
 					);
 				}
 	
