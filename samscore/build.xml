@@ -9,14 +9,14 @@
 
 	<!-- Required libraries -->
 	<property name="fileutils" value="${generated}/DIST/fileutils.jar"/>
-	<property name="sig"       value="${generated}/DIST/sig.jar"/>
+	<property name="sig"	   value="${generated}/DIST/sig.jar"/>
 	<property name="sigoper"   value="${generated}/DIST/sigoper.jar"/>
 	<property name="envifile"  value="${generated}/DIST/envifile.jar"/>
 	<property name="specfile"  value="${generated}/DIST/specfile.jar"/>
-	<property name="sfsys"     value="${generated}/DIST/sfsys.jar"/>
+	<property name="sfsys"	   value="${generated}/DIST/sfsys.jar"/>
 
 	<!-- External required libraries -->
-	<property name="bsh"       value="../lib/bsh-1.3b2.jar"/>
+	<property name="bsh"	   value="../lib/bsh-1.3b2.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="${generated}/BUILD"/>
@@ -27,18 +27,18 @@
 	<property name="src.dir" value="src/samscore"/>
 	<property name="dest.dir" value="${build}/classes"/>
 
-    <target name="init">
+	<target name="init">
 		<tstamp/>
 		<mkdir dir="${build}/classes"/>
-    </target>
+	</target>
 
-    <target name="samscore.jar" depends="compile"
-    description="Makes executable samscore.jar">
-        <jar jarfile="${dist}/samscore.jar" manifest="samscore.manifest"
-         	basedir="${build}/classes"
+	<target name="samscore.jar" depends="compile"
+	description="Makes executable samscore.jar">
+		<jar jarfile="${dist}/samscore.jar" manifest="samscore.manifest"
+			basedir="${build}/classes"
 			includes="samscore/**"
 		/>
-    </target>
+	</target>
 
 	<target name="compile" depends="init">
 		<javac srcdir="${src.dir}" destdir="${dest.dir}"
@@ -48,12 +48,12 @@
 		/>
 	</target>
 
-    <target name="clean">
+	<target name="clean">
 		<delete dir="${build}/classes/samsgui"/>
-    </target>
+	</target>
 
-    <target name="clean-dist" depends="clean">
+	<target name="clean-dist" depends="clean">
 		<delete file="${dist}/samscore.jar"/>
-    </target>
+	</target>
 
 </project>
