@@ -23,6 +23,12 @@ import java.util.*;
  * @version $Id$ 
  */
 class SamsDb implements ISamsDb {
+	/** Every signature file is given this suffix. */
+	static final String SIG_SUFFIX = ".sig";
+	
+	/** Every metadata spectrum file is given this suffix. */
+	static final String MD_SUFFIX = ".md";
+	
 	static ISamsDb open(String dirname) throws Exception {
 		File baseDir = new File(dirname).getCanonicalFile();
 		if ( !baseDir.isDirectory() )
@@ -133,7 +139,7 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public ISfsys getGroupingLocation() throws Exception {
-		return Sfsys.createDir(sigsDir.getPath(), ".sig");
+		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX);
 	}
 	
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
@@ -174,7 +180,7 @@ class SamsDb implements ISamsDb {
 	public Iterator getAllPaths() {
 		List paths = new ArrayList();
 		try {
-			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), ".sig");
+			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX);
 			_populatePaths(paths, fs.getRoot());
 		}
 		catch(Exception ex) {
@@ -187,11 +193,8 @@ class SamsDb implements ISamsDb {
 		List children = dir.getChildren();
 		for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
 			INode inode = (INode) iter.next();
-			if ( inode instanceof IFile ) {
-				String path = inode.getPath();
-				if ( path.endsWith(".sig") )
-					paths.add(path.substring(0, path.length() - ".sig".length()));
-			}
+			if ( inode instanceof IFile )
+				paths.add(inode.getPath());
 			else if ( inode instanceof IDirectory )
 				_populatePaths(paths, (IDirectory) inode);
 		}
@@ -236,7 +239,7 @@ class SamsDb implements ISamsDb {
 	
 	public String addSpectrum(String path, Signature sig) throws Exception {
 		setSignature(path, sig);
-		return path;
+		return normalizePath(path);
 	}
 	
 	public void deleteSpectrum(String path) throws Exception {
@@ -246,7 +249,7 @@ class SamsDb implements ISamsDb {
 		if ( file.exists() )
 			file.delete();
 		// remove metadata:
-		file = new File(sigsDir, normalizePath(path)+ "md");
+		file = new File(sigsDir, normalizePath(path)+ MD_SUFFIX);
 		if ( file.exists() )
 			file.delete();
 	}
@@ -317,6 +320,51 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
+	private void _storeSpectrumMetadata(String path, Properties attrValues)
+	throws Exception {
+		File file = new File(sigsDir, normalizePath(path) + MD_SUFFIX);
+		assert file.getParentFile().exists() ;
+		if ( attrValues.size() == 0 ) {
+			// no values to store.
+			if ( file.exists() )
+				file.delete();
+			return;
+		}
+		OutputStream stream = null;
+		try {
+			stream = new BufferedOutputStream(new FileOutputStream(file));
+			attrValues.store(stream, "#Signature metadata");
+		}
+		catch ( Exception ex ) {
+			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
+		}
+		finally {
+			if ( stream != null )
+				try{ stream.close(); }catch ( Exception ex ){}
+		}
+	}
+	
+	private boolean _loadSpectrumMetadata(String path, Properties attrValues)
+	throws Exception {
+		File file = new File(sigsDir, normalizePath(path) + MD_SUFFIX);
+		assert file.getParentFile().exists() ;
+		if ( !file.exists() )
+			return false;  // OK
+		InputStream stream = null;
+		try {
+			stream = new BufferedInputStream(new FileInputStream(file));
+			attrValues.load(stream);
+			return true;
+		}
+		catch ( Exception ex ) {
+			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
+		}
+		finally {
+			if ( stream != null )
+				try{ stream.close(); }catch ( Exception ex ){}
+		}
+	}
+	
 	public String renameSpectrum(String oldPath, String newPath) throws Exception {
 		oldPath = normalizePath(oldPath);
 		newPath = normalizePath(newPath);
@@ -324,7 +372,7 @@ class SamsDb implements ISamsDb {
 			return null;   // no renaming neccesary.
 		
 		// rename files:
-		String[] exts = { ".sig", ".md", };
+		String[] exts = { "", MD_SUFFIX };
 		for ( int i = 0; i < exts.length; i++ ) {
 			String ext = exts[i];
 			File oldfile = new File(sigsDir, oldPath + ext);
@@ -342,38 +390,15 @@ class SamsDb implements ISamsDb {
 		String name;
 		
 		/** Attribute name->value mapping. */
-		Map attrValues;
+		Properties attrValues;
 		
 		/** creates an element */
-		Spectrum(String path) {
+		Spectrum(String path) throws Exception {
 			int index = path.lastIndexOf("/") + 1;
 			location = path.substring(0, index);
 			name = path.substring(index);
-			
-			attrValues = new HashMap();
-			File file = new File(normalizePath(path)+ "md");
-			if ( file.exists() ) {
-				// read attributes:
-				// PENDING			
-			}
-		}
-		
-		/** convenience no-arg constructor for clone() */
-		Spectrum() { }
-		
-		/** creates a copy but with location/name updated according to new_path. */
-		Spectrum clone(String new_path) {
-			Spectrum clone = new Spectrum();
-			clone.attrValues = new HashMap();
-			for ( Iterator iter = attrValues.keySet().iterator(); iter.hasNext(); ) {
-				String attrName = (String) iter.next();
-				String attrValue = (String) attrValues.get(attrName);
-				clone.attrValues.put(attrName, attrValue);
-			}
-			int index = new_path.lastIndexOf("/") + 1;
-			clone.location = new_path.substring(0, index);
-			clone.name = new_path.substring(index);
-			return clone;
+			attrValues = new Properties();
+			_loadSpectrumMetadata(path, attrValues);
 		}
 		
 		public String getLocation() {
@@ -393,7 +418,7 @@ class SamsDb implements ISamsDb {
 			if ( attrName.equals("name") )
 				return name;
 			
-			String val = (String) attrValues.get(attrName);
+			String val = attrValues.getProperty(attrName);
 			if ( val == null ) {
 				IMetadataDef.IAttributeDef attr = mddef.get(attrName);
 				if ( attr != null )
@@ -407,7 +432,11 @@ class SamsDb implements ISamsDb {
 			if ( attrName.equals("location") || attrName.equals("name") )
 				throw new IllegalArgumentException(attrName);
 			
-			attrValues.put(attrName, attrValue);
+			attrValues.setProperty(attrName, attrValue);
+		}
+		
+		public void save() throws Exception {
+			_storeSpectrumMetadata(getPath(), attrValues);
 		}
 		
 		void remove(String attrName) {
@@ -449,12 +478,22 @@ class SamsDb implements ISamsDb {
 			attrDefList.remove(attribute);
 			
 			// update all spectrum elements:
-			/* PENDING
+			Properties attrValues = new Properties();
 			for ( Iterator it = getAllPaths(); it.hasNext(); ) {
 				String path = (String) it.next();
-				// PENDING ...
+				attrValues.clear();
+				try {
+					if ( _loadSpectrumMetadata(path, attrValues) ) {
+						if ( attrValues.getProperty(attrName) != null ) {
+							attrValues.remove(attrName);
+							_storeSpectrumMetadata(path, attrValues);
+						}
+					}
+				}
+				catch(Exception ex) {
+					System.out.println("Should not happen!  Continuing anyway...");
+				}
 			}
-			*/
 		}
 	}
 		
@@ -494,11 +533,11 @@ class SamsDb implements ISamsDb {
 		assert !path.endsWith("/");
 		path = path.replaceAll("//+", "/");
 		path = path.replaceAll("\\.+$", "");
-		if ( !path.toLowerCase().endsWith(".sig") )
-			path += ".sig";
+		if ( !path.toLowerCase().endsWith(SIG_SUFFIX) )
+			path += SIG_SUFFIX;
 		if ( !path.startsWith("/") )
 			path = "/" +path;
-		path = path.substring(0, path.length() - ".sig".length()) + ".sig";
+		path = path.substring(0, path.length() - SIG_SUFFIX.length()) + SIG_SUFFIX;
 		return path;
 	}
 	private static void test_normalizePath() {
@@ -627,9 +666,7 @@ class SamsDb implements ISamsDb {
 				String new_path = normalizePath(target_location+ "/" +name);
 				
 				setSignature(new_path, e.signature);
-				
-				// PENDING  setSpectrum does not exist yet
-				//setSpectrum(new_path, e.spectrum.clone(new_path));
+				_storeSpectrumMetadata(new_path, e.spectrum.attrValues);
 				
 				processed++;
 				if ( obs.elementFinished(i+1, new_path) )

@@ -5,8 +5,6 @@ $Id$
  Pending features:
 	- where to allow for creation of subgroups .... See Actions
 	- delete group
-	- rename as a command from tree display
-	- rename from table: pending to improve (no saveDatabase, but cut/paste style...)
 	- import from envi
 	- import from ascii
 	- new grouping by attr value
@@ -18,12 +16,12 @@ $Id$
 		
  07/29/03
  	- New scheme for SamsDb implementation:
-		- name.sig:   stores the signature
-		- name.sigmd: stores the metadata (PENDING to create/update)
+		- name.sig:    stores the signature
+		- name.sig.md: stores the metadata (PENDING to create/update)
 		- Spectrum not longer stored (serializable)
 		- "location", "name" are not longer explicit stored attributes
-		- Pending to show implicit "location", "name" attributes in Table...
-	  
+	- Implicit "location", "name" attributes shown in Table.
+	- Rename as a command from tree display.
 
  07/28/03
  	- rename already working from table.

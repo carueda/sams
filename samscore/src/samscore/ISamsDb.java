@@ -90,6 +90,9 @@ public interface ISamsDb {
 		 * @throw IllegalArgumentException if attrName is "location" or "name".
 		 */
 		public void setString(String attrName, String attrValue);
+		
+		/** Saves this spectrum. */
+		public void save() throws Exception;
 	}
 
 	/** Metadata definition */

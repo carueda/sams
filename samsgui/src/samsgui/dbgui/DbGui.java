@@ -63,12 +63,13 @@ public class DbGui extends JPanel {
 
 		tree = new Tree(this);
 		table = new Table() {
-			protected void doRenaming(ISpectrum s, String new_name_value) {
+			protected ISpectrum doRenaming(ISpectrum s, String new_name_value) {
 				try {
-					_doRenaming(s, new_name_value);
+					return _doRenaming(s, new_name_value);
 				}
 				catch(Exception ex) {
 					SamsGui.message("Error: " +ex.getMessage());
+					return null;
 				}
 			}
 		};
@@ -103,16 +104,17 @@ public class DbGui extends JPanel {
 		setDatabase(db);
 	}
 	
-	private boolean _doRenaming(ISpectrum s, String new_name_value) throws Exception {
+	private ISpectrum _doRenaming(ISpectrum s, String new_name_value) throws Exception {
 		assert new_name_value.length() > 0;
 		String oldpath = s.getPath();
 		String newpath = db.renameSpectrum(oldpath, s.getLocation() + new_name_value); 
 		if ( newpath == null )
-			return false; // OK, there was no necessary change
+			return null; // OK, there was no necessary change
+		s = db.getSpectrum(newpath);
 		tree.removeNode(oldpath);
 		tree.insertNode(newpath, true);
 		clearPlot();
-		return true;
+		return s;
 	}
 	
 	/** notifies */
@@ -859,7 +861,7 @@ public class DbGui extends JPanel {
 		if ( form.accepted() ) {
 			String newname = f_newname.getText().trim();
 			try {
-				if ( _doRenaming(s, newname) )
+				if ( _doRenaming(s, newname) != null )
 					table.updateData();
 			}
 			catch(Exception ex) {

@@ -111,6 +111,7 @@ public class Interpreter {
 			return;
 		}
 		s.setString(attrName, attrValue);
+		s.save();
 	}
 	
 	public void getval(String[] args) throws Exception {

@@ -39,7 +39,7 @@ public abstract class Table extends JPanel {
 	}
 
 	/** called to rename a row. */
-	protected abstract void doRenaming(ISpectrum s, String new_name_value);
+	protected abstract ISpectrum doRenaming(ISpectrum s, String new_name_value);
 	
 	/*  ********** NOT USED -- COMMENTED OUT
 	 * Programatically lets the user change the name of a spectrum. 
@@ -162,11 +162,13 @@ public abstract class Table extends JPanel {
 		}
 	
 		public int getColumnCount() {
-			return attributes.length;
+			return 2 + attributes.length;
 		}
 	
-		public String getColumnName(int columnIndex) {
-			return attributes[columnIndex].getName();
+		public String getColumnName(int col) {
+			return col == 0 ? "Location" : 
+			       col == 1 ? "Name"     : attributes[col - 2].getName()
+			;
 		}
 	
 		public int getRowCount() {
@@ -174,20 +176,47 @@ public abstract class Table extends JPanel {
 		}
 	
 		public Object getValueAt(int row, int col) {
-			String colname = attributes[col].getName();
-			String val = ((ISpectrum) spectrums.get(row)).getString(colname);
-			return val;
+			ISpectrum s = (ISpectrum) spectrums.get(row);
+			if ( col == 0 )
+				return s.getLocation();
+			else if ( col == 1 )
+				return s.getName();
+			else 
+				return s.getString(attributes[col - 2].getName());
 		}
 	
 		public boolean isCellEditable(int row, int col) {
-			return attributes[col].isEditable();
+			if ( col == 0 )
+				return false;
+			return col == 1 || attributes[col - 2].isEditable();
 		}
 	
 		public void setValueAt(Object val, int row, int col) {
 			String newvalue = ((String) val).trim();
 			ISpectrum s = (ISpectrum) spectrums.get(row);
-			String colname = attributes[col].getName();
-			s.setString(colname, newvalue);
+			assert col > 0 ;
+			if ( col == 1 ) {
+				String oldvalue = s.getName();
+				if ( !oldvalue.equals(newvalue) ) {
+					s = doRenaming(s, newvalue);
+					if ( s != null )
+						spectrums.set(row, s);
+				}
+			}
+			else { 
+				String colname = attributes[col - 2].getName();
+				String oldvalue = s.getString(colname);
+				if ( !oldvalue.equals(newvalue) ) {
+					s.setString(colname, newvalue);
+					try {
+						s.save();
+					}
+					catch(Exception ex) {
+						SamsGui.message("Error trying to save new value: " +ex.getMessage());
+						s.setString(colname, oldvalue);
+					}
+				}
+			}
 		}
 	}
 
