@@ -12,6 +12,8 @@ $Id$
 	  A new method was added to SignatureOperationManager
 	  (sigopers module) to support this.
 	  
+	- New Reflectance to radiance operation (refl2rad.b.bsh)
+	  
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message
 	  telling about the number of signatures imported.

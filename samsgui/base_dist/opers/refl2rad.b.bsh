@@ -1,0 +1,50 @@
+// ref2rad operation
+// $Id$
+
+// This identifies this operation:
+name = "Reflectance to radiance";
+
+// A description:
+description = "Reflectance to radiance calculation using total irradiance spectra";
+
+
+/** Performs the Reflectance to radiance operation.
+  *
+  * @param refl - The reflectance signature. SAMS passes one
+  *        of the selected signatures through this argument.
+  *
+  * @param irrad - The irradiance signature. SAMS uses the
+  *         reference signature for this argument
+  */
+operate(refl_sig, irrad_sig) {
+	// create the resulting radiance signature:	
+	new_rad = new Signature();
+	
+	// We will use OpUtil.averagedValueAt; for the required
+	// winsize, we take just the distance between two
+	// consecutive samples in refl signature:
+	x0 = refl_sig.getDatapoint(0).x;
+	x1 = refl_sig.getDatapoint(1).x;
+	winsize = x1 - x0;
+	
+	// for each datapoint in reflectance:
+	refl_size = refl_sig.getSize();
+	for ( int i = 0; i < refl_size; i++ ) {
+		// get the i-th datapoint: 
+		refl_point = refl_sig.getDatapoint(i);
+
+		// get the irradiance value by averaging in the window
+		// centered at the reflectance wavelength:
+		irrad_val = OpUtil.averagedValueAt(irrad_sig, refl_point.x, winsize);
+		
+		// apply conversion:
+		rad = refl_point.y * irrad_val / Math.PI;
+		
+		// and add the new point to resulting radiance:
+		new_rad.addDatapoint(refl_point.x, rad);
+	}
+
+	// done. Return the created radiance signature:
+	return new_rad;
+}
+
