@@ -31,7 +31,10 @@ public interface ISamsDb {
 	/** Creates a condition. */
 	public ICondition createCondition(String text) throws Exception;
 
-	/** Select elements that satisfy a condition. condition can be null. */
+	/** Select elements that satisfy a condition and in a given order.
+	 * @param condition can be null. 
+	 * @orderBy comma-separated field names. null or empty is equivalent to "location,name". 
+	 */
 	public Iterator select(ICondition condition, String orderBy) throws Exception ;
 	
 	/** Adds an element */
@@ -103,5 +106,23 @@ public interface ISamsDb {
 	public interface ICondition {
 		/** Gets a string representation of this condition. */
 		public String toString();	
+	}
+	
+	/** Returns the associated clipboard. */
+	public IClipboard getClipboard() throws Exception;
+	
+	/** Provides clipboard-like actions on this database. */
+	public interface IClipboard {
+		/** Copies a list of spectra into this clipboard. */
+		public void copy(List paths) throws Exception;
+		
+		/** Cuts a list of spectra into this clipboard. */
+		public void cut(List paths) throws Exception;
+		
+		/** Pastes the spectra in this clipboard into the given location. */
+		public void paste(String target_location) throws Exception;
+		
+		/** Deletes the list of given spectra. */
+		public void delete(List paths) throws Exception;
 	}
 }

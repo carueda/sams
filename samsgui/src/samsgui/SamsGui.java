@@ -6,6 +6,8 @@ import samscore.Sams;
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
 import fileutils.Files;
+import sfsys.ISfsys;
+import sfsys.ISfsys.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -17,6 +19,7 @@ import java.util.*;
 import java.io.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import java.util.List;
 
 /** 
  * Main Sams GUI component.
@@ -230,6 +233,10 @@ public class SamsGui {
 			frame.dispose();
 			focusedDbGui = null;
 		}
+	}
+	
+	public static DbGui getFocusedDbGui() { 
+		return focusedDbGui;
 	}
 	
 	/** Saves the focused database. */
@@ -466,5 +473,5 @@ public class SamsGui {
 		if ( focusedDbGui != null )
 			focusedDbGui.compute(opername);
 	}
-	
+
 }

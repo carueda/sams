@@ -6,6 +6,11 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Status bar for a database.
+ * @author Carlos A. Rueda
+ * @version $Id$ 
+ */
 class StatusBar extends JPanel {
 	private static String[] statusLabels = {
 		"Signature selection",

@@ -23,7 +23,9 @@ public class Table extends JPanel {
 	ISamsDb db;
 	List /*ISpectrum*/ spectrums; // for TableModel
 	TableModel tableModel;
-	JTable table;
+	JTable jtable;
+	ICondition condition = null;
+	String orderBy;
 	ControlPanel controlPanel;
 
 	/** Creates the Spectra panel. */
@@ -40,6 +42,12 @@ public class Table extends JPanel {
 			tableModel.updateMetadata();
 	}
 
+	/** refreshes the contents of this table. */
+	public void updateData() {
+		if ( tableModel != null )
+			tableModel.updateData();
+	}
+	
 	/** Updates the database being rendered. */
 	public void setDatabase(ISamsDb db) {
 		removeAll();
@@ -57,11 +65,11 @@ public class Table extends JPanel {
 			return;
 		}
 
-		table = new JTable(tableModel);
-		table.setPreferredScrollableViewportSize(new Dimension(400, 200));
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setRowSelectionAllowed(true);
-		add(new JScrollPane(table), BorderLayout.CENTER);
+		jtable = new JTable(tableModel);
+		jtable.setPreferredScrollableViewportSize(new Dimension(400, 200));
+		jtable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		jtable.setRowSelectionAllowed(true);
+		add(new JScrollPane(jtable), BorderLayout.CENTER);
 		add(controlPanel, BorderLayout.NORTH);
 		
 		tableModel.addTableModelListener(
@@ -69,11 +77,12 @@ public class Table extends JPanel {
 				public void tableChanged(TableModelEvent e) {
 					int row = e.getFirstRow();
 					int column = e.getColumn();
-					String columnName = tableModel.getColumnName(column);
-					Object data = tableModel.getValueAt(row, column);
-
-					// Do something with the data...
-					System.out.println(data);
+					if ( row >= 0 && column >= 0 ) {
+						String columnName = tableModel.getColumnName(column);
+						Object data = tableModel.getValueAt(row, column);
+						// Do something with the data... PENDING
+						System.out.println(data);
+					}
 				}
 			}
 		);
@@ -84,18 +93,11 @@ public class Table extends JPanel {
 		IMetadataDef metadata;
 		IAttributeDef[] attributes;
 	
-		TableModel(ISamsDb db)
-		throws Exception
-		{
+		TableModel(ISamsDb db) throws Exception {
 			this.db = db;
 			metadata = db.getMetadata();
 			_updateMetadata();
-	
-			spectrums = controlPanel.selectRows();
-			for ( Iterator it = db.getSpectrumIterator(); it.hasNext(); ) {
-				ISpectrum s = (ISpectrum) it.next();
-				spectrums.add(s);
-			}
+			_updateData();
 		}
 	
 		private void _updateMetadata() throws Exception {
@@ -104,11 +106,29 @@ public class Table extends JPanel {
 			attributes = (IAttributeDef[]) defs.toArray(new IAttributeDef[defs.size()]);
 		}
 		
-		/**  Update the meta data. */
-		public void updateMetadata() {
+		private void _updateData() throws Exception {
+			spectrums = _selectRows();
+			for ( Iterator it = db.getSpectrumIterator(); it.hasNext(); ) {
+				ISpectrum s = (ISpectrum) it.next();
+				spectrums.add(s);
+			}
+		}
+		
+		/**  Updates the meta data. */
+		void updateMetadata() {
 			try {
 				_updateMetadata();
 				fireTableStructureChanged();
+			}
+			catch ( Exception ex ) {
+			}
+		}
+		
+		/**  Updates the data. */
+		void updateData() {
+			try {
+				_updateData();
+				fireTableDataChanged();
 			}
 			catch ( Exception ex ) {
 			}
@@ -119,13 +139,7 @@ public class Table extends JPanel {
 		}
 	
 		public String getColumnName(int columnIndex) {
-			try {
-				return attributes[columnIndex].getName();
-			}
-			catch (ArrayIndexOutOfBoundsException ex) {
-				// Java bug?
-				return "Java bug: "+"ArrayIndexOutOfBoundsException: col=" +columnIndex;
-			}
+			return attributes[columnIndex].getName();
 		}
 	
 		public int getRowCount() {
@@ -133,15 +147,9 @@ public class Table extends JPanel {
 		}
 	
 		public Object getValueAt(int row, int col) {
-			try {
-				String cn = attributes[col].getName();
-				String val = ((ISpectrum) spectrums.get(row)).getString(cn);
-				return val;
-			}
-			catch (ArrayIndexOutOfBoundsException ex) {
-				// Java bug?
-				return "Java bug: " +"ArrayIndexOutOfBoundsException: row,col=" +row+ "," +col;
-			}
+			String cn = attributes[col].getName();
+			String val = ((ISpectrum) spectrums.get(row)).getString(cn);
+			return val;
 		}
 	
 		public boolean isCellEditable(int row, int col) {
@@ -154,10 +162,33 @@ public class Table extends JPanel {
 		}
 	}
 
+	public void sort(String orderBy) throws Exception {
+		spectrums = _selectRows(condition, orderBy);
+		this.orderBy = orderBy;
+		if ( tableModel != null )
+			tableModel.fireTableDataChanged();
+	}
+	
+	public void filter(String cond_txt) throws Exception {
+		ICondition condition = db.createCondition(cond_txt);
+		spectrums = _selectRows(condition, orderBy);
+		this.condition = condition;
+		if ( tableModel != null )
+			tableModel.fireTableDataChanged();
+	}
+	
+	private List _selectRows() throws Exception {
+		return _selectRows(condition, orderBy);
+	}
+	
+	private List _selectRows(ICondition condition, String orderBy) throws Exception {
+		List tmp = new ArrayList();
+		for ( Iterator it = db.select(condition, orderBy); it.hasNext(); ) 
+			tmp.add(it.next());
+		return tmp;
+	}
+
 	private class ControlPanel extends JPanel {
-		ICondition condition = null;
-		String orderBy = "location,name";
-		
 		JPanel controls;
 		JTextField sort_tf;
 		JTextField filter_tf;
@@ -190,31 +221,5 @@ public class Table extends JPanel {
 				}
 			});
 		}
-		
-		void sort(String orderBy) throws Exception {
-			spectrums = _selectRows(condition, orderBy);
-			this.orderBy = orderBy;
-			tableModel.fireTableDataChanged();
-		}
-		
-		void filter(String cond_txt) throws Exception {
-			ICondition condition = db.createCondition(cond_txt);
-			spectrums = _selectRows(condition, orderBy);
-			this.condition = condition;
-			tableModel.fireTableDataChanged();
-		}
-		
-		List selectRows() throws Exception {
-			return _selectRows(condition, orderBy);
-		}
-		
-		private List _selectRows(ICondition condition, String orderBy) throws Exception {
-			List tmp = new ArrayList();
-			for ( Iterator it = db.select(condition, orderBy); it.hasNext(); ) 
-				tmp.add(it.next());
-			return tmp;
-		}
-		
-	
 	}
 }

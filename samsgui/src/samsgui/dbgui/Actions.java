@@ -54,6 +54,7 @@ public final class Actions {
 		list.add(null);
 		list.add(getAction("copy"));
 		list.add(getAction("cut"));
+		list.add(getAction("paste"));
 		list.add(getAction("delete"));
 		list.add(null);
 		//list.add(new GroupExportAction("envi"));
@@ -166,19 +167,34 @@ public final class Actions {
 		actions.put("about", new BaseAction("About SAMS..."));
 		
 		actions.put("copy", new BaseAction("Copy",
-			"Copies the selected signatures to an internal clipboard", KeyEvent.VK_C, "control INSERT")
+			"Copies the selected signatures to an internal clipboard", KeyEvent.VK_C, "control INSERT") {
+				public void run() {
+					Controller.copy();
+				}
+			}
 		);
 		actions.put("cut", new BaseAction("Cut",
-			"Cuts the selected signatures to an internal clipboard", KeyEvent.VK_U, "shift DELETE")
+			"Cuts the selected signatures to an internal clipboard", KeyEvent.VK_U, "shift DELETE") {
+				public void run() {
+					Controller.cut();
+				}
+			}
 		);
-		actions.put("paste-ref", new BaseAction("Paste reference",
-			"Pastes references (shortcuts) to the signatures from the internal clipboard", KeyEvent.VK_R, "shift INSERT")
+		actions.put("paste", new BaseAction("Paste",
+			"Pastes signatures from the internal clipboard into the selected group", KeyEvent.VK_R, "shift INSERT") {
+				public void run() {
+					Controller.paste();
+				}
+			}
 		);
 		actions.put("delete", new BaseAction("Delete",
-			"Deletes the list of signatures", KeyEvent.VK_D, "DELETE")
+			"Deletes the list of signatures", KeyEvent.VK_D, "DELETE") {
+				public void run() {
+					Controller.delete();
+				}
+			}
 		);
 		actions.put("rename", new BaseAction("Rename", "Renames a signature"));
-		actions.put("select", new BaseAction("Select", "Selectes some signatures")); 
 		
 		actions.put("view-source", new BaseAction("View source", "View source of a signature"));
 		actions.put("view-data", new BaseAction("View data", "View data of a signature"));

@@ -32,12 +32,6 @@ public class BaseDialog extends JDialog {
     protected JButton btnAccept = new JButton("OK");
     protected JButton btnCancel = new JButton("Cancel");
 	
-	ActionListener accept_al = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			optionPane.setValue(btnAccept.getText());
-		}
-	};
-
 	private void _setListeners(final Object comp) {
 		if ( comp instanceof Container ) {
 			Container container = (Container) comp;
@@ -56,8 +50,6 @@ public class BaseDialog extends JDialog {
 				public void changedUpdate(DocumentEvent e) { common(); }
 			});
 		}
-		if ( comp instanceof JTextField ) // WHY?  PENDING
-			((JTextField) comp).addActionListener(accept_al);
 		
 		if ( comp instanceof JComboBox ) {
 			((JComboBox) comp).addItemListener(new ItemListener() {
@@ -111,7 +103,16 @@ public class BaseDialog extends JDialog {
 		componentsEnabled = true;
         Object[] options = {btnAccept, btnCancel};
 		accepted = false;
-		btnAccept.addActionListener(accept_al);
+		btnAccept.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				optionPane.setValue(btnAccept.getText());
+			}
+		});
+		btnCancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				optionPane.setValue(btnCancel.getText());
+			}
+		});
 		for ( int i = 0; i < components.length; i++ )
 			_setListeners(components[i]);
 		

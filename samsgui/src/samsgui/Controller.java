@@ -1,5 +1,11 @@
 package samsgui;
 
+import samsgui.dbgui.*;
+
+import samscore.ISamsDb;
+import samscore.ISamsDb.*;
+import sfsys.ISfsys;
+import sfsys.ISfsys.*;
 import fileutils.Files;
 
 import javax.swing.*;
@@ -8,6 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
 import java.io.*;
+import java.util.List;
 
 /** 
  * Main SAMS GUI controller.
@@ -138,6 +145,56 @@ public class Controller {
 		catch(Exception ex) {
 			SamsGui.message("Error: " +ex.getMessage());
 		}
+	}
+	
+	public static void copy() {
+		DbGui dbgui = SamsGui.getFocusedDbGui();
+		if ( dbgui == null )
+			return;
+		ISamsDb db = dbgui.getDatabase();
+		if ( db == null )
+			return;
+		List paths = dbgui.getSelectedSpectraPaths();
+		if ( paths == null ) {
+			SamsGui.message("No selected spectra to copy");
+			return;
+		}
+		try {
+			IClipboard clipboard = db.getClipboard(); 
+			clipboard.copy(paths);
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
+	}
+	
+	public static void paste() {
+		DbGui dbgui = SamsGui.getFocusedDbGui();
+		if ( dbgui == null )
+			return;
+		ISamsDb db = dbgui.getDatabase();
+		if ( db == null )
+			return;
+		List dirs = dbgui.getSelectedDirectories();
+		if ( dirs == null || dirs.size() != 1 ) {
+			SamsGui.message("One group must be selected to paste signatures to");
+			return;
+		}
+		IDirectory dir = (IDirectory) dirs.get(0);
+		try {
+			IClipboard clipboard = db.getClipboard(); 
+			clipboard.paste(dir.getPath());
+			dbgui.getTree().update(dir);
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
+	}
+
+	public static void cut() {
+	}
+
+	public static void delete() {
 	}
 	
 	/** Dialog utilities. */

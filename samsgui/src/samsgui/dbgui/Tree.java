@@ -90,27 +90,76 @@ public class Tree extends JPanel {
 	
 	public void setInfo() {
 		rootNode.removeAllChildren();
-
 		ISamsDb db = dbgui.getDatabase();
 		if ( db != null ) {
 			try {
 				ISfsys fs = db.getGroupingBy(new String[] {"location"});
-				if ( fs != null ) {
-					IDirectory group = fs.getRoot();
-					rootNode.setUserObject(group);
-					createGroupNode(rootNode, group);
-				}
+				_setInfo(rootNode, fs.getRoot());
 			}
-			catch (Exception ex) {
-				rootNode.setUserObject("error: " +ex.getMessage());
+			catch(Exception ex) {
+				rootNode.setUserObject("Error: " +ex.getMessage());
 			}
 		}
 		else
 			rootNode.setUserObject("no database");
 		
 		treeModel.reload();
+	}		
+		
+	private void _setInfo(DefaultMutableTreeNode node, IDirectory group) {
+		ISamsDb db = dbgui.getDatabase();
+		assert db != null;
+		node.setUserObject(group);
+		createGroupNode(node, group);
 	}
 
+	DefaultMutableTreeNode findNode(String path) {
+		DefaultMutableTreeNode parent = rootNode;
+		String[] parts = path.split("/");
+		for ( int i = 0; i < parts.length; i++ ) {
+			String part = parts[i];
+			if ( part.length() == 0 )
+				continue;
+			parent = findChildNode(parent, part);
+			if ( parent == null )
+				return null;
+			if ( i == parts.length - 1 )  // found;
+				return parent;
+		}
+		return null;
+	}
+	
+	DefaultMutableTreeNode findChildNode(DefaultMutableTreeNode parent, String part) {
+		for ( int i = 0; i < parent.getChildCount(); i++ ) {
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent.getChildAt(i);
+			Object obj = n.getUserObject();
+			if ( !(obj instanceof INode) )
+				return null;
+			String n_part = ((INode) obj).getPath();
+			n_part = n_part.substring(n_part.indexOf('/') + 1);
+			if ( n_part.equals(part) )
+				return n;
+		}
+		return null;
+	}
+	
+	
+	public void update(IDirectory dir) {
+		DefaultMutableTreeNode node = findNode(dir.getPath());
+		if ( node == null )
+			return;
+		node.removeAllChildren();
+		ISamsDb db = dbgui.getDatabase();
+		if ( db != null ) {
+			_setInfo(node, dir);
+			DefaultMutableTreeNode lastChild = (DefaultMutableTreeNode) node.getLastChild();
+			if ( lastChild != null ) {
+				treeModel.reload();
+				tree.scrollPathToVisible(new TreePath(lastChild.getPath()));
+			}
+		}
+	}
+	
 	public DefaultMutableTreeNode getImportedNode() {
 		return importedNode;
 	}
@@ -178,16 +227,28 @@ public class Tree extends JPanel {
 		}
 	}
 
+	/** adds a child if necessary. */
     public DefaultMutableTreeNode addObject(
 		DefaultMutableTreeNode parent,
 		Object child,
 		boolean shouldBeVisible
 	) {
-        DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
-        if (parent == null) 
+        if ( parent == null ) 
             parent = rootNode;
-        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
-        if (shouldBeVisible) 
+        DefaultMutableTreeNode childNode = null;
+		// find for existing child node
+		for ( int i = 0; i < parent.getChildCount(); i++ ) {
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent.getChildAt(i);
+			if ( n.toString().equals(child.toString()) ) {
+				childNode = n;
+				break;
+			}
+		}
+		if ( childNode == null ) {
+			childNode = new DefaultMutableTreeNode(child);
+	        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+		}
+        if ( shouldBeVisible ) 
             tree.scrollPathToVisible(new TreePath(childNode.getPath()));
         return childNode;
     }

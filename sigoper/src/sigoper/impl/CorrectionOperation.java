@@ -108,6 +108,9 @@ public class CorrectionOperation implements ISingleSignatureOperation {
 		catch(Exception ex) {
 			throw new OperationException("Invalid parameters: " +ex.getMessage());
 		}
+System.out.println("breakx=" +breakx);
+System.out.println("forward=" +forward);
+System.out.println("additive=" +additive);
 
 		int size = sig.getSize();
 		int indexx = OpUtil.indexAt(sig, breakx);

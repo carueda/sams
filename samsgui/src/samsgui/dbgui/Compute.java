@@ -21,7 +21,11 @@ import java.util.List;
 import javax.swing.Timer;
 
 
-/** Makes a computation. */
+/**
+ * Interacts with the user to perform an available operation.
+ * @author Carlos A. Rueda
+ * @version $Id$
+ */ 
 public class Compute {
 	static final int ONE_SECOND = 1000;
 	static final String lbl_in_place = "In place";
@@ -90,7 +94,7 @@ public class Compute {
 			else if ( pval instanceof Boolean ) {
 				parValues.put(pname, pval);
 				boolean defaultValue = ((Boolean) pval).booleanValue();
-				JCheckBox cmp = new JCheckBox(pdesc);
+				JCheckBox cmp = new JCheckBox(pdesc, defaultValue);
 				cmp.setName("::" +pname);
 				array.add(cmp);
 			}
@@ -115,8 +119,8 @@ public class Compute {
 		return null;
 	}
 	
-	void _notifyUpdate(String comp_name, Object value) {
-		//System.out.println("notifyUpdate: " +comp_name+ "->" +value);
+	// only for operation parameters:
+	void par_notifyUpdate(String comp_name, Object value) {
 		if ( comp_name != null && comp_name.startsWith("::") )
 			parValues.put(comp_name.substring(2), value);
 	}
@@ -189,7 +193,7 @@ public class Compute {
 					String resultname = f_resultname.getText();
 					if ( resultname.trim().length() == 0 )
 						msg = "Please specify a name for resulting signature";
-					else
+					if ( msg == null )
 						msg = _checkRequiredParameters();
 					
 					if ( msg == null ) {
@@ -204,7 +208,7 @@ public class Compute {
 				}
 				
 				public void notifyUpdate(String comp_name, Object value) {
-					_notifyUpdate(comp_name, value);
+					par_notifyUpdate(comp_name, value);
 					if ( !timer.isRunning() )
 						super.notifyUpdate(comp_name, value);
 				}
@@ -233,7 +237,6 @@ public class Compute {
 							doUpdate(new Runnable() {
 								public void run() {
 									f_resultname.setEditable(false);
-									
 									btnAccept.setEnabled(false);
 									btnCancel.setEnabled(false);
 									progressBar.setEnabled(true);
@@ -258,9 +261,15 @@ public class Compute {
 								task_message.append("\nAdding result " +path);
 								progressBar.setValue(progressBar.getMaximum() -1);
 								ISpectrum s = db.addSpectrum(path, sig);
-								IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
-								dbgui.getTree().addObject(computedNode, f, true);
+								final IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
 
+								// update GUI
+								doUpdate(new Runnable() {
+									public void run() {
+										dbgui.getTree().addObject(computedNode, f, true);
+										dbgui.refreshTable();
+									}
+								});
 								progressBar.setValue(progressBar.getMaximum());
 								
 								task_message.append("\nDone.");
@@ -363,7 +372,7 @@ public class Compute {
 						if ( resultname.trim().length() == 0 )
 							msg = "Please specify a suffix to compose names";
 					}
-					else
+					if ( msg == null )
 						msg = _checkRequiredParameters();
 					
 					if ( msg == null ) {
@@ -378,7 +387,12 @@ public class Compute {
 				}
 				
 				public void notifyUpdate(String comp_name, Object value) {
-					_notifyUpdate(comp_name, value);
+					if ( comp_name != null ) { 
+						if ( comp_name.equals("suffix") ) 
+							r_create.setSelected(true);
+						else
+							par_notifyUpdate(comp_name, value);
+					}
 					if ( !timer.isRunning() )
 						super.notifyUpdate(comp_name, value);
 				}
@@ -407,7 +421,6 @@ public class Compute {
 							doUpdate(new Runnable() {
 								public void run() {
 									f_resultname.setEditable(false);
-									
 									btnAccept.setEnabled(false);
 									btnCancel.setEnabled(false);
 									progressBar.setEnabled(true);
@@ -449,6 +462,15 @@ public class Compute {
 									}
 								}
 
+								// update GUI
+								doUpdate(new Runnable() {
+									public void run() {
+										if ( r_inplace.isSelected() )
+											dbgui.plotSelectedSignatures(true);
+										else
+											dbgui.refreshTable();
+									}
+								});
 								progressBar.setValue(progressBar.getMaximum());
 								
 								task_message.append("\nDone.");

@@ -1,5 +1,6 @@
 package samscore;
 
+import samscore.ISamsDb;
 import samscore.ISamsDb.*;
 import samscore.ISamsDb.IMetadataDef.IAttributeDef;
 import specfile.ISpectrumFile;
@@ -66,8 +67,8 @@ public class Interpreter {
 	}
 	
 	public void specs(String[] args) throws Exception {
-		String condition_text = args[1];
-		String orderBy = args[2];
+		String condition_text = args.length >= 2 ? args[1] : null;
+		String orderBy = args.length >= 3 ? args[3] : null;
 		
 		ISamsDb db = dbman.getDatabase();
 		ISamsDb.IMetadataDef mddef = db.getMetadata();
@@ -77,9 +78,9 @@ public class Interpreter {
 			 pw.print("  " +attrName);
 		}
 		pw.println();
-		ICondition condition = db.createCondition(condition_text);
+		ICondition condition = condition_text == null ? null : db.createCondition(condition_text);
 		for ( Iterator it2 = db.select(condition, orderBy); it2.hasNext(); ) {
-			 ISamsDb.ISpectrum s = (ISamsDb.ISpectrum) it2.next();
+			ISamsDb.ISpectrum s = (ISamsDb.ISpectrum) it2.next();
 			for ( Iterator it = mddef.getDefinitions().iterator(); it.hasNext(); ) {
 				 IAttributeDef attrDef = (IAttributeDef) it.next();
 				 String attrName = attrDef.getName();
@@ -230,6 +231,20 @@ public class Interpreter {
 		current_grouping_shell.process(argsshell);
 	}
 	
+	public void clipboard(String[] args) throws Exception {
+		IClipboard clipboard = dbman.getDatabase().getClipboard();
+		if ( args[1].equals("copy") ) {
+			List paths = new ArrayList();
+			for ( int i = 2; i < args.length; i++ )
+				paths.add(args[i]);
+			clipboard.copy(paths);
+		}
+		else if ( args[1].equals("paste") )
+			clipboard.paste(args[2]);
+		else
+			pw.println("clipboard: unrecognized command");
+	}
+	
 	protected boolean process(String[] args) throws Exception {
 		if ( args[0].equals("info") )
 			info();
@@ -267,6 +282,8 @@ public class Interpreter {
 			grouping_command(args);
 		else if ( args[0].equals("gc") )
 			gc();
+		else if ( args[0].equals("clipboard") )
+			clipboard(args);
 		else
 			return false;
 		

@@ -26,7 +26,6 @@ import java.util.*;
  * @version $Id$ 
  */
 public class DbGui extends JPanel {
-
 	JFrame parentFrame;  // accesible to Plot
 	private ISamsDb db;
 	private ISfsys fs;
@@ -48,7 +47,7 @@ public class DbGui extends JPanel {
 
 	/** The popup menu for spectrum when selection is empty. */
 	private JPopupMenu popupSpectrumNoSelection;
-	
+
 		
 	public DbGui(JFrame parentFrame, ISamsDb db) throws Exception {
 		super(new BorderLayout());
@@ -93,6 +92,11 @@ public class DbGui extends JPanel {
 	/** notifies */
 	public void metadataUpdated() {
 		table.updateMetadata();
+	}
+
+	/** notifies */
+	public void refreshTable() {
+		table.updateData();
 	}
 
 	public ISamsDb getDatabase() {
@@ -613,5 +617,36 @@ public class DbGui extends JPanel {
 		IFile s = (IFile) focusedNode.getUserObject(); 
 		referenceSID = s.getPath();
 		updateStatus();
+	}
+
+	/** gets the list of selected spectra paths. */
+	public List getSelectedSpectraPaths() {
+		List paths = null;
+		if ( db != null ) {
+			List files = tree.getSelectedNodes(IFile.class, false);
+			if ( files != null ) {
+				for ( Iterator iter = files.iterator(); iter.hasNext(); ) {
+					IFile file = (IFile) iter.next();
+					if ( paths == null )
+						paths = new ArrayList();
+					paths.add(file.getPath());
+				}
+			}
+		}
+		return paths;
+	}
+	
+	/** removes the list of selected IFile's. */
+	public void removeSpectraFiles(List files) {
+		System.out.println("removeSpectraFiles pending");
+		// PENDING
+	}
+
+	/** gets the list of selected IDirectory's. */
+	public List getSelectedDirectories() {
+		List dirs = null;
+		if ( db != null )
+			dirs = tree.getSelectedNodes(IDirectory.class, false);
+		return dirs;
 	}
 }

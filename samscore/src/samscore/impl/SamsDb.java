@@ -54,6 +54,9 @@ class SamsDb implements ISamsDb {
 
 	private IMetadataDef mddef;
 	
+	/** my associated clipboard. */
+	private Clipboard clipboard;
+	
 
 	private SamsDb(File baseDir, boolean create) throws Exception {
 		this.baseDir = baseDir;
@@ -79,6 +82,7 @@ class SamsDb implements ISamsDb {
 		}
 
 		_updateAttrDefMap();
+		clipboard = new Clipboard();
 	}
 
 	private void _updateAttrDefMap() {
@@ -199,23 +203,25 @@ class SamsDb implements ISamsDb {
 			if ( condition == null || ((Condition) condition).accepts(s) )
 				result.add(s);
 		}
-		if ( orderBy != null && orderBy.length() > 0 ) { 
-			final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
-			final IAttributeDef[] attrs = _getAttrDefs(orderByAttrNames);
-			Comparator comparator = new Comparator() {
-				public int compare(Object o1, Object o2){
-					ISpectrum s1 = (ISpectrum) o1;
-					ISpectrum s2 = (ISpectrum) o2;
-					for ( int i = 0; i < attrs.length; i++ ) {
-						int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
-						if ( c != 0 )
-							return c;
-					}
-					return 0;
+		if ( orderBy == null || orderBy.trim().length() == 0 )
+			orderBy = "location,name";
+ 
+		final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
+		final IAttributeDef[] attrs = _getAttrDefs(orderByAttrNames);
+		Comparator comparator = new Comparator() {
+			public int compare(Object o1, Object o2){
+				ISpectrum s1 = (ISpectrum) o1;
+				ISpectrum s2 = (ISpectrum) o2;
+				for ( int i = 0; i < attrs.length; i++ ) {
+					int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
+					if ( c != 0 )
+						return c;
 				}
-			};
-			Collections.sort(result, comparator);
-		}
+				return 0;
+			}
+		};
+		Collections.sort(result, comparator);
+
 		return result.iterator();
 	}
 	
@@ -234,7 +240,7 @@ class SamsDb implements ISamsDb {
 		setSignature(path, sig);
 		return spectrum;
 	}
-	
+
 	public Signature getSignature(String path) throws Exception {
 		path = normalizePath(path);
 		if ( !path.endsWith(".txt") )
@@ -317,6 +323,28 @@ class SamsDb implements ISamsDb {
 			attrValues = new HashMap();
 			attrValues.put("location", location);
 			attrValues.put("name", name);
+		}
+		
+		/** convenience no-arg constructor for clone() */
+		Spectrum() { }
+		
+		/** creates a copy but with path/location/name updated according to new_path. */
+		Spectrum clone(String new_path) {
+			Spectrum clone = new Spectrum();
+			clone.attrValues = new HashMap();
+			for ( Iterator iter = attrValues.keySet().iterator(); iter.hasNext(); ) {
+				String name = (String) iter.next();
+				String value = (String) attrValues.get(name);
+				clone.attrValues.put(name, value);
+			}
+			clone.db = db;
+			clone.path = new_path;
+			int index = clone.path.lastIndexOf("/") + 1;
+			String location = clone.path.substring(0, index);
+			String name = clone.path.substring(index);
+			clone.attrValues.put("location", location);
+			clone.attrValues.put("name", name);
+			return clone;
 		}
 		
 		public String getPath() {
@@ -490,6 +518,82 @@ class SamsDb implements ISamsDb {
 				return true;
 			String val = s.getString(attrName);
 			return val != null && val.equals(attrValue);
+		}
+	}
+
+	public IClipboard getClipboard() throws Exception {
+		return clipboard;
+	}
+	
+	/** clipboard element */
+	static class ClipboardElement {
+		Spectrum spectrum;
+		Signature signature;
+		ClipboardElement(Spectrum spectrum, Signature signature) {
+			this.spectrum = spectrum;
+			this.signature = signature;
+		}
+	}
+	
+	/** the clipboard */
+	class Clipboard implements IClipboard {
+		// current contents is from a "copy" action?
+		boolean copied;
+		// the elements in the clipboard
+		List elements = null;
+		
+		public void copy(List paths) throws Exception {
+			if ( paths == null || paths.size() == 0 )
+				return;
+			List new_elements = new ArrayList();
+			for ( Iterator iter = paths.iterator(); iter.hasNext(); ) {
+				String path = (String) iter.next();
+				try {
+					Spectrum spec = (Spectrum) getSpectrum(path);
+					Signature sig = getSignature(path);
+					new_elements.add(new ClipboardElement(spec, sig));
+				}
+				catch (Exception ex) {
+					// ignore
+				}
+			}
+			if ( new_elements.size() > 0 ) {
+				if ( elements == null )
+					elements = new ArrayList();
+				elements = new_elements;
+				copied = true;
+			}
+		}
+		
+		public void paste(String target_location) throws Exception {
+			if ( elements == null || elements.size() == 0 )
+				return;
+			for ( Iterator iter = elements.iterator(); iter.hasNext(); ) {
+				ClipboardElement e = (ClipboardElement) iter.next();
+				String name = e.spectrum.getString("name");
+				String new_path = normalizePath(target_location+ "/" +name);
+				int index = new_path.lastIndexOf("/") + 1;
+				target_location = new_path.substring(0, index); // from normalized new_path
+				
+				if ( copied ) {
+					String path = e.spectrum.getPath();
+					if ( new_path.equals(path) )
+						continue;
+					
+					Spectrum modified = e.spectrum.clone(new_path);
+					spectrums.put(new_path, modified);
+					setSignature(new_path, e.signature);
+				}
+				else { // cut
+					// ...
+				}
+			}
+		}
+		
+		public void cut(List paths) throws Exception {
+		}
+		
+		public void delete(List paths) throws Exception {
 		}
 	}
 }

@@ -2,6 +2,18 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/23/03
+	- Now on copy-cut-paste-delete actions ...
+	  pending: update table, a progress-bar for lengthy actions...
+	
+	- Bug: FIX PENDING
+	  CorrectionOperation: check operation when forward=false, additive=false
+	  (it's giving out a "reflection"--check sign in correction variable) 
+
+	- Compute: All "string" parameters are required.
+	- Table updated after a computation.
+	- No repeated nodes in tree.
+	
 07/22/03
 	- Compute: checking required paramters...
 07/21/03
