@@ -1,0 +1,26 @@
+// An example of a SAMS scripted operation
+// $Id$
+
+// This identifies this operation:
+name = "Scales each reflectance by a factor";
+
+// A description:
+description = "Scales a signature multiplying by a given factor";
+
+// the required parameter to work with:
+addParameterInfo("factor", "Scale factor", "1");
+
+// This performs the operation:
+operate(sig) {
+	factor = getDoubleParameter("factor");
+	size = sig.getSize();
+	new_sig = new Signature();
+	for ( i = 0; i < size; i++ ) {
+		dp = sig.getDatapoint(i);
+		new_sig.addDatapoint(dp.x, factor * dp.y);
+	}
+	return new_sig;
+}
+
+
+
