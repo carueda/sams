@@ -5,7 +5,7 @@
 -->
 <project name="sams" default="sams.jar" >
 	<!-- Version -->
-	<property name="VERSION" value="3.0"/>
+	<property name="VERSION" value="3.1"/>
 
 	<!-- Base dir for generated files -->
 	<property name="generated" value="../../_GENERATED/sams"/>
@@ -106,6 +106,7 @@
 		<copy file="${kunststoff}" todir="${dist}/base_dist/lib"/>
 		<copy file="${bsh}" todir="${dist}/base_dist/lib"/>
 		<copy file="${src.dir}/img/splash.png" todir="${dist}/base_dist/img"/>
+		<copy file="${src.dir}/img/splashi.png" todir="${dist}/base_dist/img"/>
 		<copy file="copyright.txt" todir="${dist}/base_dist/doc"/>
 		<copy file="izshortcut.xml" todir="${dist}/base_dist/lib"/>
     </target>

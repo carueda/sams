@@ -2,6 +2,9 @@ SAMS Readme
 Carlos A. Rueda
 $Id$
 
+ 04/06/04 - version 3.1 - izpack installation activated. 
+ 	See samsgui.DEVNOTES.txt
+	
  12/31/03 - version 3.0
  	Minor change:
  	- build.xml files updated: use a ${generated} base directory

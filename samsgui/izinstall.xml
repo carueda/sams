@@ -8,19 +8,16 @@
 <installation version="1.0">
     <info>
         <appname>SAMS</appname>
-        <appversion>3.0</appversion>
-        <authors>
-            <author name="Carlos A. Rueda" email="carueda@ucdavis.edu"/>
-        </authors>
+        <appversion>3.1</appversion>
         <url>http://www.cstars.ucdavis.edu/software/sams</url>
     </info>
     
-    <guiprefs width="640" height="480" resizable="yes"/>
+    <guiprefs width="580" height="360" resizable="yes"/>
     
     <locale> <langpack iso3="eng"/> </locale>
     
     <resources>
-		<res id="Installer.image" src="img/splash.png" />
+		<res id="Installer.image" src="img/splashi.png" />
         <res id="LicencePanel.licence" src="doc/copyright.txt"/>
 		<res id="shortcutSpec.xml" src="lib/izshortcut.xml"/>
     </resources>
