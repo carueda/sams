@@ -15,7 +15,7 @@ public class Main {
 			System.out.println(
 				"USAGE:\n"+
 				"      samsgui -help\n"+
-				"      samsgui [-opers dir] [dbdir ...]\n"
+				"      samsgui [-opers dir]\n"
 			);
 			System.exit(0);
 		}
@@ -32,15 +32,6 @@ public class Main {
 			else
 				usage(args[arg]+ ": unknown option.");
 		}
-		
 		SamsGui.init(operdirname);
-		if ( arg == args.length )
-			SamsGui.openRecent();
-		else {
-			for (; arg < args.length; arg++ ) {
-				String dirname = args[arg]; 
-				SamsGui.open(dirname);
-			}
-		}
 	}
 }

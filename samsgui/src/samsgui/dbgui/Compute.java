@@ -39,14 +39,14 @@ public class Compute {
 	private IOperation sigOper;
 	private IOperation.IParameterInfo parInfo;
 	private Map parValues;
-	private List selectedSpectraPaths;
+	private List spectraPaths;
 	private Signature reference_sig;
 	
 	
-	public Compute(DbGui dbgui, IOperation sigOper, List selectedSpectraPaths, Signature reference_sig) {
+	public Compute(DbGui dbgui, IOperation sigOper, List spectraPaths, Signature reference_sig) {
 		this.dbgui = dbgui;
 		this.sigOper = sigOper;
-		this.selectedSpectraPaths = selectedSpectraPaths;
+		this.spectraPaths = spectraPaths;
 		this.reference_sig = reference_sig;
 		if ( sigOper instanceof IMultiSignatureOperation )
 			new MultiForm((IMultiSignatureOperation) sigOper).go();
@@ -242,7 +242,7 @@ public class Compute {
 								}
 							});
 	
-							progressBar.setMaximum(selectedSpectraPaths.size() +2);
+							progressBar.setMaximum(spectraPaths.size() +2);
 							progressBar.setIndeterminate(false);
 							progressBar.setString(null); //display % string
 
@@ -302,9 +302,9 @@ public class Compute {
 		}
 		
 		Signature[] getSignatures() throws Exception {
-			Signature[] sigs = new Signature[selectedSpectraPaths.size()];
-			for ( int i = 0; i < selectedSpectraPaths.size(); i++ ) {
-				String path = (String) selectedSpectraPaths.get(i);
+			Signature[] sigs = new Signature[spectraPaths.size()];
+			for ( int i = 0; i < spectraPaths.size(); i++ ) {
+				String path = (String) spectraPaths.get(i);
 				task_message.append("processing " +path+ "\n");
 				progressBar.setValue(i+1);
 				Signature sig = dbgui.getDatabase().getSignature(path);
@@ -441,13 +441,13 @@ public class Compute {
 								}
 							});
 	
-							progressBar.setMaximum(selectedSpectraPaths.size() +1);
+							progressBar.setMaximum(spectraPaths.size() +1);
 							progressBar.setIndeterminate(false);
 							progressBar.setString(null); //display % string
 
 							try {	
-								for ( int i = 0; i < selectedSpectraPaths.size(); i++ ) {
-									String path = (String) selectedSpectraPaths.get(i);
+								for ( int i = 0; i < spectraPaths.size(); i++ ) {
+									String path = (String) spectraPaths.get(i);
 									task_message.append("processing " +path+ "\n");
 									progressBar.setValue(i+1);
 									Signature sig = dbgui.getDatabase().getSignature(path);

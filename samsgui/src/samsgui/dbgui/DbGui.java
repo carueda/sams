@@ -329,7 +329,7 @@ public class DbGui extends JPanel {
 	}
 
 	JPopupMenu getPopupMenuSpectrum() {
-		List selectedSpectra = tree.getSelectedSpectraPaths();
+		List selectedSpectra = tree.getSelectedSpectraNodes();
 		if ( selectedSpectra.size() == 0 ) {
 			// no selection of spectra elements: show corresponding popup:
 			if ( popupSpectrumNoSelection == null ) {
@@ -342,7 +342,7 @@ public class DbGui extends JPanel {
 
 		String title;
 		if (  selectedSpectra.size() == 1 )
-			title = "Selected: " +((String) selectedSpectra.get(0));
+			title = "Selected: " +((MyNode) selectedSpectra.get(0)).getLocationPath();
 		else
 			title = "Multiple selection: " +selectedSpectra.size()+ " signatures";
 	
@@ -413,16 +413,17 @@ public class DbGui extends JPanel {
 			}
 			reference_sig = db.getSignature(referenceSID);
 		}
-		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if ( selectedSpectra.size() > 0 )
-			new Compute(this, sigOper, selectedSpectra, reference_sig);
+		List spectraPaths = tree.getSelectedSpectraPaths();
+		if ( spectraPaths.size() > 0 )
+			new Compute(this, sigOper, spectraPaths, reference_sig);
 	}
 
+	/** the whole selection is processed (direct signatures and via groups) */
 	public void export(String format) throws Exception {
 		if ( db == null )
 			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		List selectedGroups = tree.getSelectedGroupPaths();
+		List selectedGroups = tree.getSelectedGroups();
 		if ( selectedSpectra.size() == 0 && selectedGroups.size() == 0 ) {
 			SamsGui.message("Please select the signatures to be exported.");
 			return;
@@ -431,8 +432,7 @@ public class DbGui extends JPanel {
 		if ( selectedSpectra.size() > 0 && selectedGroups.size() > 0 ) {
 			info = new StringBuffer("<html>");
 			info.append("<b>Note:</b> " +
-				"The current selection includes both groups and specific spectra.<br>\n" +
-				"Only selected spectra will be exported.<br>\n"
+				"The current selection includes both groups and specific spectra.<br>\n"
 			);
 		}
 		
@@ -440,58 +440,21 @@ public class DbGui extends JPanel {
 		List paths = new ArrayList();
 		
 		if ( selectedSpectra.size() > 0 ) {
-			// only selected spectra
-			for ( Iterator iter = selectedSpectra.iterator(); iter.hasNext(); )
-				paths.add(iter.next());
-		}
-		else { // selectedGroups.size() > 0
-			// include members from subgroups?
-			if ( SamsGui.confirm(
-				"Export: " +selectedGroups.size()+ " group(s) selected.\n" +
-				"Direct spectra members will be included.\n" +
-				"Do you want to include all members from subgroups as well?"
-				)
-			) {
-				// Yes, include members from subgroups.
-				// easy strategy: for each spectrum check if it "belongs" to any of
-				// the selected groups or its subgroups:
-				for ( Iterator iter = db.getAllPaths(); iter.hasNext(); ) {
-					String path = (String) iter.next();
-					boolean include = false;
-					for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
-						String group_path = (String) iterg.next();
-						if ( path.startsWith(group_path+ "/") ) {
-							include = true;
-							break;
-						}
-					}
-						
-					if ( include && !paths.contains(path) )
-						paths.add(path);
-				}
-			}
-			else {
-				// No, only direct signature members:
-				for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
-					String group_path = (String) iterg.next();
-					INode dir = db.getGroupingUnderLocation(group_path);
-					List children = dir.getChildren();
-					for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
-						INode inode = (INode) iter.next();
-						if ( inode.isFile() ) {
-							String path = inode.getPath();
-							if ( !paths.contains(path) )
-								paths.add(path);
-						}
-					}
-				}
+			for ( Iterator iter = selectedSpectra.iterator(); iter.hasNext(); ) {
+				String path = (String) iter.next();
+				if ( !paths.contains(path) )
+					paths.add(path);
 			}
 		}
 		
-		// test:
-		//for ( Iterator iter = paths.iterator(); iter.hasNext(); )
-		//	System.out.println("[" +iter.next()+ "]");
-
+		if ( selectedGroups.size() > 0 ) {
+			// Always include members from subgroups.
+			for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
+				MyNode node = (MyNode) iterg.next();
+				tree.addMemberSignaturePaths(node, paths);
+			}
+		}
+		
 		if ( paths.size() == 0 )
 			SamsGui.message("No signatures were specified");
 		else
@@ -888,7 +851,7 @@ public class DbGui extends JPanel {
 		if (  selectedGroups.size() != 1 )
 			return;
 		MyNode node_path = (MyNode) selectedGroups.get(0);
-		if ( !node_path.underLocationGrouping() ) {
+		if ( !node_path.underGrouping("location:") ) {
 			SamsGui.message("Subgroups can only be created under the location grouping");
 			return;
 		}

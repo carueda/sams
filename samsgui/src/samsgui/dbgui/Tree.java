@@ -150,14 +150,23 @@ public class Tree extends JPanel {
 			jtree.scrollPathToVisible(new TreePath(childNode.getPath()));
 		}
 	}		
-		
+	
+	/** gets the paths to groups under location, including "/" */	
 	public List getLocationGroups() {
 		List loc_groups = new ArrayList();
-		loc_groups.add("/");
-		loc_groups.add("/computed");
-		loc_groups.add("/imported");
-		loc_groups.add("/OTHER");
+		loc_groups.add(locationNode.getLocationPath());
+		_addLocationGroupsUnder(locationNode, loc_groups);
 		return loc_groups;
+	}
+		
+	private void _addLocationGroupsUnder(MyNode node, List loc_groups) {
+		for ( int i = 0; i < node.getChildCount(); i++ ) {
+			MyNode child = (MyNode) node.getChildAt(i);
+			if ( child.isGroup() ) {
+				loc_groups.add(child.getLocationPath());
+				_addLocationGroupsUnder(child, loc_groups);
+			}
+		}
 	}
 	
 	public MyNode findLocationNode(String path, boolean isSpectrum) {
@@ -258,43 +267,49 @@ public class Tree extends JPanel {
 		}
 	}
 	
-	public List getSelectedSpectraNodes() {
-		return _getSelectedNodes(true, true);
-	}
-	
+	/** gets the list (MyNode) of selected group-nodes. */
 	public List getSelectedGroups() {
-		return _getSelectedNodes(false, true);
-	}
-	
-	// TO BE ELIMINATED !!!!!!!
-	public List getSelectedSpectraPaths() {
-		return _getSelectedNodes(true, false);
-	}
-	
-	// TO BE ELIMINATED !!!!!!!
-	public List getSelectedGroupPaths() {
-		return _getSelectedNodes(false, false);
-	}
-	
-	/**
-	 * @param spectra true for spectra; false for groups (aka directories).
-	 * @param nodes true for nodes; false for paths
-	 * @return The list of elements, NEVER null.
-	 */
-	private List _getSelectedNodes(boolean spectra, boolean nodes) {
 		List list = new ArrayList();
 		TreePath[] paths = jtree.getSelectionPaths(); 
 		if ( paths != null ) {
 			for ( int i = 0; i < paths.length; i++ ) {
 				TreePath tree_path = paths[i];
 				MyNode n = (MyNode) tree_path.getLastPathComponent();
-				if ( (spectra && n.isSpectrum())  ||  (!spectra && n.isGroup()) ) {
+				if ( n.isGroup() )
+					list.add(n);
+			}
+		}
+		return list;
+	}
+	
+	/** gets the list (MyNode) of selected spectra-nodes. */
+	public List getSelectedSpectraNodes() {
+		return _getSelectedSpectra(true);
+	}
+	
+	/** gets the list (String) of selected spectra location paths. */
+	public List getSelectedSpectraPaths() {
+		return _getSelectedSpectra(false);
+	}
+	
+	/**
+	 * @param nodes true for nodes; false for paths
+	 * @return The list of elements, NEVER null.
+	 */
+	private List _getSelectedSpectra(boolean nodes) {
+		List list = new ArrayList();
+		TreePath[] paths = jtree.getSelectionPaths(); 
+		if ( paths != null ) {
+			for ( int i = 0; i < paths.length; i++ ) {
+				TreePath tree_path = paths[i];
+				MyNode n = (MyNode) tree_path.getLastPathComponent();
+				if ( n.isSpectrum() ) {
 					if ( nodes )
 						list.add(n);
 					else {
-						String loc_path = n.getLocationPath();
-						if ( loc_path.trim().length() > 0 )
-							list.add(loc_path);
+						String path = n.getLocationPath();
+						if ( !list.contains(path) )
+							list.add(path);
 					}
 				}
 			}
@@ -314,6 +329,20 @@ public class Tree extends JPanel {
 			}
 		}
 		return true;
+	}
+	
+	public void addMemberSignaturePaths(MyNode mynode, List paths) {
+		for ( int i = 0; i < mynode.getChildCount(); i++ ) {
+			MyNode submynode = (MyNode) mynode.getChildAt(i);
+			if ( submynode.isSpectrum() ) {
+				String path = submynode.getLocationPath();
+				if ( !paths.contains(path) )
+					paths.add(path);
+			}
+			else {
+				addMemberSignaturePaths(submynode, paths);
+			}
+		}
 	}
 	
     public MyNode getFocusedNode() {
@@ -395,20 +424,17 @@ public class Tree extends JPanel {
 				hasFocus
 			);
 			
-			boolean set_bold_font = false;
+			// children under root are "groupings"
+			boolean is_grouping = n.getPath().length == 2;
+			
+			boolean set_bold_font = hasFocus || is_grouping;
+			
 			if ( n.isGroup() ) {
 				setIcon(openIcon);
-				setBackgroundSelectionColor(bg_group);
-				set_bold_font = getText().equals("location:");
+				setBackgroundSelectionColor(is_grouping ? bg_grouping : bg_group);
 			}
-			else if ( n.isSpectrum() )  {
+			else // n.isSpectrum()
 				setBackgroundSelectionColor(bg_spectrum);
-			}
-			else {
-				setBackgroundSelectionColor(bg_grouping);
-				set_bold_font = true;
-			}
-			set_bold_font = set_bold_font || hasFocus;
 	
 			if ( normalFont == null ) {
 				normalFont = getFont();
@@ -454,14 +480,14 @@ public class Tree extends JPanel {
 			return this;
 		}
 		
-		/** tells if this node is under the "location:" grouping. */
-		public boolean underLocationGrouping() {
+		/** tells if this node is under (or equal to) the given grouping. */
+		public boolean underGrouping(String grouping_name) {
 			TreeNode[] node_path = getPath();
-			return node_path.length >= 2 && !((MyNode)node_path[1]).getName().equals("location:");
+			return node_path.length >= 2 && grouping_name.equals(((MyNode)node_path[1]).getName());
 		}
 		
 		/** gets the real path under "location:" of the group or signature referenced by this node.
-		 * Note that this.underLocationGrouping() can be false. */
+		 * Note that this.underGrouping("location:") may be false. */
 		public String getLocationPath() {
 			if ( name.startsWith("/") ) {
 				// this is the case when the name is precisely the path

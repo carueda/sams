@@ -254,7 +254,7 @@ public class Controller {
 			return;
 		}
 		MyNode target_node = (MyNode) paths.get(0);
-		if ( !target_node.underLocationGrouping() ) {
+		if ( !target_node.underGrouping("location:") ) {
 			SamsGui.message("Only the location grouping can be used for pasting");
 			return;
 		}
@@ -359,8 +359,8 @@ public class Controller {
 			// check ther are only deletable groups (not under "location:"
 			for ( Iterator iter = selectedGroups.iterator(); iter.hasNext(); ) {
 				MyNode grp_node = (MyNode) iter.next();
-				if ( !grp_node.underLocationGrouping() ) {
-					SamsGui.message("Only groups under locatiorn grouping can be deleted.");
+				if ( !grp_node.underGrouping("location:") ) {
+					SamsGui.message("Only groups under location grouping can be deleted.");
 					return;
 				}
 				collect_paths.add(grp_node.getLocationPath());
@@ -513,9 +513,11 @@ public class Controller {
 		public static String selectExportFile(String title, Files.FileFilter ff) {
 			String basedir = Prefs.get(Prefs.EXPORT_DIR); 
 			File file = selectSaveFile(title, ff, basedir);
-			if ( file != null )
+			if ( file != null ) {
 				Prefs.set(Prefs.EXPORT_DIR, file.getParent());
-			return file.getAbsolutePath();
+				return file.getAbsolutePath();
+			}
+			return null;
 		}
 			
 		public static File selectSaveFile(String title, Files.FileFilter ff, String basedir) {

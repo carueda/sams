@@ -27,25 +27,39 @@ import java.util.List;
  * @version $Id$ 
  */ 
 public class SamsGui {
+	// Names of resources loaded via a classloader:
+	private static final String INFO_PROPS_FILENAME = "samsgui/info.properties";
+	private static final String LICENSE_FILENAME = "samsgui/copyright.txt";
+	private static final String SPLASH_FILENAME = "samsgui/img/splash.gif";
 	
 	private static final String NO_DB_NAME = "<No database>";
 	
+	static Info info = null;
+
 	static DbGui focusedDbGui;
+	
 	/** Mapping from filename -> DbGui */
 	static Map openDbGuis;
 	
 	public static void init(String operdirname) throws Exception {
+		info = new Info();
+		nextFrame = new DbFrame();
+		Splash splash = Splash.showSplash(nextFrame);
 		Sams.init(operdirname);
 		openDbGuis = new HashMap();
 		_initSystemMonitoring();
 		_setLookAndFeel();
-	}
-		
-	public static void openRecent() throws Exception {
 		String filename = Prefs.get(Prefs.RECENT);
 		if ( filename.length() == 0 || filename.equals(NO_DB_NAME) ||  !new File(filename).exists() )
 			filename = null;
+		if ( filename != null )
+			splash.status("Opening recent database '" +new File(filename).getName()+ "'...");
 		open(filename);
+		splash.status(null);
+	}
+
+	public static Info getInfo() {
+		return info;
 	}
 	
 	public static void open(String filename) throws Exception {
@@ -59,7 +73,8 @@ public class SamsGui {
 		ISamsDb db = null;
 		DbFrame frame;
 		if ( NO_DB_NAME.equals(filename) ) {
-			frame = new DbFrame(_nextRectangle());
+			frame = _getNextFrame();
+			frame.init(_nextRectangle());
 			_dispatch(frame, db);
 		}
 		else {
@@ -74,7 +89,8 @@ public class SamsGui {
 				focusedDbGui.display();
 			}
 			else {
-				frame = new DbFrame(_nextRectangle());
+				frame = _getNextFrame();
+				frame.init(_nextRectangle());
 				_dispatch(frame, db);
 			}
 		}
@@ -102,7 +118,8 @@ public class SamsGui {
 		}
 		else {
 			Rectangle rect = _nextRectangle();
-			frame = new DbFrame(rect);
+			frame = _getNextFrame();
+			frame.init(rect);
 			_dispatch(frame, db);
 		}
 		frame.filename = filename;
@@ -329,6 +346,14 @@ public class SamsGui {
 		Importer.importSignaturesFromAsciiFile(focusedDbGui);
 	}
 	
+	private static DbFrame nextFrame = null;
+	private static DbFrame _getNextFrame() {
+		DbFrame ret = nextFrame;
+		nextFrame = new DbFrame();
+		return ret;
+	}
+	
+	/** instances must be created via _getNextFrame() */
 	private static class DbFrame extends JFrame {
 		String filename;
 		DbGui dbgui;
@@ -337,12 +362,6 @@ public class SamsGui {
 		/** Constructor with no initialization. */
 		DbFrame() { 
 			super();
-		}
-		
-		/** Constructor with initialization. */
-		DbFrame(Rectangle rect) {
-			this();
-			init(rect);
 		}
 		
 		void init(Rectangle rect) {
@@ -394,52 +413,17 @@ public class SamsGui {
 		toolkit.addAWTEventListener(listener, AWTEvent.KEY_EVENT_MASK);
 	}		
 
-	public static Icon getIcon(String filename) {
-		Icon icon = null;
-		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		java.net.URL url = cl.getResource(filename);
-		if ( url != null )
-			icon = new ImageIcon(url);
-		return icon;
-	}
-
-	public static String getVersion() {
-		return Sams.getVersion();
-	}
-	
-	public static String getBuild() {
-		return "pending";
-	}
-	
-	public static String getLicense() {
-		return "pending-license";
-	}
-	
-	public static String getAboutMessage() {
-		return
-			" \n"+
-			"SAMS - Spectral Analysis and Management System\n"+
-			"Version " +getVersion()+ " (Build " +getBuild()+ ")\n"+
-			" \n"+
-			"Home page: http://www.cstars.ucdavis.edu/software/sams/\n"+
-			" \n"+
-			"Center for Spatial Technologies and Remote Sensing\n"+
-			"University of California, Davis\n"+
-			" \n"
-		;
-	}
-	
 	/** Shows the "About" message. */
 	public static void showAboutMessage() {
-		String about = getAboutMessage();
-		String license = getLicense();
+		String about = info.getAboutMessage();
+		String license = info.getLicense();
 		String msg = about+ "\n" +license;
 		JOptionPane.showMessageDialog(
 			getFocusedFrame(),
 			msg,
 			"About SAMS...",
 			JOptionPane.INFORMATION_MESSAGE,
-			getIcon("img/splash.gif")
+			info.getIcon("samsgui/img/splash.gif")
 		);
 	}
 
@@ -546,5 +530,188 @@ public class SamsGui {
 	public static void createGroup() throws Exception {
 		if ( focusedDbGui != null )
 			focusedDbGui.createGroup();
+	}
+
+	/** Splash Window. */
+	static class Splash extends JWindow {
+		private JLabel status_label;
+		
+		/**
+		 * Writes a status message. If the argument is null, then the
+		 * splash window will be closed in at most one second approx.
+		 */
+		public void status(String status_text) {
+			if ( status_text != null ) {
+				status_label.setText(status_text);
+				return;
+			}
+			new Thread(getWaitRunner(1000)).start();
+		}
+		 
+		/** Creates a splash window. */
+		private Splash(String text, Frame f, int waitTime) {
+			super(f);
+			Color bg_color = new Color(210,255,255);
+			getContentPane().setBackground(bg_color);
+			ImageIcon ii = info.getIcon(SPLASH_FILENAME);
+			MouseListener ml = new MouseAdapter()  {
+				public void mousePressed(MouseEvent e) {
+					setVisible(false);
+					dispose();
+				}
+			};
+			addMouseListener(ml);
+			
+			JLabel label = new JLabel(ii, JLabel.CENTER);
+			label.setIconTextGap(100);
+			getContentPane().add(label, BorderLayout.CENTER);
+	
+			JPanel fields = new JPanel(new GridLayout(2, 1)); 
+			getContentPane().add(fields, BorderLayout.SOUTH);
+			
+			JLabel text_label = new JLabel(text);
+			text_label.setFont(text_label.getFont().deriveFont(Font.BOLD));
+			text_label.setHorizontalAlignment(JLabel.RIGHT);
+			text_label.setBackground(bg_color);
+			text_label.setOpaque(true);
+			text_label.addMouseListener(ml);
+			fields.add(text_label);
+			
+			status_label = new JLabel("Starting...");
+			status_label.setFont(status_label.getFont().deriveFont(10f));
+			status_label.setHorizontalAlignment(JLabel.LEFT);
+			status_label.setBackground(bg_color);
+			status_label.setOpaque(true);
+			status_label.addMouseListener(ml);
+			fields.add(status_label);
+	
+			pack();
+			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+			Dimension labelSize = label.getPreferredSize();
+			int locy = (screenSize.height - labelSize.height)/2 - 150;
+			if ( locy < 0 )
+				locy = 0;
+			setLocation( (screenSize.width - labelSize.width)/2, locy);
+			Runnable waitRunner = getWaitRunner(waitTime); 
+			setVisible(true);
+			new Thread(waitRunner, "SplashThread").start();
+		}
+	
+		private Runnable getWaitRunner(final int pause) {
+			final Runnable closerRunner = new Runnable() {
+				public void run() {
+					setVisible(false);
+					dispose();
+				}
+			};
+			Runnable waitRunner = new Runnable() {
+				public void run() {
+					try {
+						Thread.sleep(pause);
+						SwingUtilities.invokeAndWait(closerRunner);
+					}
+					catch(Exception e) {
+					}
+				}
+			};
+			return waitRunner;
+		}
+		
+		/** Displays the splash window. */
+		static Splash showSplash(JFrame frame) {
+			return new Splash("SAMS"+ "  " +info.getVersion(), frame, 30 * 1000);
+		}
+	}
+
+	/** Application properties. */
+	static class Info {
+		// default values
+		String name = "SAMS";
+		String version = "v";
+		String build = "b";
+		
+		String licenseText = null;  // License text (loaded on demand):
+		
+		/** Loads the properties. */
+		Info()  {
+			Properties props = new Properties(); 
+			InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(INFO_PROPS_FILENAME);
+			if ( is == null ) {
+				System.err.println(
+					"!!!!!! Resource " +INFO_PROPS_FILENAME+ " not found.\n" +
+					"!!!!!! SAMS has not been properly compiled.\n"+
+					"!!!!!! Continuing with default values."
+				);
+			}
+			else {
+				try {
+					props.load(is);
+					is.close();
+				}
+				catch(IOException ex) { 
+					// ignore. 
+				}
+				name    = props.getProperty("sams.name");
+				version = props.getProperty("sams.version");
+				build   = props.getProperty("sams.build");
+			}
+		}
+
+		public ImageIcon getIcon(String filename) {
+			ImageIcon icon = null;
+			java.net.URL url = ClassLoader.getSystemClassLoader().getResource(filename);
+			if ( url != null )
+				icon = new ImageIcon(url);
+			return icon;
+		}
+	
+		public String getVersion() {
+			return version;
+		}
+		
+		public String getBuild() {
+			return build;
+		}
+		
+		public String getLicense() {
+			if ( licenseText == null ) {
+				InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(LICENSE_FILENAME);
+				StringBuffer sb = new StringBuffer(); 
+				if ( is == null ) {
+					sb.append(
+						"!!!!!! Resource " +LICENSE_FILENAME+ " not found.\n" +
+						"!!!!!! SAMS has not been properly compiled.\n"
+					);
+				}
+				else {
+					try {
+						BufferedReader br = new BufferedReader(new InputStreamReader(is));
+						String line;
+						while ( (line = br.readLine()) != null )
+							sb.append(line+ "\n");
+					}
+					catch(IOException ex) {
+						sb.append(ex.getClass().getName()+ " : " +ex.getMessage()+ "\n");
+					}
+				}
+				licenseText = sb.toString();
+			}
+			return licenseText;
+		}
+		
+		public String getAboutMessage() {
+			return
+				" \n"+
+				"SAMS - Spectral Analysis and Management System\n"+
+				"Version " +getVersion()+ " (Build " +getBuild()+ ")\n"+
+				" \n"+
+				"http://www.cstars.ucdavis.edu/software/sams/\n"+
+				" \n"+
+				"Center for Spatial Technologies and Remote Sensing\n"+
+				"Department of Land, Air, and Water Resources\n"+
+				"University of California, Davis\n"+
+				" \n"
+			;
+		}
 	}
 }
