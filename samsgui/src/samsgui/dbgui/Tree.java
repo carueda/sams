@@ -6,12 +6,18 @@ import sfsys.ISfsys.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+import java.util.*;
+import java.awt.event.*;
+import java.awt.Toolkit;
+import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.font.*;
 import java.awt.Color;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
 
 /** 
  * Tree display.
@@ -19,13 +25,21 @@ import java.util.*;
  * @version $Id$ 
  */
 public class Tree extends JPanel {
+	private static final Color bg_group = new Color(222,222,255);
+	private static final Color bg_spectrum = new Color(210,255,255);
+
+	DbGui dbgui;
 	ISfsys fs;
 	protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
     protected JTree tree;
+
+	protected DefaultTreeCellRenderer tcr;
+	protected DefaultMutableTreeNode focusedNode = null;	
 	
-	public Tree() {
+	public Tree(DbGui dbgui) {
 		super(new BorderLayout());
+		this.dbgui = dbgui;
 		fs = null;
 		
 		JLabel label = new JLabel("Right-click for options", JLabel.CENTER);
@@ -57,6 +71,9 @@ public class Tree extends JPanel {
 		tree.putClientProperty("JTree.lineStyle", "Angled");
 		
         add(new JScrollPane(tree));
+		
+		// cell renderer:
+		tree.setCellRenderer(tcr = new MyRenderer());
 	}
 
 	public JTree getJTree() {
@@ -111,4 +128,86 @@ public class Tree extends JPanel {
 		return list;
 	}
 	
+    public DefaultMutableTreeNode getFocusedNode() {
+		return focusedNode;
+	}
+
+    protected void updateFocusedNode(DefaultMutableTreeNode node, int row) {
+		if ( focusedNode != node ) {
+			focusedNode = node;
+			dbgui.focusedNodeChanged();
+		}
+	}
+
+	class MyRenderer extends DefaultTreeCellRenderer  {
+		Font normalFont = null;
+		Font boldFont = null;
+		
+		/**
+		 * Returns a wider preferred size value in an attempt to make room for 
+		 * the bold font. <b>This is not guaranteed.</b>
+		 */
+		public Dimension getPreferredSize() {
+			Dimension dim = super.getPreferredSize();
+			if ( dim != null ) {
+				// 16: arbitrarely chosen.
+				int new_width = 16 + (int) dim.width;
+				dim = new Dimension(new_width, dim.height);
+			}
+			return dim;
+		}
+
+		public Component getTreeCellRendererComponent(
+			JTree tree,
+			Object value,
+			boolean sel,
+			boolean expanded,
+			boolean leaf,
+			int row,
+			boolean hasFocus
+		) {
+			if ( !(value instanceof DefaultMutableTreeNode) ) {
+				super.getTreeCellRendererComponent(
+					tree, value, sel,
+					expanded, leaf, row,
+					hasFocus
+				);
+				return this;
+			}
+
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) value;
+			
+			if ( hasFocus )
+				updateFocusedNode(n, row);
+
+			super.getTreeCellRendererComponent(
+				tree, value, sel,
+				expanded, leaf, row,
+				hasFocus
+			);
+			
+			value = n.getUserObject();
+			if ( value instanceof IDirectory ) {
+				setIcon(openIcon);
+				setBackgroundSelectionColor(bg_group);
+				//setToolTipText("....");
+			}
+			else if ( value instanceof IFile )  {
+				setBackgroundSelectionColor(bg_spectrum);
+				//setToolTipText(null); //no tool tip
+			}
+	
+			if ( normalFont == null ) {
+				normalFont = getFont();
+				if ( normalFont != null )
+					boldFont = normalFont.deriveFont(Font.BOLD);
+			}
+			
+			if ( normalFont != null && boldFont != null )
+				setFont(hasFocus ? boldFont : normalFont);
+
+			return this;
+		}
+	}
+
 }

@@ -37,6 +37,10 @@ public class DbGui extends JPanel {
 	
 	private JLabel loc_label;
 	
+	private StatusBar statusBar;
+	/** the reference for reference-based operations. */
+	private String referenceSID;
+	
 		
 	public DbGui(JFrame parentFrame, ISamsDb db) throws Exception {
 		super(new BorderLayout());
@@ -45,7 +49,7 @@ public class DbGui extends JPanel {
 		splitPane1 = getJSplitPane1();
 		splitPane2 = getJSplitPane2();
 
-		tree = new Tree();
+		tree = new Tree(this);
 		table = new Table();
 
 		splitPane2.add(table);
@@ -72,6 +76,9 @@ public class DbGui extends JPanel {
 				treeSelectionChanged(e);
 			}
 		});
+		
+		add(statusBar = new StatusBar(),  BorderLayout.SOUTH);
+		
 		setDatabase(db);
 	}
 	
@@ -481,5 +488,55 @@ public class DbGui extends JPanel {
 			list.add(opername == null ? null : new ComputeAction(opername));
 		}*/
 		return list;
+	}
+
+	/** Called by DynamicTree. */
+    public void focusedNodeChanged() {
+		updateStatus();
+	}
+	
+	public void updateStatus() {
+		String signature_selection; 
+		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		if ( selectedSpectra == null )
+			signature_selection = "None";
+		else if (  selectedSpectra.size() == 1 ) {
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedSpectra.get(0);
+			IFile s = (IFile) n.getUserObject();
+			String path = s.getPath();
+			signature_selection = path;
+		}
+		else
+			signature_selection = selectedSpectra.size()+ " signatures";
+		
+		String group_selection; 
+		List selectedGroups = tree.getSelectedNodes(IDirectory.class);
+		if ( selectedGroups == null )
+			group_selection = "None";
+		else if (  selectedGroups.size() == 1 ) {
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedGroups.get(0);
+			IDirectory s = (IDirectory) n.getUserObject();
+			String path = s.getPath();
+			group_selection = path;
+		}
+		else
+			group_selection = selectedGroups.size()+ " groups selected";
+
+		String focused_element = "None";		
+		DefaultMutableTreeNode focusedNode = tree.getFocusedNode();
+		if ( focusedNode != null )
+			focused_element = focusedNode.toString();
+		
+		String reference_signature = "None";
+		if ( referenceSID != null )
+			reference_signature = referenceSID;
+
+		statusBar.updateStatusInfo(new String[] {
+				signature_selection,
+				reference_signature,
+				focused_element,
+				group_selection,
+			}
+		);
 	}
 }
