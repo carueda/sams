@@ -16,9 +16,6 @@ public final class EnviFileManager {
 	 * The resulting signature is sorted.
 	 *
 	 * @param filename The Envi file name.
-	 * @param type     Assumed file type. Current recognized types:
-	 *                        "Standard"
-	 *                 If null, an automatic recognition is attempted.
 	 * @param line Line of the desired location.
 	 * @param pixel Column of the desired location.
 	 *
@@ -30,7 +27,6 @@ public final class EnviFileManager {
 	 */
 	public static Signature getSignature(
 		String filename,
-		String type,
 		int line,
 		int pixel
 	) throws FileNotFoundException, InvalidEnviFormatException, IOException {
