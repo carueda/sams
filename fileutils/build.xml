@@ -3,7 +3,6 @@
 	$Id$
 -->
 <project name="fileutils" default="fileutils.jar" >
-
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
 
