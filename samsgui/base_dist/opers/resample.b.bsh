@@ -1,61 +1,80 @@
-// Resample operation
+// FWHM Resample operation
 // $Id$
 
 
 
 // This identifies this operation:
-name = "Resampling";
+name = "FWHM based resampling";
 
 // A description:
 description = 
   "<html>"+
   "A reference-based operation to resample selected signatures.<br>"+
-  "A signature with <b>wavelength,FWHM</b> columns should be set<br>"+
-  "as the reference signature, for example<br>"+
-  "calibration_hymap2_14june04_wav_fwhm_126.txt"
-  ;
+  "The reference signature should contain <b>wavelength,FWHM</b> columns.";
 
-
-getIntegerParameter(parname) {
-	int index = ((Integer) __parIndex.get(parname)).intValue();
-	Integer.parseInt(((String) __par_values[index]).trim()); 
-}
-
-
-
-addParameterInfo("max_win_size", "Max window size", "50");
-addParameterInfo("bad_value", "Set bad values to", "0.0");
 
 kte = Math.sqrt(8*Math.log(2));
 
-// This performs the operation:
+/** Performs the FWHM based resampling operation.
+  *
+  * @param sig - A selected signature. SAMS passes one
+  *        of the selected signatures through this argument.
+  *
+  * @param ref - The FWHM signature. SAMS passed the
+  *         reference signature through this argument.
+  *
+  * @author C. Rueda, P. Zarco, Y. Cheng
+  * @version $Id$
+  */
 operate(sig, ref) {
-	max_win_size = getIntegerParameter("max_win_size");
-	max_win_size2 = max_win_size / 2; 
-	bad_value = getDoubleParameter("bad_value");
+	// create new signature:
 	new_sig = new Signature();
 
+	// get sizes of operands:
 	ref_size = ref.getSize();
 	sig_size = sig.getSize();
 	
 	for ( int i = 0; i < ref_size; i++ ) {
 		rp = ref.getDatapoint(i);
+		// wavelength at which we want resample sig:
 		w = rp.x;
+		
 		fwhm = rp.y;
 		sigma = fwhm / kte;
 		
+		// as suggested by P.Z.
+		winsize = 2*fwhm;
+		winsize2 = fwhm;   // == winsize/2
+
+		// just to check that at least the signature is defined at w
+		// (we don't need the returned index)
+		OpUtil.indexAt(sig, w);
 		
-		idx = OpUtil.indexAt(sig, w);
+		// interval of interest:
+		double at_inf = w - winsize2;		
+		double at_sup = w + winsize2;
+
+		// corresponding indices:
+		int inf_idx = OpUtil.rightMostIndexAt(sig, at_inf);
+		int sup_idx = OpUtil.leftMostIndexAt(sig, at_sup);
+
+		// the following adjustments are OK since we already know
+		// the signature is at least defined at the center abscissa:
+		if ( inf_idx < 0 )
+			inf_idx = 0;
+		if ( sup_idx >= sig_size )
+			sup_idx = sig_size -1;
 		
+		// make weighting:
 		sum = 0.0;
 		ker_sum = 0.0;
-		for ( int j = idx - max_win_size2; j <= idx + max_win_size2; j++ ) {
-			if ( j < 0 || j >= sig_size )
-				continue;
-			
+		for ( int j = inf_idx; j <= sup_idx; j++ ) {
 			sp = sig.getDatapoint(j);
 			
-			weight = Math.exp(-(sp.x-w)*(sp.x-w)/(2*sigma*sigma));
+			spxw2 = (sp.x-w)*(sp.x-w);
+			sigma2 = sigma*sigma;
+			
+			weight = Math.exp(-spxw2 / (2*sigma2));
 			ker_sum += weight;
 			sum += weight * sp.y;
 		}
