@@ -108,10 +108,6 @@ public class Table extends JPanel {
 		
 		private void _updateData() throws Exception {
 			spectrums = _selectRows();
-			for ( Iterator it = db.getSpectrumIterator(); it.hasNext(); ) {
-				ISpectrum s = (ISpectrum) it.next();
-				spectrums.add(s);
-			}
 		}
 		
 		/**  Updates the meta data. */

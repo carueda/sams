@@ -160,7 +160,6 @@ public class Controller {
 		boolean refreshTable;
 		boolean insertIntoTree;
 		boolean removeFromTree;
-		Set dirs_to_update = new HashSet();
 		int total;
 		int index;
 		Component parent;
@@ -184,28 +183,18 @@ public class Controller {
 		public boolean elementFinished(int index, String path) {
 			this.index = index;
 			pm.setProgress(index);
-			if ( insertIntoTree ) {
-				String parent_path = dbgui.getTree().insertNode(path);
-			}
-			if ( removeFromTree ) {
-				String parent_path = dbgui.getTree().removeNode(path);
-				if ( parent_path != null )
-					dirs_to_update.add(parent_path);
-			}
+			if ( insertIntoTree )
+				dbgui.getTree().insertNode(path, true);
+			if ( removeFromTree )
+				dbgui.getTree().removeNode(path);
 			return pm.isCanceled();
 		}
 		
 		public void endTask(int processed) { 
 			pm.close();
-			// update affected directories:
-			for ( Iterator iter = dirs_to_update.iterator(); iter.hasNext(); ) {
-				String parent_path = (String) iter.next();
-				dbgui.getTree().updateDirectory(parent_path, false);
-			}
-			dirs_to_update.clear();
-			// update table:
 			if ( refreshTable )
 				dbgui.refreshTable();
+			dbgui.updateStatus();
 		}
 	};
 	
@@ -216,7 +205,7 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
+		final List paths = dbgui.getTree().getSelectedSpectraPaths();
 		if ( paths == null ) {
 			SamsGui.message("No selected spectra to copy");
 			return;
@@ -254,7 +243,7 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		List paths = dbgui.getTree().getSelectedNodes(IDirectory.class, 2);
+		List paths = dbgui.getTree().getSelectedGroupPaths();
 		if ( paths == null || paths.size() != 1 ) {
 			SamsGui.message("One group must be selected to paste signatures to");
 			return;
@@ -275,8 +264,6 @@ public class Controller {
 					finally {
 						_setEnabledClipboardActions(true);
 					}
-					//dbgui.getTree().updateDirectory(target_path, true);
-					//dbgui.getTree().reloadModel();
 				}
 			});
 			thread.start();
@@ -294,7 +281,7 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
+		final List paths = dbgui.getTree().getSelectedSpectraPaths();
 		if ( paths == null ) {
 			SamsGui.message("No selected spectra to cut");
 			return;
@@ -332,9 +319,9 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
+		final List paths = dbgui.getTree().getSelectedSpectraPaths();
 		if ( paths == null || paths.size() == 0 ) {
-			SamsGui.message("No selected spectra to cut");
+			SamsGui.message("No selected spectra to delete");
 			return;
 		}
 		if ( !SamsGui.confirm("Delete " +(paths.size()==1 ? (String)paths.get(0) : paths.size()+" selected elements")+ "?") )

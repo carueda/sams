@@ -69,7 +69,7 @@ public class DbGui extends JPanel {
 				int selRow = tree.getJTree().getRowForLocation(e.getX(), e.getY());
 				TreePath selPath = tree.getJTree().getPathForLocation(e.getX(), e.getY());
 				if ( selRow != -1 ) {
-					DefaultMutableTreeNode n = (DefaultMutableTreeNode) selPath.getLastPathComponent();
+					Tree.MyNode n = (Tree.MyNode) selPath.getLastPathComponent();
 					click(n, e);
 				}
 			}
@@ -141,13 +141,11 @@ public class DbGui extends JPanel {
 		if ( db == null )
 			return;
 		Collection sids = new ArrayList();
-		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		List selectedSpectra = tree.getSelectedSpectraNodes();
 		if ( selectedSpectra != null ) {
 			for ( Iterator it = selectedSpectra.iterator(); it.hasNext(); ) {
-				DefaultMutableTreeNode n = (DefaultMutableTreeNode) it.next();
-				IFile s = (IFile) n.getUserObject();
-				String path = s.getPath();
-				sids.add(path);
+				Tree.MyNode n = (Tree.MyNode) it.next();
+				sids.add(n.getStringPath());
 			}
 		}
 		plotSignatures(sids, only);
@@ -257,23 +255,21 @@ public class DbGui extends JPanel {
 		loc_label.setText("x=" +x+ "  y=" +y);
 	}
 	
-	protected void click(DefaultMutableTreeNode n, MouseEvent e) {
-		Object obj = n.getUserObject();
-		if ( obj instanceof IDirectory )
+	protected void click(Tree.MyNode n, MouseEvent e) {
+		if ( n.isGroup() )
 			clickGroup(n, e);
-		else if ( obj instanceof IFile )
+		else if ( n.isSpectrum() )
 			clickSpectrum(n, e);
 	}
 	
-	public void clickSpectrum(DefaultMutableTreeNode n, MouseEvent e) {
+	public void clickSpectrum(Tree.MyNode n, MouseEvent e) {
 		if ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
 			JPopupMenu popup = getPopupMenuSpectrum();
 			Component c = (Component) e.getSource();
 			popup.show(c, e.getX(), e.getY());
 			return;
 		}
-		IFile s = (IFile) n.getUserObject();
-		String path = s.getPath();
+		String path = n.getStringPath();
 		Signature sig = null;
 		try {
 			sig = db.getSignature(path);
@@ -289,12 +285,12 @@ public class DbGui extends JPanel {
 		plot.repaint();
 	}
 
-	public void clickGroup(DefaultMutableTreeNode n, MouseEvent e) {
+	public void clickGroup(Tree.MyNode n, MouseEvent e) {
 		System.out.println("clickGroup");
 	}
 
 	JPopupMenu getPopupMenuSpectrum() {
-		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		List selectedSpectra = tree.getSelectedSpectraNodes();
 		if ( selectedSpectra == null ) {
 			// no selection of spectra elements: show corresponding popup:
 			if ( popupSpectrumNoSelection == null ) {
@@ -308,9 +304,8 @@ public class DbGui extends JPanel {
 
 		String title;
 		if (  selectedSpectra.size() == 1 ) {
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedSpectra.get(0);
-			IFile s = (IFile) n.getUserObject();
-			title = "Selected: " +s.getPath();
+			Tree.MyNode n = (Tree.MyNode) selectedSpectra.get(0);
+			title = "Selected: " +n.getStringPath();
 		}
 		else
 			title = "Multiple selection: " +selectedSpectra.size()+ " signatures";
@@ -348,7 +343,7 @@ public class DbGui extends JPanel {
 			}
 			reference_sig = db.getSignature(referenceSID);
 		}
-		List selectedSpectra = tree.getSelectedNodes(IFile.class, 1);
+		List selectedSpectra = tree.getSelectedSpectraPaths();
 		if ( selectedSpectra != null )
 			new Compute(this, sigOper, selectedSpectra, reference_sig);
 	}
@@ -560,64 +555,57 @@ public class DbGui extends JPanel {
 	
 	public void updateStatus() {
 		String signature_selection; 
-		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		List selectedSpectra = tree.getSelectedSpectraPaths();
 		if ( selectedSpectra == null )
 			signature_selection = "None";
-		else if (  selectedSpectra.size() == 1 ) {
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedSpectra.get(0);
-			IFile s = (IFile) n.getUserObject();
-			String path = s.getPath();
-			signature_selection = path;
-		}
+		else if ( selectedSpectra.size() == 1 )
+			signature_selection = (String) selectedSpectra.get(0);
 		else
 			signature_selection = selectedSpectra.size()+ " signatures";
 		
 		String group_selection; 
-		List selectedGroups = tree.getSelectedNodes(IDirectory.class);
+		List selectedGroups = tree.getSelectedGroupPaths();
 		if ( selectedGroups == null )
 			group_selection = "None";
-		else if (  selectedGroups.size() == 1 ) {
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedGroups.get(0);
-			IDirectory s = (IDirectory) n.getUserObject();
-			String path = s.getPath();
-			group_selection = path;
-		}
+		else if (  selectedGroups.size() == 1 )
+			group_selection = (String) selectedGroups.get(0);
 		else
 			group_selection = selectedGroups.size()+ " groups selected";
 
 		String focused_element = "None";		
-		DefaultMutableTreeNode focusedNode = tree.getFocusedNode();
+		Tree.MyNode focusedNode = tree.getFocusedNode();
 		if ( focusedNode != null )
-			focused_element = focusedNode.toString();
+			focused_element = focusedNode.getStringPath();
 		
 		String reference_signature = "None";
 		if ( referenceSID != null )
 			reference_signature = referenceSID;
+
+		String clipboard_contents = "None";
+		if ( db != null ) {
+			int size = db.getClipboard().size();
+			if ( size > 0 )
+			clipboard_contents = size+ " signatures";
+		}
 
 		statusBar.updateStatusInfo(new String[] {
 				signature_selection,
 				reference_signature,
 				focused_element,
 				group_selection,
+				clipboard_contents,
 			}
 		);
 	}
 
 	/** Sets the focused signature as the reference for reference-based operations. */
 	public void setAsReference() {
-		DefaultMutableTreeNode focusedNode = tree.getFocusedNode();
-		if ( focusedNode == null || !(focusedNode.getUserObject() instanceof IFile) ) {
+		Tree.MyNode focusedNode = tree.getFocusedNode();
+		if ( focusedNode == null || !focusedNode.isSpectrum() ) {
 			SamsGui.message("Please, first focus the signature to be taken as the reference");
 			return;
 		}
-		IFile s = (IFile) focusedNode.getUserObject(); 
-		referenceSID = s.getPath();
+		referenceSID = focusedNode.getStringPath();
 		updateStatus();
-	}
-
-	/** removes the list of selected IFile's. */
-	public void removeSpectraFiles(List files) {
-		System.out.println("removeSpectraFiles pending");
-		// PENDING
 	}
 }

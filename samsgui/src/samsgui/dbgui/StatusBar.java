@@ -17,12 +17,14 @@ class StatusBar extends JPanel {
 		"Reference signature",
 		"Focused",
 		"Group selection",
+		"Clipboard",
 	};
 	private static String[] statusTooltips = {
 		"Shows which signature or how many signatures are currently selected",
 		"This signature has a special meaning in reference-based operations",
 		"You can make this signature the 'reference' one by typing Alt-Enter",
 		"",
+		"Contents of the clipboard",
 	};
 	private JTextField[] statusFields;
 	

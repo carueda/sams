@@ -2,7 +2,6 @@ package samsgui.dbgui;
 
 import samscore.ISamsDb;
 import sfsys.ISfsys;
-import sfsys.ISfsys.*;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -30,16 +29,14 @@ public class Tree extends JPanel {
 	private static final Color bg_spectrum = new Color(210,255,255);
 
 	protected DbGui dbgui;
-	protected ISfsys imported_fs;
-	protected ISfsys computed_fs;
-	protected DefaultMutableTreeNode rootNode;
-	protected DefaultMutableTreeNode importedNode;
-	protected DefaultMutableTreeNode computedNode;
+	protected final MyNode rootNode = new MyNode().reset("^");
+	protected MyNode importedNode;
+	protected MyNode computedNode;
     protected DefaultTreeModel treeModel;
-    protected JTree tree;
+    protected JTree jtree;
 
 	protected DefaultTreeCellRenderer tcr;
-	protected DefaultMutableTreeNode focusedNode = null;	
+	protected MyNode focusedNode = null;	
 	
 	public Tree(DbGui dbgui) {
 		super(new BorderLayout());
@@ -50,14 +47,11 @@ public class Tree extends JPanel {
 		label.setForeground(Color.gray);
 		add(label, BorderLayout.NORTH);
 		
-        rootNode = new DefaultMutableTreeNode("Root Node");
-		
         treeModel = new DefaultTreeModel(rootNode);
-
-        tree = new JTree(treeModel);
+        jtree = new JTree(treeModel);
 
 		// To avoid keyboard navigation when "Alt" is pressed. 
-		tree.setUI(new javax.swing.plaf.basic.BasicTreeUI() {
+		jtree.setUI(new javax.swing.plaf.basic.BasicTreeUI() {
 			protected KeyListener createKeyListener() {
 				return new KeyHandler() {
 					public void keyTyped(KeyEvent e) {
@@ -70,18 +64,18 @@ public class Tree extends JPanel {
 			}
 		});
 
-		tree.setRootVisible(false);
-        tree.setShowsRootHandles(true);
-		tree.putClientProperty("JTree.lineStyle", "Angled");
+		jtree.setRootVisible(false);
+        jtree.setShowsRootHandles(true);
+		jtree.putClientProperty("JTree.lineStyle", "Angled");
 		
-        add(new JScrollPane(tree));
+        add(new JScrollPane(jtree));
 		
 		// cell renderer:
-		tree.setCellRenderer(tcr = new MyRenderer());
+		jtree.setCellRenderer(tcr = new MyRenderer());
 	}
 
 	public JTree getJTree() {
-		return tree;
+		return jtree;
 	}
 	
 	public Icon getLeafIcon(){
@@ -93,29 +87,16 @@ public class Tree extends JPanel {
 		ISamsDb db = dbgui.getDatabase();
 		if ( db != null ) {
 			try {
-				ISfsys fs = db.getGroupingBy(new String[] {"location"});
-				_setInfo(rootNode, fs.getRoot());
+				createGroupNode(rootNode, db.getGroupingUnderLocation("/"));
 			}
 			catch(Exception ex) {
-				rootNode.setUserObject("Error: " +ex.getMessage());
 			}
 		}
-		else
-			rootNode.setUserObject("no database");
-		
 		treeModel.reload();
 	}		
 		
-	private void _setInfo(DefaultMutableTreeNode node, IDirectory group) {
-		ISamsDb db = dbgui.getDatabase();
-		assert db != null;
-		assert group != null;
-		node.setUserObject(group);
-		createGroupNode(node, group);
-	}
-
-	DefaultMutableTreeNode findNode(String path) {
-		DefaultMutableTreeNode parent = rootNode;
+	MyNode findNode(String path) {
+		MyNode parent = rootNode;
 		String[] parts = path.split("/");
 		for ( int i = 0; i < parts.length; i++ ) {
 			String part = parts[i];
@@ -130,103 +111,68 @@ public class Tree extends JPanel {
 		return null;
 	}
 	
-	DefaultMutableTreeNode findChildNode(DefaultMutableTreeNode parent, String part) {
+	MyNode findChildNode(MyNode parent, String name) {
 		for ( int i = 0; i < parent.getChildCount(); i++ ) {
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent.getChildAt(i);
-			Object obj = n.getUserObject();
-			if ( !(obj instanceof INode) )
-				return null;
-			String n_part = ((INode) obj).getPath();
-			n_part = n_part.substring(n_part.lastIndexOf('/') + 1);
-			if ( n_part.equals(part) )
+			MyNode n = (MyNode) parent.getChildAt(i);
+			if ( name.equals(n.getName()) )
 				return n;
 		}
 		return null;
 	}
 	
 	/** Returns path to affected parent */
-	public String insertNode(String path) {
-		String parent_path = path.substring(0, path.lastIndexOf('/'));
-		DefaultMutableTreeNode parent = findNode(parent_path);
-		if ( parent == null ) {
-			return null;
-		}
+	public String insertNode(String path, boolean isSpectrum) {
+		assert !path.endsWith("/");
+		
 		ISamsDb db = dbgui.getDatabase();
-		if ( db == null ) {
+		if ( db == null )
 			return null;
-		}
-		try {
-			IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(path);
-			if ( f == null )
-				System.out.println(path+ ": path not found!!");
-			else {
-				addObject(parent, f, true);
-				return parent_path;
-			}
-		}
-		catch(Exception ex) {
-		}
-		return null;
+
+		String parent_path = path.substring(0, path.lastIndexOf('/'));
+		MyNode parent = findNode(parent_path);
+		if ( parent == null )
+			return null;
+
+		String name = path.substring(path.lastIndexOf('/') + 1);
+		addChild(parent, name, isSpectrum, true);
+		return parent_path;
 	}
 		
 	/** Returns path to affected parent */
 	public String removeNode(String path) {
-		DefaultMutableTreeNode node = findNode(path);
+		MyNode node = findNode(path);
 		if ( node == null ) {
 			return null;
 		}
-		DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+		MyNode parent = (MyNode) node.getParent();
 		if ( parent == null ) {
 			return null;
 		}
 		treeModel.removeNodeFromParent(node);
-		Object obj = parent.getUserObject();
-		if ( obj instanceof IDirectory )
-			return ((IDirectory) obj).getPath();
-		else
-			return null;
+		//treeModel.reload();
+		jtree.scrollPathToVisible(new TreePath(parent.getPath()));
+		return parent.getStringPath();
 	}
 	
-	public void reloadModel() {
-		treeModel.reload();
-	}
-	
-	public void updateDirectory(String path, boolean scrollToLastChild) {
-		DefaultMutableTreeNode node = findNode(path);
-		if ( node == null )
-			return;
-		node.removeAllChildren();
-		ISamsDb db = dbgui.getDatabase();
-		if ( db != null ) {
-			createGroupNode(node, (IDirectory) node.getUserObject());
-			if ( scrollToLastChild && node.getChildCount() > 0 ) {
-				DefaultMutableTreeNode lastChild = (DefaultMutableTreeNode) node.getLastChild();
-				tree.scrollPathToVisible(new TreePath(lastChild.getPath()));
-			}
-			else {
-				tree.scrollPathToVisible(new TreePath(node.getPath()));
-			}
-		}
-	}
-	
-	public DefaultMutableTreeNode getImportedNode() {
+	public MyNode getImportedNode() {
 		return importedNode;
 	}
 	
-	public DefaultMutableTreeNode getComputedNode() {
+	public MyNode getComputedNode() {
 		return computedNode;
 	}
 	
-	private void createGroupNode(DefaultMutableTreeNode parent, IDirectory group) {
+	private void createGroupNode(MyNode parent, ISfsys.IDirectory group) {
 		for ( Iterator iter = group.getChildren().iterator(); iter.hasNext(); ) {
 			ISfsys.INode node = (ISfsys.INode) iter.next();
 			if ( node instanceof ISfsys.IFile ) {
-				parent.add(new DefaultMutableTreeNode(node, false));
+				MyNode mynode = new MyNode().reset(node.getName(), true);
+				parent.add(mynode);
 			}
 			else if ( node instanceof ISfsys.IDirectory ) {
 				// recurse creating subgroup nodes:
 				ISfsys.IDirectory subgroup = (ISfsys.IDirectory) node;
-				DefaultMutableTreeNode child = new DefaultMutableTreeNode(subgroup, true);
+				MyNode child = new MyNode().reset(subgroup.getName(), false);
 				createGroupNode(child, subgroup);
 				parent.add(child);
 				
@@ -241,40 +187,53 @@ public class Tree extends JPanel {
 		}
 	}
 	
-	public List getSelectedNodes(Class clazz) {
-		return getSelectedNodes(clazz, 0);
+	public List getSelectedSpectraNodes() {
+		return _getSelectedNodes(true, true);
+	}
+	public List getSelectedSpectraPaths() {
+		return _getSelectedNodes(true, false);
+	}
+	public List getSelectedGroupNodes() {
+		return _getSelectedNodes(false, true);
+	}
+	public List getSelectedGroupPaths() {
+		return _getSelectedNodes(false, false);
 	}
 	
 	/**
-	 * @param what 0: nodes containing clazz instances, 1: clazz instances, 2: paths of INodes instances
+	 * @param spectra true for spectra; false for groups (aka directories).
+	 * @param nodes true for nodes; false for paths
 	 */
-	public List getSelectedNodes(Class clazz, int what) {
+	private List _getSelectedNodes(boolean spectra, boolean nodes) {
 		List list = null;
-		TreePath[] paths = tree.getSelectionPaths(); 
+		TreePath[] paths = jtree.getSelectionPaths(); 
 		if ( paths != null ) {
 			for ( int i = 0; i < paths.length; i++ ) {
-				DefaultMutableTreeNode n = (DefaultMutableTreeNode) paths[i].getLastPathComponent();
-				Object obj = n.getUserObject();
-				if ( clazz.isInstance(obj) ) {
+				TreePath tree_path = paths[i];
+				MyNode n = (MyNode) tree_path.getLastPathComponent();
+				if ( spectra && n.isSpectrum()  ||  !spectra && n.isGroup() ) {
 					if ( list == null )
 						list = new ArrayList();
-					if ( what == 0 )  // nodes
+					if ( nodes )
 						list.add(n);
-					else if ( what == 1 )  // instances
-						list.add(obj);
-					else if ( what == 2 && obj instanceof INode )   // paths
-						list.add( ((INode)obj).getPath() );
+					else {
+						if ( n.getStringPath().trim().length() ==0 ) {
+							System.out.println(n._toString());
+							assert false;
+						}
+						list.add(n.getStringPath());
+					}
 				}
 			}
 		}
 		return list;
 	}
 	
-    public DefaultMutableTreeNode getFocusedNode() {
+    public MyNode getFocusedNode() {
 		return focusedNode;
 	}
 
-    protected void updateFocusedNode(DefaultMutableTreeNode node, int row) {
+    protected void updateFocusedNode(MyNode node, int row) {
 		if ( focusedNode != node ) {
 			focusedNode = node;
 			dbgui.focusedNodeChanged();
@@ -282,28 +241,22 @@ public class Tree extends JPanel {
 	}
 
 	/** adds a child if necessary. */
-    public DefaultMutableTreeNode addObject(
-		DefaultMutableTreeNode parent,
-		Object child,
+    public MyNode addChild(
+		MyNode parent,
+		String child_name,
+		boolean isSpectrum,
 		boolean shouldBeVisible
 	) {
         if ( parent == null ) 
             parent = rootNode;
-        DefaultMutableTreeNode childNode = null;
-		// find for existing child node
-		for ( int i = 0; i < parent.getChildCount(); i++ ) {
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent.getChildAt(i);
-			if ( n.toString().equals(child.toString()) ) {
-				childNode = n;
-				break;
-			}
-		}
+        MyNode childNode = findChildNode(parent, child_name);
 		if ( childNode == null ) {
-			childNode = new DefaultMutableTreeNode(child);
+			childNode = new MyNode().reset(child_name, isSpectrum);
 	        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+			childNode.setParent(parent);
 		}
         if ( shouldBeVisible ) 
-            tree.scrollPathToVisible(new TreePath(childNode.getPath()));
+            jtree.scrollPathToVisible(new TreePath(childNode.getPath()));
         return childNode;
     }
 
@@ -326,7 +279,7 @@ public class Tree extends JPanel {
 		}
 
 		public Component getTreeCellRendererComponent(
-			JTree tree,
+			JTree jtree,
 			Object value,
 			boolean sel,
 			boolean expanded,
@@ -334,39 +287,36 @@ public class Tree extends JPanel {
 			int row,
 			boolean hasFocus
 		) {
-			if ( !(value instanceof DefaultMutableTreeNode) ) {
+			if ( !(value instanceof MyNode) ) {
 				super.getTreeCellRendererComponent(
-					tree, value, sel,
+					jtree, value, sel,
 					expanded, leaf, row,
 					hasFocus
 				);
 				return this;
 			}
 
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) value;
+			MyNode n = (MyNode) value;
 			
 			if ( hasFocus )
 				updateFocusedNode(n, row);
 
 			// do default behaviour:
 			super.getTreeCellRendererComponent(
-				tree, value, sel,
+				jtree, value, sel,
 				expanded, leaf, row,
 				hasFocus
 			);
 			
-			value = n.getUserObject();
-			if ( value instanceof IDirectory ) {
+			if ( n.isGroup() ) {
 				setIcon(openIcon);
 				setBackgroundSelectionColor(bg_group);
 				//setToolTipText("....");
 			}
-			else if ( value instanceof IFile )  {
+			else if ( n.isSpectrum() )  {
 				setBackgroundSelectionColor(bg_spectrum);
 				//setToolTipText(null); //no tool tip
 			}
-			else
-				System.err.println("Node: " +value.getClass()+ " = " +value);
 	
 			if ( normalFont == null ) {
 				normalFont = getFont();
@@ -381,4 +331,66 @@ public class Tree extends JPanel {
 		}
 	}
 
+	public static class MyNode extends DefaultMutableTreeNode {
+		String name; // always the simple name -- no slashes at all
+		boolean isSpectrum;
+		boolean isGroup;
+		
+		MyNode() {
+			super();
+		}
+		
+		MyNode reset(String name) {
+			return reset(name, false, false, true);
+		}
+		
+		MyNode reset(String name, boolean isSpectrum) {
+			return reset(name, isSpectrum, !isSpectrum, !isSpectrum);
+		}
+		
+		private MyNode reset(String name, boolean isSpectrum, boolean isGroup, boolean allowsChildren) {
+			assert name.trim().length() > 0;
+			this.name = name;
+			this.isSpectrum = isSpectrum;
+			this.isGroup = isGroup;
+			setAllowsChildren(allowsChildren);
+			return this;
+		}
+		
+		public String getStringPath() {
+			TreeNode[] t = getPath();
+			assert this == t[t.length - 1];
+			StringBuffer sb = new StringBuffer();
+			// from 1 to omit root node:
+			for ( int i = 1; i < t.length; i++ ) {
+				MyNode mynode = (MyNode) t[i];
+				sb.append("/" +mynode.getName());
+			}
+			return sb.toString();
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
+		public boolean isGroup() {
+			return isGroup;
+		}
+		
+		public boolean isSpectrum() {
+			return isSpectrum;
+		}
+		
+		public String toString() {
+			return name;
+		}
+		
+		String _toString() {
+			return "name=[" +name+ "]\n"
+				+  "isSpectrum=[" +isSpectrum+ "]\n"
+				+  "isGroup=[" +isGroup+ "]\n"
+				+  "allowsChildren=[" +getAllowsChildren()+ "]"
+			;
+		}
+	}
 }

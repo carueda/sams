@@ -7,8 +7,6 @@ import samsgui.BaseDialog;
 import samscore.ISamsDb;
 import samscore.ISamsDb.ISpectrum;
 import samscore.Sams;
-import sfsys.ISfsys;
-import sfsys.ISfsys.*;
 import sig.Signature;
 import sigoper.*;
 
@@ -40,15 +38,15 @@ public class Compute {
 	private IOperation sigOper;
 	private IOperation.IParameterInfo parInfo;
 	private Map parValues;
-	private List selectedSpectra;
+	private List selectedSpectraPaths;
 	private Signature reference_sig;
-	private DefaultMutableTreeNode computedNode;
+	private Tree.MyNode computedNode;
 	
 	
-	public Compute(DbGui dbgui, IOperation sigOper, List selectedSpectra, Signature reference_sig) {
+	public Compute(DbGui dbgui, IOperation sigOper, List selectedSpectraPaths, Signature reference_sig) {
 		this.dbgui = dbgui;
 		this.sigOper = sigOper;
-		this.selectedSpectra = selectedSpectra;
+		this.selectedSpectraPaths = selectedSpectraPaths;
 		this.reference_sig = reference_sig;
 		computedNode = dbgui.getTree().getComputedNode();
 		if ( sigOper instanceof IMultiSignatureOperation )
@@ -236,7 +234,7 @@ public class Compute {
 								}
 							});
 	
-							progressBar.setMaximum(selectedSpectra.size() +2);
+							progressBar.setMaximum(selectedSpectraPaths.size() +2);
 							progressBar.setIndeterminate(false);
 							progressBar.setString(null); //display % string
 
@@ -252,13 +250,12 @@ public class Compute {
 								// b)
 								task_message.append("\nAdding result " +path);
 								progressBar.setValue(progressBar.getMaximum() -1);
-								ISpectrum s = db.addSpectrum(path, sig);
-								final IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
+								final ISpectrum s = db.addSpectrum(path, sig);
 
 								// update GUI
 								Controller.doUpdate(new Runnable() {
 									public void run() {
-										dbgui.getTree().addObject(computedNode, f, true);
+										dbgui.getTree().addChild(computedNode, s.getString("name"), true, true);
 										dbgui.refreshTable();
 									}
 								});
@@ -296,15 +293,14 @@ public class Compute {
 		}
 		
 		Signature[] getSignatures() throws Exception {
-			Signature[] sigs = new Signature[selectedSpectra.size()];
-			for ( int i = 0; i < selectedSpectra.size(); i++ ) {
-				IFile f = (IFile) selectedSpectra.get(i);
-				String path = f.getPath();
+			Signature[] sigs = new Signature[selectedSpectraPaths.size()];
+			for ( int i = 0; i < selectedSpectraPaths.size(); i++ ) {
+				String path = (String) selectedSpectraPaths.get(i);
 				task_message.append("processing " +path+ "\n");
 				progressBar.setValue(i+1);
 				Signature sig = dbgui.getDatabase().getSignature(path);
 				if ( sig.getUserObject() == null )
-					sig.setUserObject(f.getName());
+					sig.setUserObject(path.substring(path.lastIndexOf('/') + 1));
 				sigs[i] = sig;
 			}
 			return sigs;
@@ -420,14 +416,13 @@ public class Compute {
 								}
 							});
 	
-							progressBar.setMaximum(selectedSpectra.size() +1);
+							progressBar.setMaximum(selectedSpectraPaths.size() +1);
 							progressBar.setIndeterminate(false);
 							progressBar.setString(null); //display % string
 
 							try {	
-								for ( int i = 0; i < selectedSpectra.size(); i++ ) {
-									IFile f = (IFile) selectedSpectra.get(i);
-									String path = f.getPath();
+								for ( int i = 0; i < selectedSpectraPaths.size(); i++ ) {
+									String path = (String) selectedSpectraPaths.get(i);
 									task_message.append("processing " +path+ "\n");
 									progressBar.setValue(i+1);
 									Signature sig = dbgui.getDatabase().getSignature(path);
@@ -438,7 +433,7 @@ public class Compute {
 										sig_res = ((ISingleSignatureOperation) sigOper).operate(sig);
 									
 									if ( r_create.isSelected() ) {
-										String prefix = f.getName();
+										String prefix = path.substring(path.lastIndexOf('/') + 1);
 										if ( prefix.endsWith(".txt") )
 											prefix = prefix.substring(0, prefix.length() - ".txt".length());
 										String resultname = f_resultname.getText();
@@ -446,8 +441,7 @@ public class Compute {
 										
 										task_message.append("Adding result " +path_res+ "\n");
 										ISpectrum s = db.addSpectrum(path_res, sig_res);
-										f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
-										dbgui.getTree().addObject(computedNode, f, false);
+										dbgui.getTree().addChild(computedNode, s.getString("name"), true, false);
 									}
 									else {
 										db.setSignature(path, sig_res);

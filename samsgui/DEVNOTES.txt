@@ -2,6 +2,10 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/25/03
+	- clipboard operations: 
+		- Tree: new MyNode to simplify node management.
+		- new element in status bar for clipboard contents.
 07/24/03
 	- clipboard operations: 
 		- progress-bar now working very nicely.
