@@ -2,6 +2,11 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 09/29/04 - version 3.1
+ 	- New operations included in base_dist/opers/:
+		sort.s.bsh
+		resample.b.bsh
+		
  04/06/04 - version 3.1
  	- Just change in version with new izpack installer activated
 	  and splash image rotated to better fit in installation window.
