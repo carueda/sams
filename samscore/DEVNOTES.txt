@@ -2,7 +2,8 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
- 08/14/03
+ 08/14/03 - version 3.0
+ 	- Set the new version 3.0
  	- SamsDb._makeGroupingBy(): string values are put in single quotes.
 	  (note: currently, string is the only data type supported.)
 	- SamsDb: changes to check for valid attr names, better messages
