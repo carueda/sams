@@ -63,6 +63,8 @@ public class SamsGui {
 			splash.status("Opening recent database '" +new File(filename).getName()+ "'...");
 		open(filename);
 		splash.status(null);
+		ToolTipManager ttman = ToolTipManager.sharedInstance();
+		ttman.setDismissDelay(60*1000);
 	}
 
 	public static Info getInfo() {

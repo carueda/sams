@@ -13,6 +13,9 @@ $Id$
 	  (sigopers module) to support this.
 	  
 	- New Reflectance to radiance operation (refl2rad.b.bsh)
+	
+	- SamsGui.init(): now uses the ToolTipManager to
+	  setDismissDelay with a longer delay (60 secs).
 	  
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message
