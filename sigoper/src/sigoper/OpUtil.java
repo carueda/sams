@@ -215,8 +215,12 @@ public final class OpUtil {
 	 */
 	public static double averagedValueAt(Signature sig, double at, double winsize)
 	throws OperationException {
+		// just to check that at least the signature is defined at the
+		// given abscissa: (we don't need the returned index)
+		indexAt(sig, at);
+		
 		int size = sig.getSize();
-		Signature.Datapoint p = null;
+		Signature.Datapoint p = null;      
 
 		// interval of interest:
 		double winsize2 =  winsize/2;		
@@ -224,8 +228,15 @@ public final class OpUtil {
 		double at_sup = at + winsize2;
 		
 		// corresponding indices:
-		int inf_idx = indexAt(sig, at_inf);
-		int sup_idx = indexAt(sig, at_sup);
+		int inf_idx = rightMostIndexAt(sig, at_inf);
+		int sup_idx = leftMostIndexAt(sig, at_sup);
+
+		// the following adjustments are OK since we already know
+		// the signature is at least defined at the center abscissa:
+		if ( inf_idx < 0 )
+			inf_idx = 0;
+		if ( sup_idx >= size )
+			sup_idx = size -1;
 		
 		p = sig.getDatapoint(inf_idx);
 		if ( inf_idx == sup_idx )
@@ -238,6 +249,64 @@ public final class OpUtil {
 			sum += p.y;
 		}
 		return sum / (sup_idx - inf_idx + 1);
+	}
+	
+	/**
+	 * Gets the right most index i such that sig[i].x &lt;= at.
+	 * Example:
+	 * <pre>
+	 * 	sig.x = [ 400, 401, 402, 403, 404]
+	 *	rightMostIndexAt(sig, 401.5) == 1
+	 *	rightMostIndexAt(sig, 399) == -1
+	 *	rightMostIndexAt(sig, 405) == 4
+	 * </pre>
+	 *
+	 * @return The index in [-1, size-1]
+	 *
+	 * @throws OperationException If signature is undefined at the given abscissa.
+	 */
+	public static int rightMostIndexAt(Signature sig, double at)
+	throws OperationException {
+		int size = sig.getSize();
+		Signature.Datapoint p = null;
+		
+		// search for index of at:
+		int index;
+		for ( index = 0; index < size; index++ ) {
+			p = sig.getDatapoint(index);
+			if ( p.x > at )
+				return index - 1;
+		}
+		return size -1;
+	}
+	
+	/**
+	 * Gets the left most index i such that sig[i].x >= at.
+	 * Example:
+	 * <pre>
+	 * 	sig.x = [ 400, 401, 402, 403, 404]
+	 *	leftMostIndexAt(sig, 401.5) == 2
+	 *	leftMostIndexAt(sig, 399) == 0
+	 *	leftMostIndexAt(sig, 405) == 5
+	 * </pre>
+	 *
+	 * @return The index in [0, size]
+	 *
+	 * @throws OperationException If signature is undefined at the given abscissa.
+	 */
+	public static int leftMostIndexAt(Signature sig, double at) 
+	throws OperationException {
+		int size = sig.getSize();
+		Signature.Datapoint p = null;
+		
+		// search for index of at:
+		int index;
+		for ( index = size-1; index >= 0; index-- ) {
+			p = sig.getDatapoint(index);
+			if ( p.x < at )
+				return index + 1;
+		}
+		return 0;
 	}
 	
 	/**
