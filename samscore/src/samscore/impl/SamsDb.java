@@ -619,10 +619,9 @@ class SamsDb implements ISamsDb {
 		Evaluator setSource(String source) throws Exception {
 			returnType = null;
 			// change every single quote for double quote (char is not considered): 
-			src = source.trim().replace('\'', '"');
-		
+			src = source.replace('\'', '"');
 			// to distinguish strings:  (escaped quotes are not processed yet)
-			String[] parts = src.split("\"");
+			String[] parts = (" " +src+ " ").split("\"");
 			boolean in_string = false;
 			for ( int j = 0; j < parts.length; j++, in_string = !in_string ) {
 				if ( !in_string ) {
@@ -655,9 +654,11 @@ class SamsDb implements ISamsDb {
 				new bsh.Parser(new StringReader(src)).Expression();
 			}
 			catch(bsh.ParseException ex) {
+				System.err.println(ex.getMessage());
 				throw new Exception("Syntax error", ex);
 			}
 			catch(bsh.TokenMgrError ex) {
+				System.err.println(ex.getMessage());
 				throw new Exception("Syntax error", ex);
 			}
 			
@@ -698,12 +699,12 @@ class SamsDb implements ISamsDb {
 		
 		Evaluator bind(ISpectrum s) throws Exception {
 			try {
-				bsh.set("name", s.getName());
-				bsh.set("location", s.getLocation());
+				bsh.set("name", s.getName().intern());
+				bsh.set("location", s.getLocation().intern());
 				for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
 					IAttributeDef def = (IAttributeDef) iter.next();
 					String name = def.getName();
-					bsh.set(name+ "_", s.getString(name));
+					bsh.set(name+ "_", s.getString(name).intern());
 				}
 				return this;
 			}

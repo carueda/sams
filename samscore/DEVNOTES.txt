@@ -5,6 +5,7 @@ $Id$
  08/21/03 - version 3.0
  	- Evaluator: fake_big_value defined to prevent runtime errors during
 	  semantic checking.
+	- Why beanshell evaluates "abc" == "abc" as false ??
 	- Order.compare: possible NPE fixed: orderByExpressions could be null.
 	
  08/20/03 - version 3.0
