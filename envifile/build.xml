@@ -38,7 +38,11 @@
 	</target>
 
     <target name="clean">
-		<delete dir="${build}"/>
+		<delete dir="${build}/classes/envifile"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete file="${dist}/envifile.jar"/>
     </target>
 
 </project>

@@ -4,26 +4,37 @@
 -->
 <project name="sams" default="compile" >
 
-    <target name="compile">
-	<ant dir="fileutils" inheritAll="false"/>
-	<ant dir="sig" inheritAll="false"/>
-	<ant dir="sigoper" inheritAll="false"/>
-	<ant dir="specfile" inheritAll="false"/>
-	<ant dir="sfsys" inheritAll="false"/>
-	<ant dir="envifile" inheritAll="false"/>
-	<ant dir="samscore" inheritAll="false"/>
-	<ant dir="samsgui" inheritAll="false"/>
-    </target>
+	<target name="compile">
+		<ant dir="fileutils" inheritAll="false"/>
+		<ant dir="sig" inheritAll="false"/>
+		<ant dir="sigoper" inheritAll="false"/>
+		<ant dir="specfile" inheritAll="false"/>
+		<ant dir="sfsys" inheritAll="false"/>
+		<ant dir="envifile" inheritAll="false"/>
+		<ant dir="samscore" inheritAll="false"/>
+		<ant dir="samsgui" inheritAll="false"/>
+	</target>
+	
+	<target name="clean">
+		<ant dir="fileutils" target="clean" inheritAll="false"/>
+		<ant dir="sig" target="clean" inheritAll="false"/>
+		<ant dir="sigoper" target="clean" inheritAll="false"/>
+		<ant dir="specfile" target="clean" inheritAll="false"/>
+		<ant dir="sfsys" target="clean" inheritAll="false"/>
+		<ant dir="envifile" target="clean" inheritAll="false"/>
+		<ant dir="samscore" target="clean" inheritAll="false"/>
+		<ant dir="samsgui" target="clean" inheritAll="false"/>
+	</target>
 
-    <target name="clean">
-	<ant dir="fileutils" target="clean" inheritAll="false"/>
-	<ant dir="sig" target="clean" inheritAll="false"/>
-	<ant dir="sigoper" target="clean" inheritAll="false"/>
-	<ant dir="specfile" target="clean" inheritAll="false"/>
-	<ant dir="sfsys" target="clean" inheritAll="false"/>
-	<ant dir="envifile" target="clean" inheritAll="false"/>
-	<ant dir="samscore" target="clean" inheritAll="false"/>
-	<ant dir="samsgui" target="clean" inheritAll="false"/>
-    </target>
+	<target name="clean-dist">
+		<ant dir="fileutils" target="clean-dist" inheritAll="false"/>
+		<ant dir="sig" target="clean-dist" inheritAll="false"/>
+		<ant dir="sigoper" target="clean-dist" inheritAll="false"/>
+		<ant dir="specfile" target="clean-dist" inheritAll="false"/>
+		<ant dir="sfsys" target="clean-dist" inheritAll="false"/>
+		<ant dir="envifile" target="clean-dist" inheritAll="false"/>
+		<ant dir="samscore" target="clean-dist" inheritAll="false"/>
+		<ant dir="samsgui" target="clean-dist" inheritAll="false"/>
+	</target>
 
 </project>

@@ -54,7 +54,12 @@ public class Controller {
 	}
 	
 	public static void closeDatabase() {
-		SamsGui.close();
+		try {
+			SamsGui.close();
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
 	}
 	
 	public static void saveDatabase() {
@@ -140,7 +145,7 @@ public class Controller {
 		public static String selectDatabaseDirectory(String title) {
 			String basedir = "";
 			File file = new File(Prefs.get(Prefs.RECENT));
-			if ( file.exists() && file.getParent() != null )
+			if ( file.getParent() != null )
 				basedir = file.getParent();
 			File dir = selectDirectory(title, basedir);
 			return dir == null ? null : dir.getAbsolutePath(); 

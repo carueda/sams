@@ -40,7 +40,11 @@
 	</target>
 
     <target name="clean">
-		<delete dir="${build}"/>
+		<delete dir="${build}/classes/specfile"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete file="${dist}/specfile.jar"/>
     </target>
 
 </project>

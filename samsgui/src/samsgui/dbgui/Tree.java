@@ -1,5 +1,6 @@
 package samsgui.dbgui;
 
+import samscore.ISamsDb;
 import sfsys.ISfsys;
 import sfsys.ISfsys.*;
 
@@ -28,9 +29,12 @@ public class Tree extends JPanel {
 	private static final Color bg_group = new Color(222,222,255);
 	private static final Color bg_spectrum = new Color(210,255,255);
 
-	DbGui dbgui;
-	ISfsys fs;
+	protected DbGui dbgui;
+	protected ISfsys imported_fs;
+	protected ISfsys computed_fs;
 	protected DefaultMutableTreeNode rootNode;
+	protected DefaultMutableTreeNode importedNode;
+	protected DefaultMutableTreeNode computedNode;
     protected DefaultTreeModel treeModel;
     protected JTree tree;
 
@@ -40,7 +44,6 @@ public class Tree extends JPanel {
 	public Tree(DbGui dbgui) {
 		super(new BorderLayout());
 		this.dbgui = dbgui;
-		fs = null;
 		
 		JLabel label = new JLabel("Right-click for options", JLabel.CENTER);
 		label.setFont(label.getFont().deriveFont(Font.ITALIC));
@@ -48,6 +51,7 @@ public class Tree extends JPanel {
 		add(label, BorderLayout.NORTH);
 		
         rootNode = new DefaultMutableTreeNode("Root Node");
+		
         treeModel = new DefaultTreeModel(rootNode);
 
         tree = new JTree(treeModel);
@@ -66,7 +70,7 @@ public class Tree extends JPanel {
 			}
 		});
 
-		tree.setRootVisible(true);
+		tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
 		tree.putClientProperty("JTree.lineStyle", "Angled");
 		
@@ -84,17 +88,35 @@ public class Tree extends JPanel {
 		return tcr.getLeafIcon();
 	}
 	
-	public void setInfo(ISfsys	fs) {
+	public void setInfo() {
 		rootNode.removeAllChildren();
-		this.fs = fs;
-		if ( fs != null ) {
-			IDirectory group = fs.getRoot();
-			rootNode.setUserObject(group);
-			createGroupNode(rootNode, group);
+
+		ISamsDb db = dbgui.getDatabase();
+		if ( db != null ) {
+			try {
+				ISfsys fs = db.getGroupingBy(new String[] {"location"});
+				if ( fs != null ) {
+					IDirectory group = fs.getRoot();
+					rootNode.setUserObject(group);
+					createGroupNode(rootNode, group);
+				}
+			}
+			catch (Exception ex) {
+				rootNode.setUserObject("error: " +ex.getMessage());
+			}
 		}
 		else
 			rootNode.setUserObject("no database");
+		
 		treeModel.reload();
+	}
+
+	public DefaultMutableTreeNode getImportedNode() {
+		return importedNode;
+	}
+	
+	public DefaultMutableTreeNode getComputedNode() {
+		return computedNode;
 	}
 	
 	private void createGroupNode(DefaultMutableTreeNode parent, IDirectory group) {
@@ -109,6 +131,12 @@ public class Tree extends JPanel {
 				DefaultMutableTreeNode child = new DefaultMutableTreeNode(subgroup, true);
 				createGroupNode(child, subgroup);
 				parent.add(child);
+				
+				String subpath = subgroup.getPath();
+				if ( subpath.equals("/computed") )
+					computedNode = child;
+				else if ( subpath.equals("/imported") )
+					importedNode = child;
 			}
 			else
 				throw new RuntimeException("Unexpected object type");
@@ -149,6 +177,20 @@ public class Tree extends JPanel {
 			dbgui.focusedNodeChanged();
 		}
 	}
+
+    public DefaultMutableTreeNode addObject(
+		DefaultMutableTreeNode parent,
+		Object child,
+		boolean shouldBeVisible
+	) {
+        DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
+        if (parent == null) 
+            parent = rootNode;
+        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+        if (shouldBeVisible) 
+            tree.scrollPathToVisible(new TreePath(childNode.getPath()));
+        return childNode;
+    }
 
 	class MyRenderer extends DefaultTreeCellRenderer  {
 		Font normalFont = null;
@@ -191,6 +233,7 @@ public class Tree extends JPanel {
 			if ( hasFocus )
 				updateFocusedNode(n, row);
 
+			// do default behaviour:
 			super.getTreeCellRendererComponent(
 				tree, value, sel,
 				expanded, leaf, row,
@@ -207,6 +250,8 @@ public class Tree extends JPanel {
 				setBackgroundSelectionColor(bg_spectrum);
 				//setToolTipText(null); //no tool tip
 			}
+			else
+				System.err.println("Node: " +value.getClass()+ " = " +value);
 	
 			if ( normalFont == null ) {
 				normalFont = getFont();

@@ -114,9 +114,7 @@ public class DbGui extends JPanel {
 		this.db = db;
 		table.setDatabase(db);
 		fs = null;
-		if ( db != null )
-			fs = db.getGroupingBy(new String[] {"location"});
-		tree.setInfo(fs);
+		tree.setInfo();
 		table.revalidate();
 		plot.reset();
 		plot.repaint();

@@ -4,6 +4,7 @@ import samsgui.SamsGui;
 import samsgui.BaseDialog;
 
 import samscore.ISamsDb;
+import samscore.ISamsDb.ISpectrum;
 import samscore.Sams;
 import sfsys.ISfsys;
 import sfsys.ISfsys.*;
@@ -42,7 +43,7 @@ public class Compute {
 		this.sigOper = sigOper;
 		this.selectedSpectra = selectedSpectra;
 		this.reference_sig = reference_sig;
-		//computedNode = dbgui.getTree().getComputedNode();
+		computedNode = dbgui.getTree().getComputedNode();
 		if ( sigOper instanceof IMultiSignatureOperation )
 			new MultiForm((IMultiSignatureOperation) sigOper).go();
 		else
@@ -111,8 +112,8 @@ public class Compute {
 			if ( db == null )
 				return;
 			
-			final JTextField f_resname = new JTextField(20);
-			f_resname.setBorder(SamsGui.createTitledBorder("Computed signature name"));
+			final JTextField f_resultname = new JTextField(20);
+			f_resultname.setBorder(SamsGui.createTitledBorder("Computed signature name"));
 			final JLabel status = new JLabel();
 			status.setFont(status.getFont().deriveFont(Font.ITALIC));
 			progressBar = new JProgressBar(0, 1000);
@@ -143,7 +144,7 @@ public class Compute {
 			});
 			
 			List array = new ArrayList();
-			array.add(f_resname);
+			array.add(f_resultname);
 			addParInfoComponents(array);
 			array.add(status);
 			array.add(progressBar);
@@ -153,8 +154,8 @@ public class Compute {
 			final BaseDialog form = new BaseDialog(frame, diag_title, array.toArray()) {
 				public boolean dataOk() {
 					String msg = null;
-					String resname = f_resname.getText();
-					if ( resname.trim().length() == 0 )
+					String resultname = f_resultname.getText();
+					if ( resultname.trim().length() == 0 )
 						msg = "Please specify a name for resulting signature";
 					if ( msg == null ) {
 						status.setForeground(Color.gray);
@@ -181,14 +182,14 @@ public class Compute {
 					if ( !dataOk() )
 						return false;
 					
-					final String resname = f_resname.getText();
+					final String resultname = f_resultname.getText();
 					
 					// do computation:
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
 							doUpdate(new Runnable() {
 								public void run() {
-									f_resname.setEditable(false);
+									f_resultname.setEditable(false);
 									
 									btnAccept.setEnabled(false);
 									btnCancel.setEnabled(false);
@@ -208,24 +209,30 @@ public class Compute {
 								task_message.append("\nComputing...");
 								progressBar.setValue(progressBar.getMaximum() -2);
 								Signature sig = sigOper.operate(sigs);
+								String path = "/computed/" +resultname;
 								
-								// a)
-								task_message.append("\nAdding result...");
+								// b)
+								task_message.append("\nAdding result [" +path+ "]");
 								progressBar.setValue(progressBar.getMaximum() -1);
-								/*ISpectrum spectrum = DBUtil.addComputedSignature(current_db, sig, sig_name);
-								if ( computedNode != null )
-									tree.addObject(computedNode, spectrum, true);
-							*/	
+								ISpectrum s = db.addSpectrum(path, sig);
+								IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
+								dbgui.getTree().addObject(computedNode, f, true);
+
 								progressBar.setValue(progressBar.getMaximum());
 								
-								task_isDone = true;
 								task_message.append("\nDone.");
-								btnAccept.setText("Close");
-								btnAccept.setEnabled(true);
+							}
+							catch(RuntimeException ex) {
+								task_message.append("\nRuntimeException!: " +ex.getMessage());
+								ex.printStackTrace();
 							}
 							catch(Exception ex) {
 								task_message.append("\nError: " +ex.getMessage());
+							}
+							finally {
 								task_isDone = true;
+								btnAccept.setText("Close");
+								btnAccept.setEnabled(true);
 							}
 						}
 					});

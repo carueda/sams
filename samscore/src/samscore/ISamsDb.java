@@ -46,8 +46,8 @@ public interface ISamsDb {
 	/** gets a grouping structure according to attribute values. */
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception;
 	
-	/** gets the path name normalizer associated. */
-	public IPathNormalizer getPathNormalizer();
+	/** gets the grouping by "location". */
+	public ISfsys getGroupingLocation() throws Exception;
 	
 	/** Represents an element in this database. */
 	public interface ISpectrum {
@@ -103,14 +103,5 @@ public interface ISamsDb {
 	public interface ICondition {
 		/** Gets a string representation of this condition. */
 		public String toString();	
-	}
-	
-	/** Path name normalizer associated */
-	public interface IPathNormalizer {
-		/** normalizes a path */
-		public String normalize(String path);
-		
-		/** gets the list (String) of ignores suffixes. */
-		public java.util.List getIgnoredSuffixes();
 	}
 }

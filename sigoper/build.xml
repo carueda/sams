@@ -41,7 +41,11 @@
 	</target>
 
     <target name="clean">
-		<delete dir="${build}"/>
+		<delete dir="${build}/classes/sigoper"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete file="${dist}/sigoper.jar"/>
     </target>
 
 </project>

@@ -41,12 +41,17 @@
 	<target name="compile" depends="init">
 		<javac srcdir="${src.dir}" destdir="${dest.dir}"
 			debug="on"
+			source="1.4"
 			classpath="${sig}:${specfile}:${sfsys}:${sigoper}:${fileutils}:${envifile}"
 		/>
 	</target>
 
     <target name="clean">
-		<delete dir="${build}"/>
+		<delete dir="${build}/classes/samsgui"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete file="${dist}/samscore.jar"/>
     </target>
 
 </project>

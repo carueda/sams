@@ -11,11 +11,17 @@ import java.util.*;
 
 /** 
  * A SAMS database implementation.
+ * Notes:
+ * <ul>
+ *	<li> Never use a path ending with '/'
+ *	<li> Previous returned ISfsys objects are not automatically updated
+ *		after a modification (say, addSpectrum); you have to retrieve
+ *		a new ISfsys object (e.g getGroupingBy).	 
+ * </ul>
  * @author Carlos A. Rueda
  * @version $Id$ 
  */
 class SamsDb implements ISamsDb {
-	
 	static ISamsDb open(String dirname) throws Exception {
 		File baseDir = new File(dirname).getCanonicalFile();
 		if ( !baseDir.isDirectory() )
@@ -31,11 +37,11 @@ class SamsDb implements ISamsDb {
 	}
 
 	private static final String infoName = "info.sams";
-	private static final String spectraDirName = "signatures";
+	private static final String sigsDirName = "sigs";
+	private static final String computedDirName = "computed";
 
 	private File baseDir;
-	private File spectraDir;
-	private ISfsys location_fs;
+	private File sigsDir;
 
 	/** Mapping:s attrName->AttributeDef */
 	private Map attrDefMap;
@@ -48,17 +54,18 @@ class SamsDb implements ISamsDb {
 
 	private IMetadataDef mddef;
 	
-	private IPathNormalizer pathNormalizer; 
-
 
 	private SamsDb(File baseDir, boolean create) throws Exception {
 		this.baseDir = baseDir;
-		spectraDir = new File(baseDir, spectraDirName);
+		sigsDir = new File(baseDir, sigsDirName);
 		mddef = new MetadataDef();
 		
 		if ( create ) {
-			if ( ! spectraDir.mkdirs() )
+			if ( !sigsDir.mkdirs() )
 				throw new Exception(baseDir+ ": Cannot create directory structure");
+			
+			new File(sigsDir, "imported").mkdirs();
+			new File(sigsDir, "computed").mkdirs();
 			
 			attrDefList = new ArrayList();	// basic metadata definition: 
 			attrDefList.add(new AttributeDef("location", "", false));
@@ -72,7 +79,6 @@ class SamsDb implements ISamsDb {
 		}
 
 		_updateAttrDefMap();
-		pathNormalizer = new PathNormalizer();
 	}
 
 	private void _updateAttrDefMap() {
@@ -127,19 +133,19 @@ class SamsDb implements ISamsDb {
 		return baseDir.getPath();
 	}
 	
+	public ISfsys getGroupingLocation() throws Exception {
+		return Sfsys.create(sigsDir.getPath());
+	}
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
 		ISfsys fs = null;
-		if ( attrNames.length == 1 && attrNames[0].equals("location") ) {
-			if ( location_fs == null )
-				location_fs = Sfsys.create(spectraDir.getPath());
-			fs = location_fs;
-		}
+		if ( attrNames.length == 1 && attrNames[0].equals("location") )
+			fs = getGroupingLocation();
 		else
 			fs = _makeGroupingBy(attrNames);
 		
 		return fs;
 	}
-	
+
 	private IAttributeDef[] _getAttrDefs(String[] attrNames) throws Exception {
 		IAttributeDef[] attrs = new IAttributeDef[attrNames.length];
 		for ( int i = 0; i < attrNames.length; i++ ) {
@@ -172,10 +178,6 @@ class SamsDb implements ISamsDb {
 		}
 		
 		return fs;
-	}
-	
-	public IPathNormalizer getPathNormalizer() {
-		return pathNormalizer;
 	}
 	
 	public IMetadataDef getMetadata() {
@@ -218,12 +220,12 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public ISpectrum getSpectrum(String path) throws Exception {
-		path = getPathNormalizer().normalize(path);
+		path = normalizePath(path);
 		return (ISpectrum) spectrums.get(path);
 	}
 	
 	public ISpectrum addSpectrum(String path, Signature sig) throws Exception {
-		path = getPathNormalizer().normalize(path);
+		path = normalizePath(path);
 		ISpectrum spectrum = (ISpectrum) spectrums.get(path);
 		if ( spectrum == null ) {
 			spectrum = new Spectrum(this, path);
@@ -234,8 +236,10 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public Signature getSignature(String path) throws Exception {
-		path = getPathNormalizer().normalize(path);
-		File file = new File(spectraDir, path+ ".txt");
+		path = normalizePath(path);
+		if ( !path.endsWith(".txt") )
+			path += ".txt";
+		File file = new File(sigsDir, path);
 		if ( !file.exists() )
 			return null;
 
@@ -268,11 +272,11 @@ class SamsDb implements ISamsDb {
 	}
 
 	public void setSignature(String path, Signature sig) throws Exception {
-		path = getPathNormalizer().normalize(path);
-		File file = new File(spectraDir, path+ ".txt");
+		path = normalizePath(path);
+		File file = new File(sigsDir, path);
 		File parent = file.getParentFile();
 		if ( !parent.exists() && !parent.mkdirs() )
-			throw new Exception("Cannot make directory for : " +file.getAbsolutePath());
+			throw new Exception("Cannot make directory for: " +file.getAbsolutePath());
 		PrintWriter stream = null;
 		try {
 			stream = new PrintWriter(new FileOutputStream(file));
@@ -280,9 +284,8 @@ class SamsDb implements ISamsDb {
 			for ( int i = 0; i < size; i++ ) {
 				Signature.Datapoint p = sig.getDatapoint(i);
 				stream.print(p.x+ " , " +p.y);
-				//if ( p.obj != null ) {
-				//	stream.print("   # " +p.obj);
-				//}
+				if ( p.obj != null )
+					stream.print("   # " +p.obj);
 				stream.println();
 			}
 		}
@@ -424,50 +427,26 @@ class SamsDb implements ISamsDb {
 		}
 	}
 
-	/**
-		The path normalizer used in this database implementation.
-		This path normalizer works as follows:
-		<ul>
-			<li> Any ignored suffix is deleted. Currently, only ".txt".
-			<li> File.separatorChar replaced by '/'
-			<li> Prefix "/" added if necessary
-			<li> "/+$" deleted
-			<li> "//+" replaced by "/"
-		</ul>
-		Examples:
-		<ul>
-			<li> "" --> "/"
-			<li> "/" --> "/"
-			<li> "abc*" --> "/abc*"
-			<li> "/abc.txt" --> "/abc"
-			<li> "//abc//def" --> "/abc/def"
-			<li> "/abc/" --> "/abc"
-		</ul>
-	*/
-	static class PathNormalizer implements IPathNormalizer {
-		private String[] ignoredSuffixes = { ".txt" };
-		
-		public String normalize(String path) {
-			for ( int i = 0; i < ignoredSuffixes.length; i++ ) {
-				String suffix = ignoredSuffixes[i];
-				if ( path.toLowerCase().endsWith(suffix.toLowerCase()) ) {
-					path = path.substring(0, path.length() - suffix.length());
-					break;
-				}
-			}
-			path = path.replace(File.separatorChar, '/');
-			if ( !path.startsWith("/") )
-				path = "/" +path;
-			if ( !path.equals("/") ) {
-				path = path.replaceAll("//+", "/");
-				path = path.replaceAll("/$", "");
-			}
-			return path;
-		}
-		
-		public List getIgnoredSuffixes() {
-			return Arrays.asList(ignoredSuffixes);
-		}
+	/** Normalizes the path to a regular file. See test_normalizePath for examples. */
+	static String normalizePath(String path) {
+		assert path.trim().length() > 0;
+		path = path.replace(File.separatorChar, '/');
+		assert !path.endsWith("/");
+		path = path.replaceAll("//+", "/");
+		if ( !path.endsWith(".txt") )
+			path += ".txt";
+		if ( !path.startsWith("/") )
+			path = "/" +path;
+		return path;
+	}
+	static void test_normalizePath() {
+		System.out.println("test_normalizePath()");
+		assert normalizePath("abc").equals("/abc.txt") ;
+		assert normalizePath("//abc//def").equals("/abc/def.txt") ;
+		assert normalizePath("abc\\def").equals("/abc/def.txt") ;
+	}
+	public static void main(String[]_) {
+		test_normalizePath();
 	}
 
 	class Condition implements ICondition {

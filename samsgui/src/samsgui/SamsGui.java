@@ -154,9 +154,10 @@ public class SamsGui {
 	}
 	
 	/** Closes the focused database. */
-	public static void close() {
+	public static void close() throws Exception {
 		if ( focusedDbGui == null )
 			return;
+		save();
 		DbFrame frame = (DbFrame) focusedDbGui.getFrame();
 		String filename = frame.filename;
 		if ( NO_DB_NAME.equals(filename) ) {
@@ -181,6 +182,15 @@ public class SamsGui {
 				focusedDbGui = null;
 				frame.dispose();
 			}
+		}
+	}
+	
+	private static void _close() {
+		try {
+			close();
+		}
+		catch(Exception ex) {
+			message("Error: " +ex.getMessage());
 		}
 	}
 	
@@ -326,7 +336,7 @@ public class SamsGui {
 		void init(Rectangle rect) {
 			addWindowListener(new WindowAdapter() {
 				public void windowClosing(WindowEvent _) {
-					close();
+					_close();
 				}
 			});
 			addWindowFocusListener(new WindowFocusListener() {

@@ -139,7 +139,7 @@ public class SamsDbManager {
 							ISpectrumFile sf = Sams.readSignatureFile(filename, tryfiletype);
 							lis.importing(++file_number, relative_filename, sf.getFormatName());
 							sig.Signature sig = sf.getSignature();
-							String path = relative_filename;
+							String path = "imported/" +relative_filename;
 							db.addSpectrum(path, sig);
 						}
 						catch(Exception ex) {

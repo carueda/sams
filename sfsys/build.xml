@@ -35,10 +35,12 @@
 	</target>
 
 
-<!-- .......... Various .................. -->
-
     <target name="clean">
-		<delete dir="${build}"/>
+		<delete dir="${build}/classes/sfsys"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete file="${dist}/sfsys.jar"/>
     </target>
 
 </project>
