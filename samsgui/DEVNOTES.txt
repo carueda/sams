@@ -18,6 +18,12 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/10/03
+ 	- Grouping definitions are now stored (using the properties associated
+	  to each database). These definition are:
+	  	- created when new grouping given from table
+		- removed when click-delete over grouping and attribute removal in
+		  metadata definition edition.
+ 	- Table.TableModel.isCellEditable: only "location" is not editable.
  	- Controller.delete() now allows to delete virtual groupings.
 	  This is done inmmediately without confirmation.
  	- Tree.getSelectedSpectraPaths() won't be deleted. It now assures the

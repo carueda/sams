@@ -362,7 +362,7 @@ public class Controller {
 				if ( !grp_node.underGrouping("location:") ) {
 					// check if it is a grouping root:
 					if ( grp_node.getName().endsWith(":") ) {
-						dbgui.getTree().removeNode(grp_node);
+						dbgui.removeGrouping(grp_node);
 						continue;
 					}
 					SamsGui.message("Only groups under location grouping can be deleted.");

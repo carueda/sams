@@ -107,6 +107,11 @@ public class Tree extends JPanel {
 		treeModel.reload();
 	}		
 		
+	public void updateReadOnlyGroupingBy(String attrNames) {
+		String[] a_attrNames = attrNames.split("(,|\\s)+");
+		updateReadOnlyGroupingBy(a_attrNames);
+	}
+	
 	public void updateReadOnlyGroupingBy(String[] attrNames) {
 		StringBuffer sb = new StringBuffer("");
 		for ( int i = 0; i < attrNames.length; i++ )
@@ -167,6 +172,15 @@ public class Tree extends JPanel {
 				_addLocationGroupsUnder(child, loc_groups);
 			}
 		}
+	}
+	
+	public MyNode findGroupingNode(String name) {
+		for ( int i = 0; i < rootNode.getChildCount(); i++ ) {
+			MyNode node = (MyNode) rootNode.getChildAt(i);
+			if ( name.equals(node.getName()) )
+				return node;
+		}
+		return null;
 	}
 	
 	public MyNode findLocationNode(String path, boolean isSpectrum) {

@@ -32,6 +32,9 @@ import java.util.*;
  * @version $Id$ 
  */
 public class DbGui extends JPanel {
+	private static final String PROP_PREFIX = "samsgui";
+	private static final String PROP_GROUPINGS = PROP_PREFIX+ ".groupings";
+	
 	JFrame parentFrame;  // accesible to Plot
 	private ISamsDb db;
 	private Tree tree;
@@ -73,8 +76,10 @@ public class DbGui extends JPanel {
 			public void sort(String orderBy) throws Exception {
 				super.sort(orderBy);
 				if ( orderBy != null && orderBy.trim().length() > 0 ) {
-					String[] attrNames = orderBy.split("(,|\\s)+");
+					orderBy = orderBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+					String[] attrNames = orderBy.split(",");
 					tree.updateReadOnlyGroupingBy(attrNames);
+					_props_addGroupBy(orderBy);
 				}
 			}
 		};
@@ -126,8 +131,22 @@ public class DbGui extends JPanel {
 	}
 	
 	/** notifies */
-	public void metadataUpdated() {
+	public void metadataAttributeAdded(String attr_name) {
 		table.updateMetadata();
+	}
+
+	/** notifies */
+	public void metadataAttributeDeleted(String attr_name) {
+		table.updateMetadata();
+		List removed_groupBys = _props_removeGroupByContainingAttr(attr_name);
+		for ( Iterator it = removed_groupBys.iterator(); it.hasNext(); ) {
+			String groupBy = (String) it.next();
+			groupBy = groupBy.replaceAll(",", ":").replaceAll(":$", "");
+			groupBy += ":";
+			MyNode node = tree.findGroupingNode(groupBy);
+			if ( node != null )
+				tree.removeNode(node);
+		}
 	}
 
 	/** notifies */
@@ -149,14 +168,87 @@ public class DbGui extends JPanel {
 			SamsGui.message(db.getInfo()+ "\n\nCould not save database: " +ex.getMessage());
 		}
 	}
+
+	private List _props_getGroupBysFromProps() {
+		List groupBys = new ArrayList();
+		Properties db_props = db.getInfoProperties();
+		String str = db_props.getProperty(PROP_GROUPINGS);
+		if ( str != null && str.trim().length() > 0 )
+			groupBys.addAll(Arrays.asList(str.split(";")));
+		return groupBys;
+	}
+	private void _props_addGroupBy(String groupBy) {
+		groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+		List groupBys = _props_getGroupBysFromProps();
+		if ( !groupBys.contains(groupBy) ) {
+			groupBys.add(groupBy);
+			_props_updateGroupBysToProps(groupBys);
+		}
+	}
+	private void _props_removeGroupBy(String groupBy) {
+		groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+		List groupBys = _props_getGroupBysFromProps();
+		if ( groupBys.contains(groupBy) ) {
+			groupBys.remove(groupBy);
+			_props_updateGroupBysToProps(groupBys);
+		}
+	}
+	private List _props_removeGroupByContainingAttr(String attrName) {
+		List removed_groupBys = new ArrayList();
+		List groupBys = _props_getGroupBysFromProps();
+		// first, get names to be deleted:
+		for ( int i = 0; i < groupBys.size(); i++ ) {
+			String groupBy = (String) groupBys.get(i);
+			groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+			String[] attrNames = groupBy.split(",");
+			for ( int j = 0; j < attrNames.length; j++ ) {
+				if ( attrNames[j].equals(attrName) ) {
+					removed_groupBys.add(groupBy);
+					break;
+				}
+			}
+		}
+		// now, make deleteon:
+		for ( int i = 0; i < removed_groupBys.size(); i++ ) {
+			String groupBy = (String) removed_groupBys.get(i);
+			groupBys.remove(groupBy);
+		}
+		_props_updateGroupBysToProps(groupBys);
+		return removed_groupBys;
+	}
+	private void _props_updateGroupBysToProps(List groupBys) {
+		StringBuffer sb = new StringBuffer();
+		for ( int i = 0; i < groupBys.size(); i++ ) {
+			String groupBy = (String) groupBys.get(i);
+			if ( i > 0 )
+				sb.append(";");
+			sb.append(groupBy);
+		}
+		Properties db_props = db.getInfoProperties();
+		db_props.setProperty(PROP_GROUPINGS, sb.toString());
+	}
 	
 	public void setDatabase(ISamsDb db) throws Exception {
 		this.db = db;
 		table.setDatabase(db);
 		tree.resetInfo();
+		if ( db != null ) {
+			List groupBys = _props_getGroupBysFromProps();
+			for ( int i = 0; i < groupBys.size(); i++ ) {
+				String groupBy = (String) groupBys.get(i);
+				tree.updateReadOnlyGroupingBy(groupBy);
+			}
+		}
 		table.revalidate();
 		plot.reset();
 		plot.repaint();
+	}
+	
+	public void removeGrouping(MyNode grp_node) {
+		String groupBy = grp_node.getName();
+		assert groupBy.endsWith(":");
+		tree.removeNode(grp_node);
+		_props_removeGroupBy(groupBy);
 	}
 	
 	public Tree getTree() {

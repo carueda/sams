@@ -161,9 +161,8 @@ public abstract class Table extends JPanel {
 		}
 	
 		public boolean isCellEditable(int row, int col) {
-			if ( col == 0 )
-				return false;
-			return col == 1 || attributes[col - 2].isEditable();
+			// only "location" is not editable:
+			return col != 0;
 		}
 	
 		public void setValueAt(Object val, int row, int col) {

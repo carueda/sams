@@ -309,14 +309,14 @@ public class SamsGui {
 			protected boolean addNew(String attr_name, String attr_defval) {
 				ISamsDb db = focusedDbGui.getDatabase();
 				db.getMetadata().add(attr_name, attr_defval);
-				focusedDbGui.metadataUpdated();
+				focusedDbGui.metadataAttributeAdded(attr_name);
 				return true;
 			}
 			protected boolean delete(String attr_name) {
 				if ( SamsGui.confirm(frame, attr_name+ ": Are you sure you want to delete this attribute?") ) {
 					ISamsDb db = focusedDbGui.getDatabase();
 					db.getMetadata().delete(attr_name);
-					focusedDbGui.metadataUpdated();
+					focusedDbGui.metadataAttributeDeleted(attr_name);
 					return true;
 				}
 				return false;
