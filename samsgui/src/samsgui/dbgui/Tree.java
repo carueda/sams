@@ -172,21 +172,20 @@ public class Tree extends JPanel {
 		return computedNode;
 	}
 	
-	private void createGroupNode(MyNode parent, ISfsys.IDirectory group) {
+	private void createGroupNode(MyNode parent, ISfsys.INode group) {
 		for ( Iterator iter = group.getChildren().iterator(); iter.hasNext(); ) {
 			ISfsys.INode node = (ISfsys.INode) iter.next();
-			if ( node instanceof ISfsys.IFile ) {
+			if ( node.isFile() ) {
 				MyNode mynode = new MyNode().reset(node.getName(), true);
 				parent.add(mynode);
 			}
-			else if ( node instanceof ISfsys.IDirectory ) {
+			else if ( node.isDirectory() ) {
 				// recurse creating subgroup nodes:
-				ISfsys.IDirectory subgroup = (ISfsys.IDirectory) node;
-				MyNode child = new MyNode().reset(subgroup.getName(), false);
-				createGroupNode(child, subgroup);
+				MyNode child = new MyNode().reset(node.getName(), false);
+				createGroupNode(child, node);
 				parent.add(child);
 				
-				String subpath = subgroup.getPath();
+				String subpath = node.getPath();
 				if ( subpath.equals("/computed") )
 					computedNode = child;
 				else if ( subpath.equals("/imported") )

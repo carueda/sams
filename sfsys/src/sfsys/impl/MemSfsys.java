@@ -12,13 +12,13 @@ import java.io.*;
  * @version $Id$
  */
 public class MemSfsys implements ISfsys {
-	final IDirectory root;
+	final INode root;
 
 	private MemSfsys() {
 		root = new NDirectory("");
 	}
 
-    private MemSfsys(IDirectory root) {
+    private MemSfsys(INode root) {
 		this.root = root;
     }
 
@@ -26,7 +26,7 @@ public class MemSfsys implements ISfsys {
 		return "MemSfsys";
 	}
 	
-	public IDirectory getRoot() {
+	public INode getRoot() {
 		return root;
 	}
 
@@ -63,10 +63,26 @@ public class MemSfsys implements ISfsys {
 
 	abstract class Node implements INode {
 		String name;
-		IDirectory parent;
+		INode parent;
 		
 		Node(String name){
 			this.name = name;
+		}
+		
+		public boolean isFile() {
+			return false;
+		}
+		
+		public boolean isDirectory() {
+			return false;
+		}
+		
+		public boolean isLink() {
+			return false;
+		}
+		
+		public Object accept(IVisitor v, Object obj) {
+			return v.visit(this, obj);
 		}
 		
 		public void setName(String name) {
@@ -77,11 +93,11 @@ public class MemSfsys implements ISfsys {
 			return name;
 		}
 	
-		public void setParent(IDirectory parent) {
+		public void setParent(INode parent) {
 			this.parent = parent;
 		}
 	
-		public IDirectory getParent() {
+		public INode getParent() {
 			return parent;
 		}
 		
@@ -91,9 +107,40 @@ public class MemSfsys implements ISfsys {
 			else
 				return parent.getPath() + name;
 		}
+	
+		public INode createDirectory(String dirname) {
+			throw new UnsupportedOperationException();
+		}
+		public INode createFile(String filename) {
+			throw new UnsupportedOperationException();
+		}
+		public INode getNode(String name) {
+			throw new UnsupportedOperationException();
+		}
+		public INode findNode(String path) {
+			throw new UnsupportedOperationException();
+		}
+		public List getChildren() {
+			throw new UnsupportedOperationException();
+		}
+		public INode createLink(String name, String path) {
+			throw new UnsupportedOperationException();
+		}
+		public void setObject(Object obj) {
+			throw new UnsupportedOperationException();
+		}
+		public Object getObject() {
+			throw new UnsupportedOperationException();
+		}
+		public String getRefPath() {
+			throw new UnsupportedOperationException();
+		}
+		public void setRefPath(String path) {
+			throw new UnsupportedOperationException();
+		}
 	}	
 	
-	class NDirectory extends Node implements IDirectory {
+	class NDirectory extends Node {
 		private List children;
 		
 		NDirectory(String name) {
@@ -101,8 +148,8 @@ public class MemSfsys implements ISfsys {
 			children = new ArrayList();
 		}
 	
-		public Object accept(IVisitor v, Object obj) {
-			return v.visit(this, obj);
+		public boolean isDirectory() {
+			return true;
 		}
 		
 		private INode add(INode node) {
@@ -111,17 +158,17 @@ public class MemSfsys implements ISfsys {
 			return node;
 		}
 
-		public IDirectory createDirectory(String name) {
-			return (IDirectory) add(new NDirectory(name));
+		public INode createDirectory(String name) {
+			return add(new NDirectory(name));
 		}
 
-		public IFile createFile(String name) {
-			return (IFile) add(new NFile(name));
+		public INode createFile(String name) {
+			return add(new NFile(name));
 		}
 		
-		public ILink createLink(String name, String path) {
+		public INode createLink(String name, String path) {
 			path = normalizePath(path);
-			return (ILink) add(new NLink(name, path));
+			return add(new NLink(name, path));
 		}
 	
 		public List getChildren() {
@@ -147,14 +194,14 @@ public class MemSfsys implements ISfsys {
 		
 		public INode findNode(String path) {
 			path = normalizePath(path);
-			IDirectory from = this;
+			INode from = this;
 			if ( path.startsWith("/") )
 				from = getRoot();
 			
 			path = path.replaceAll("^/+", "");
 			path = path.replaceAll("/+$", "") + "/";
 			String[] apath = path.split("/+");
-			IDirectory dir = from;
+			INode dir = from;
 			INode node = dir;
 			for ( int i = 0; i < apath.length; i++ ) {
 				node = dir.getNode(apath[i]);
@@ -162,9 +209,9 @@ public class MemSfsys implements ISfsys {
 					return null;
 				
 				if ( i < apath.length - 1 ) {
-					if ( !(node instanceof IDirectory) )
+					if ( !node.isDirectory() )
 						return null;
-					dir = (IDirectory) node;
+					dir = node;
 				}
 			}
 			return node;
@@ -172,15 +219,15 @@ public class MemSfsys implements ISfsys {
 			
 	}	
 	
-	class NFile extends Node implements IFile {
+	class NFile extends Node {
 		Object obj;
 		
 		NFile(String name) {
 			super(name);
 		}
 		
-		public Object accept(IVisitor v, Object obj) {
-			return v.visit(this, obj);
+		public boolean isFile() {
+			return true;
 		}
 		
 		public void setObject(Object obj) {
@@ -196,7 +243,7 @@ public class MemSfsys implements ISfsys {
 		}
 	}
 
-	class NLink extends Node implements ILink {
+	class NLink extends Node {
 		String path;
 		
 		NLink(String name, String path) {
@@ -204,8 +251,8 @@ public class MemSfsys implements ISfsys {
 			this.path = path;
 		}
 		
-		public Object accept(IVisitor v, Object obj) {
-			return v.visit(this, obj);
+		public boolean isLink() {
+			return true;
 		}
 		
 		public String getRefPath() {
@@ -223,24 +270,18 @@ public class MemSfsys implements ISfsys {
 
 
 	static class EncodeVisitor implements IVisitor {
-		public Object visit(IFile n, Object obj) {
+		public Object visit(INode n, Object obj) {
 			StringBuffer sb = (StringBuffer) obj;
-			sb.append("\'" +n.getName()+ "'F");
-			return obj;
-		}
-		
-		public Object visit(ILink n, Object obj) {
-			StringBuffer sb = (StringBuffer) obj;
-			sb.append("\'" +n.getName()+ "'L\'" +n.getRefPath()+ "'");
-			return obj;
-		}
-		
-		public Object visit(IDirectory n, Object obj) {
-			StringBuffer sb = (StringBuffer) obj;
-			sb.append("\'" +n.getName()+ "'{");
-			for ( Iterator iter = n.getChildren().iterator(); iter.hasNext(); )
-				((INode) iter.next()).accept(this, obj);
-			sb.append("}");
+			if ( n.isFile() )
+				sb.append("\'" +n.getName()+ "'F");
+			else if ( n.isLink() )
+				sb.append("\'" +n.getName()+ "'L\'" +n.getRefPath()+ "'");
+			else if ( n.isDirectory() ) {
+				sb.append("\'" +n.getName()+ "'{");
+				for ( Iterator iter = n.getChildren().iterator(); iter.hasNext(); )
+					((INode) iter.next()).accept(this, obj);
+				sb.append("}");
+			}
 			return obj;
 		}
 	}
@@ -251,7 +292,7 @@ public class MemSfsys implements ISfsys {
 		static Reader r;
 		static int col;
 
-		public static void fillDirectory(IDirectory dir, Reader rr)
+		public static void fillDirectory(INode dir, Reader rr)
 		throws SyntaxException, Exception {
 			r = rr;
 			col = 1;
@@ -259,14 +300,14 @@ public class MemSfsys implements ISfsys {
 			fill(dir);
 		}
 
-		static void fill(IDirectory dir)
+		static void fill(INode dir)
 		throws SyntaxException, Exception {
 			if ( lookahead == '\'' )
 				while ( lookahead != '}' && lookahead != 0 )
 					node(dir);
 		}
 
-		static void node(IDirectory parent)
+		static void node(INode parent)
 		throws SyntaxException, Exception {
 			String name = name();
 			if ( lookahead == '{' ) { 

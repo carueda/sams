@@ -2,7 +2,7 @@ package samscore;
 
 import sig.Signature;
 import sfsys.ISfsys;
-import sfsys.ISfsys.IDirectory;
+import sfsys.ISfsys.INode;
 
 import java.util.List;
 import java.util.Iterator;
@@ -60,7 +60,7 @@ public interface ISamsDb {
 	public void setSignature(String path, Signature sig) throws Exception;
 	
 	/** gets a sub-grouping by getLocation(). */
-	public IDirectory getGroupingUnderLocation(String path) throws Exception;
+	public INode getGroupingUnderLocation(String path) throws Exception;
 
 	/** gets a grouping structure according to attribute values. */
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception;

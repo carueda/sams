@@ -464,11 +464,11 @@ public class DbGui extends JPanel {
 				// No, only direct signature members:
 				for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
 					String group_path = (String) iterg.next();
-					IDirectory dir = db.getGroupingUnderLocation(group_path);
+					INode dir = db.getGroupingUnderLocation(group_path);
 					List children = dir.getChildren();
 					for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
 						INode inode = (INode) iter.next();
-						if ( inode instanceof IFile ) {
+						if ( inode.isFile() ) {
 							String path = inode.getPath();
 							if ( !paths.contains(path) )
 								paths.add(path);
@@ -806,7 +806,7 @@ public class DbGui extends JPanel {
 			throw new Error(path+ ": spectrum not found!!");
 
 		String parent_path = ((Tree.MyNode) mnode.getParent()).getStringPath();
-		final IDirectory dir = db.getGroupingUnderLocation(parent_path);
+		final INode dir = db.getGroupingUnderLocation(parent_path);
 		if ( dir == null )
 			throw new Error(parent_path+ ": parent directory not found!!");
 		
@@ -837,7 +837,7 @@ public class DbGui extends JPanel {
 				if ( newname.length() == 0 )
 					msg = "Specify the new name";
 				INode node = dir.getNode(newname);
-				if ( node != null && node instanceof IFile )
+				if ( node != null && node.isFile() )
 					msg = "Name already exists";
 				if ( msg == null ) {
 					status.setForeground(Color.gray);
@@ -877,7 +877,7 @@ public class DbGui extends JPanel {
 		if (  selectedGroups.size() != 1 )
 			return;
 		String path = (String) selectedGroups.get(0);
-		final IDirectory dir = db.getGroupingUnderLocation(path);
+		final INode dir = db.getGroupingUnderLocation(path);
 		if ( dir == null )
 			throw new Error(path+ ": directory not found!!");
 		
@@ -904,7 +904,7 @@ public class DbGui extends JPanel {
 				if ( newname.length() == 0 )
 					msg = "Specify a name";
 				INode node = dir.getNode(newname);
-				if ( node != null && node instanceof IDirectory )
+				if ( node != null && node.isDirectory() )
 					msg = "A group with this name already exists";
 				if ( msg == null ) {
 					status.setForeground(Color.gray);
@@ -924,7 +924,7 @@ public class DbGui extends JPanel {
 		if ( form.accepted() ) {
 			String newname = f_newname.getText().trim();
 			try {
-				IDirectory subdir = dir.createDirectory(newname);
+				INode subdir = dir.createDirectory(newname);
 				if ( subdir == null ) {
 					SamsGui.message(newname+ ": the group could not be created");
 					return;

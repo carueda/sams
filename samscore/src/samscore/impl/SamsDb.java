@@ -134,10 +134,10 @@ class SamsDb implements ISamsDb {
 		return baseDir.getPath();
 	}
 	
-	public IDirectory getGroupingUnderLocation(String subpath) throws Exception {
+	public INode getGroupingUnderLocation(String subpath) throws Exception {
 		INode inode = getGroupingLocation().getNode(subpath);
-		if ( inode instanceof IDirectory )
-			return (IDirectory) inode;
+		if ( inode.isDirectory() )
+			return inode;
 		else
 			return null;
 	}
@@ -163,11 +163,11 @@ class SamsDb implements ISamsDb {
 			String path = (String) it.next();
 			ISpectrum s = getSpectrum(path);
 			 
-			ISfsys.IDirectory base = fs.getRoot();
+			ISfsys.INode base = fs.getRoot();
 			for ( int i = 0; i < attrNames.length; i++ ) {
 				String attrName = attrNames[i];
 				String attrVal = s.getString(attrName);
-				ISfsys.IDirectory val_dir = (ISfsys.IDirectory) base.getNode(attrVal);
+				ISfsys.INode val_dir = base.getNode(attrVal);
 				if ( val_dir == null )
 					val_dir = base.createDirectory(attrVal);
 				base = val_dir;
@@ -193,14 +193,14 @@ class SamsDb implements ISamsDb {
 		return paths.iterator();
 	}
 	
-	private void _populatePaths(List paths, IDirectory dir) {
+	private void _populatePaths(List paths, INode dir) {
 		List children = dir.getChildren();
 		for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
 			INode inode = (INode) iter.next();
-			if ( inode instanceof IFile )
+			if ( inode.isFile() )
 				paths.add(inode.getPath());
-			else if ( inode instanceof IDirectory )
-				_populatePaths(paths, (IDirectory) inode);
+			else if ( inode.isDirectory() )
+				_populatePaths(paths, inode);
 		}
 	}
 	

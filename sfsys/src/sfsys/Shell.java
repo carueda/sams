@@ -12,7 +12,7 @@ import java.io.*;
  */
 public class Shell {
 	ISfsys fs;
-	IDirectory curr;
+	INode curr;
 	BufferedReader br;
 	PrintWriter pw;
 	Run run;
@@ -90,25 +90,19 @@ public class Shell {
 		curr.accept(
 			new IVisitor() {
 				int indent = 0;
-				public Object visit(IFile n, Object obj) {
-					pw.println(indent() + n.getName());
+				public Object visit(INode n, Object obj) {
+					if ( n.isFile() )
+						pw.println(indent() + n.getName());
+					else if ( n.isLink() )
+						pw.println(indent() + n.getName() + " -> " +n.getRefPath());
+					else {
+						indent++;
+						for ( Iterator iter = n.getChildren().iterator(); iter.hasNext(); )
+							((INode) iter.next()).accept(this, obj);
+						indent--;
+					}
 					return obj;
 				}
-				
-				public Object visit(ILink n, Object obj) {
-					pw.println(indent() + n.getName() + " -> " +n.getRefPath());
-					return obj;
-				}
-				
-				public Object visit(IDirectory n, Object obj) {
-					pw.println(indent() + n.getName()+ "/");
-					indent++;
-					for ( Iterator iter = n.getChildren().iterator(); iter.hasNext(); )
-						((INode) iter.next()).accept(this, obj);
-					indent--;
-					return obj;
-				}
-				
 				StringBuffer indent() {
 					StringBuffer sb = new StringBuffer();
 					for ( int i = 0; i < indent; i++ )
@@ -120,7 +114,7 @@ public class Shell {
 		);
 	}
 	
-	private void ls(IDirectory dir, boolean header) {
+	private void ls(INode dir, boolean header) {
 		if ( header )
 			pw.println(dir.getPath()+ "/");
 		for (Iterator iter = dir.getChildren().iterator(); iter.hasNext(); )
@@ -134,9 +128,9 @@ public class Shell {
 			for ( int i = 1; i < toks.length; i++ ) {
 				String path = toks[i];
 				INode node = curr.findNode(path);
-				if ( node instanceof IDirectory )
-					ls((IDirectory) node, true);
-				else if ( node instanceof IFile )
+				if ( node.isDirectory() )
+					ls(node, true);
+				else if ( node.isFile() )
 					pw.println(node.getPath());
 				else
 					pw.println(path+ ": Not a directory");
@@ -145,14 +139,13 @@ public class Shell {
 	
 	public void cd(String path) {
 		INode node = curr.findNode(path);
-		while ( node instanceof ILink ) {
-		    ILink link = (ILink) node;
-		    String ref = link.getRefPath();
+		while ( node.isLink() ) {
+		    String ref = node.getRefPath();
 		    node = curr.findNode(ref);
 		}
 
-		if ( node instanceof IDirectory )
-			curr = (IDirectory) node;
+		if ( node.isDirectory() )
+			curr = node;
 		else
 			pw.println(path+ ": Not a directory");
 	}

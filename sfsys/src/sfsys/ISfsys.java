@@ -11,7 +11,7 @@ public interface ISfsys {
 	public String getInfo();
 	
 	/** Gets the root directory. */
-	public IDirectory getRoot();
+	public INode getRoot();
 	
 	/** Gets a node. */
 	public INode getNode(String path);
@@ -19,47 +19,38 @@ public interface ISfsys {
 	/** Optional operation */
     public void save(String filename) throws java.io.IOException;
 
-	/** Interface for traversing the filesystem. */
-	public interface IVisitor {
-		public Object visit(IFile n, Object obj);
-		public Object visit(ILink n, Object obj);
-		public Object visit(IDirectory n, Object obj);
-	}
-
 	/** Defines each node in the filesystem. */
 	public interface INode {
 		public String getName();
-		public IDirectory getParent();
+		public INode getParent();
 		public String getPath();
 		public Object accept(IVisitor v, Object obj);
-	}
-
-	/** Defines a directory in the filesystem. */
-	public interface IDirectory extends INode {
-		public IDirectory createDirectory(String name);
-		public IFile createFile(String name);
-
-		public INode getNode(String name);
+		public boolean isDirectory();
+		public boolean isFile();
+		public boolean isLink();
 		
+		// when isDirectory:
+		public INode createDirectory(String name);
+		public INode createFile(String name);
+		public INode getNode(String name);
 		/** Finds a node given its path. */
 		public INode findNode(String path);
-		
 		public java.util.List getChildren();
-		
 		/** Optional operation */
-		public ILink createLink(String name, String path);
-	}
-	
-	/** Defines a file in the filesystem. */
-	public interface IFile extends INode {
+		public INode createLink(String name, String path);
+
+		// when isFile:
 		public void setObject(Object obj);
 		public Object getObject();
-	}
-	
-	/** Defines a symbolic link in the filesystem. */
-	public interface ILink extends INode {
+
+		// when isLink:
 		public String getRefPath();
 		public void setRefPath(String path);
+	}
+	
+	/** Interface for traversing the filesystem. */
+	public interface IVisitor {
+		public Object visit(INode n, Object obj);
 	}
 }
 
