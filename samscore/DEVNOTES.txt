@@ -2,6 +2,15 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 09/29/04 - version 3.1
+ 	- SamsDb.getSignature(String path) no longer sorts the signature.
+	  Previously we were sorting the signature before returning,
+	  but this seems unnecessary as sorting is normally performed 
+	  during importation. Moreover, this improves performance a bit.
+	  Also a "Sort" operation is now included so the user can perform 
+	  this sorting when necessary.
+	  
+	
  08/23/03 - version 3.0
  	- TO-DO.txt, BUGS.txt added.
 	
