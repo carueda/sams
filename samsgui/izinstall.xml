@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+
+<!--
+	SAMS Installation specification 
+	Carlos A. Rueda
+	$Id$
+-->
+<installation version="1.0">
+    <info>
+        <appname>SAMS</appname>
+        <appversion>3.0</appversion>
+        <authors>
+            <author name="Carlos A. Rueda" email="carueda@ucdavis.edu"/>
+        </authors>
+        <url>http://www.cstars.ucdavis.edu/software/sams</url>
+    </info>
+    
+    <guiprefs width="640" height="480" resizable="no"/>
+    
+    <locale>
+        <langpack iso3="eng"/>
+    </locale>
+    
+    <resources>
+		<res id="Installer.image" src="img/splash.png" />
+        <res id="LicencePanel.licence" src="doc/copyright.txt"/>
+		<res id="shortcutSpec.xml" src="lib/izshortcut.xml"/>
+    </resources>
+    
+    <panels>
+        <panel classname="HelloPanel"/>
+        <panel classname="LicencePanel"/>
+        <panel classname="TargetPanel"/>
+        <panel classname="InstallPanel"/>
+		<panel classname="ShortcutPanel"/>
+        <panel classname="FinishPanel"/>
+    </panels>
+    
+	<native type="izpack" name="ShellLink.dll"/>
+
+    <packs>
+        <pack name="System" required="yes">
+            <description>The complete system</description>
+            <file src="." targetdir="$INSTALL_PATH"/>
+			<parsable targetfile="$INSTALL_PATH/bin/sams.bat"/>
+        </pack>
+    </packs>
+    
+</installation>

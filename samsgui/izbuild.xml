@@ -1,0 +1,20 @@
+<!--
+	Build for SAMS izpack installer
+	Carlos A. Rueda
+	$Id$
+-->
+<project name="iz" default="iz" >
+	<property name="VERSION" value="3.0"/>
+	<property name="dist" value="../../_GENERATED/DIST"/>
+	<property name="izdir" value="C:/Program Files/IzPack"/>
+	<taskdef name="izpack" classpath="${izdir}/lib/compiler.jar"
+		classname="com.izforge.izpack.ant.IzPackTask"/>
+		
+    <target name="iz">
+		<izpack input="izinstall.xml"
+			output="${dist}/install-sams-${VERSION}.jar"
+			installerType="standard-kunststoff"
+			basedir="${dist}/base_dist"
+			izPackDir="${izdir}/"/>
+	</target>
+</project>
