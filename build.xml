@@ -23,7 +23,7 @@
 		<delete dir="${generated}"/>
     </target>
 
-	<target name="compile" depends="init">
+	<target name="compile">
 		<ant dir="fileutils" inheritAll="false"/>
 		<ant dir="sig" inheritAll="false"/>
 		<ant dir="sigoper" inheritAll="false"/>
@@ -34,15 +34,4 @@
 		<ant dir="samsgui" inheritAll="false"/>
 	</target>
 	
-	<target name="clean">
-		<ant dir="fileutils" target="clean" inheritAll="false"/>
-		<ant dir="sig" target="clean" inheritAll="false"/>
-		<ant dir="sigoper" target="clean" inheritAll="false"/>
-		<ant dir="specfile" target="clean" inheritAll="false"/>
-		<ant dir="sfsys" target="clean" inheritAll="false"/>
-		<ant dir="envifile" target="clean" inheritAll="false"/>
-		<ant dir="samscore" target="clean" inheritAll="false"/>
-		<ant dir="samsgui" target="clean" inheritAll="false"/>
-	</target>
-
 </project>
