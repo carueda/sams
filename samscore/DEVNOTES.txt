@@ -1,0 +1,80 @@
+SAMS Core DEVNOTES
+Carlos A. Rueda
+$Id$
+
+06/21/03 init
+
+	Jonathan,
+	
+	I will be happy to include this operation as I am just working on the next version of SAMS. 
+	
+	So, basically the operation will take two inputs:
+	  1) A sensor description file (wavelength,band center,FWHM)
+	  2) A spectrum S
+	and will generate the resampling of S in a file with the format:
+		[blank line]
+		"Wavelength" [tab] [tab] "Spectrum name" <<-- "spectrum reflectance"??
+		wavelength1 [tab] [tab] reflectance1
+		wavelength2 [tab] [tab] reflectance2
+		Etc...
+	
+	Can you provide me with the corresponding formulas?
+	
+	For the sake of generality I think there would be like a "Resampling" operation and maybe SAMS would include some predefined 
+	well-known sensor characteristics. What do you think?
+	
+	In fact, in your case you would:
+	  1) Perform the "resampling" operation on a number of signatures;
+	  2) then, "export" the generated (resampled) signatures to the ".SIF" format
+	
+	Let me know.
+	
+	carlos
+	
+	
+		From: Jonathan Greenberg
+		Subject: SAMS request
+		Date: 21 Jun 2003
+	> Carlos:
+	> 
+	>     Hope all is going well.  I just ran into an irritating problem that I
+	> think would be perfect to include in a future version of SAMS: using field
+	> collected spectra (GER 1500, in my case) with the atmospheric correction
+	> package ATCOR2/3 and ERDAS Imagine.  I had to do a lot of manual editing to
+	> get 20 spectra properly formatted, and it took me over 3 hours to get those
+	> figured out.  Here is the basic issue and the solution:
+	> 
+	> 1) The spectrum must be resampled to a particular sensor's bands before it
+	> can be used.  This requires knowledge of a sensor's band centers and full
+	> width at half maximum (ENVI spectral resampling performs this, if you need a
+	> reference).  If you want, I could make up a basic format for inputting
+	> sensor characteristics (a text file with wavelength,band center,FWHM would
+	> be easily readable, I imagine).
+	> 2) The spectrum must be saved in a very bizarre ASCII format with the
+	> extension ".SIF".  Here is the format:
+	> 
+	> [blank line]
+	> "Wavelength" [tab] "Spectrum name"
+	> wavelength1 [tab] reflectance1
+	> wavelength2 [tab] reflectance2
+	> Etc...
+	> 
+	> Wavelength must be in either micrometers or nanometers (IMAGINE figures out
+	> which it is automatically).  Reflectance must be scaled to either 0 to 1, or
+	> 0% to 100%.
+	> 
+	> Note that there are no spaces between the various fields, just a tab break.
+	> The problem that took me the longest was that Imagine really needs that
+	> blank line at the top, and if you are using Excel to create this
+	> tab-deliminated file, Excel peels off that top line, so you have to add it
+	> back with Wordpad or something.
+	> 
+	> 3) Each spectrum must be saved as a SEPARATE file, not a spectral library
+	> like that found in ENVI.
+	> 
+	> At any rate, I did all this manually, but future uses of ATCOR2/3 could
+	> benefit from an easy way to do this, since neither ENVI nor IMAGINE has the
+	> required tools.
+	> 
+	> --j
+	> Jonathan Greenberg

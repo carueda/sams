@@ -1,0 +1,44 @@
+<!--
+	sfsys - A Simple Filesystem
+	$Id$
+-->
+<project name="sfsys" default="sfsys.jar" >
+
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src/sfsys"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<mkdir dir="${build}/classes"/>
+    </target>
+
+    <target name="sfsys.jar" depends="init, compile"
+     description="Makes sfsys.jar">
+        <jar jarfile="${dist}/sfsys.jar" manifest="sfsys.manifest"
+         	basedir="${build}/classes"
+			includes="sfsys/**"
+		/>
+    </target>
+
+	
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+			classpath="${bsh}"
+		/>
+	</target>
+
+
+<!-- .......... Various .................. -->
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+</project>

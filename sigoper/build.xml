@@ -1,0 +1,47 @@
+<!--
+	Build for sigoper
+	$Id$
+-->
+<project name="sigoper" default="sigoper.jar" >
+
+	<!-- the 'sig' library -->
+	<property name="sig" value="../../_GENERATED/DIST/sig.jar"/>
+	
+	<!-- the 'bsh' library -->
+	<property name="bsh" value="../../_GENERATED/DIST/bsh-1.2b5.jar"/>
+	
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src/sigoper"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<mkdir dir="${build}/classes"/>
+		<mkdir dir="${dist}"/>
+    </target>
+
+    <target name="sigoper.jar" depends="compile"
+    description="Makes library sigoper.jar">
+        <jar jarfile="${dist}/sigoper.jar"
+         	basedir="${build}/classes"
+			includes="sigoper/**"
+		/>
+    </target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+			classpath="${sig}:${bsh}"
+		/>
+	</target>
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+</project>

@@ -1,0 +1,52 @@
+<!--
+	Build for SAMS2 Core
+	$Id$
+-->
+<project name="samscore" default="samscore.jar" >
+
+	<!-- Version -->
+	<property name="VERSION" value="2.5"/>
+
+	<!-- Required libraries -->
+	<property name="fileutils" value="../../_GENERATED/DIST/fileutils.jar"/>
+	<property name="sig"       value="../../_GENERATED/DIST/sig.jar"/>
+	<property name="sigoper"   value="../../_GENERATED/DIST/sigoper.jar"/>
+	<property name="envifile"  value="../../_GENERATED/DIST/envifile.jar"/>
+	<property name="specfile"  value="../../_GENERATED/DIST/specfile.jar"/>
+	<property name="sfsys"     value="../../_GENERATED/DIST/sfsys.jar"/>
+	
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src/samscore"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<echo message="VERSION = ${VERSION}"/>
+		<mkdir dir="${build}/classes"/>
+    </target>
+
+    <target name="samscore.jar" depends="compile"
+    description="Makes executable samscore.jar">
+        <jar jarfile="${dist}/samscore.jar" manifest="samscore.manifest"
+         	basedir="${build}/classes"
+			includes="samscore/**"
+		/>
+    </target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+			classpath="${sig}:${specfile}:${sfsys}:${sigoper}:${fileutils}:${envifile}"
+		/>
+	</target>
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+</project>

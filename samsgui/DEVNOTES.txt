@@ -1,0 +1,9 @@
+SAMS2 Core 2X  DEVNOTES
+Carlos A. Rueda.
+
+07/01/03
+	estoy en:
+	
+		- EditMetadataDefinition, edita tabla, falta botones
+		- BaseDialog, pero aun sin utilizacion
+

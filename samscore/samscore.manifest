@@ -1,0 +1,2 @@
+Main-class: samscore.Main
+Class-path: sig.jar specfile.jar sfsys.jar sigoper.jar bsh-1.2b5.jar fileutils.jar envifile.jar 

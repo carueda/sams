@@ -1,0 +1,44 @@
+<!--
+	Build for sig
+	$Id$
+-->
+<project name="sig" default="sig.jar" >
+
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src/sig"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<mkdir dir="${build}/classes"/>
+		<mkdir dir="${dist}"/>
+    </target>
+
+    <target name="sig.jar" depends="compile"
+    description="Makes library sig.jar">
+        <jar jarfile="${dist}/sig.jar"
+         	basedir="${build}/classes"
+			includes="sig/**"
+		/>
+    </target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+		/>
+	</target>
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete dir="${dist}"/>
+    </target>
+
+</project>

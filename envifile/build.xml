@@ -1,0 +1,44 @@
+<!--
+	Build for envifile
+	$Id$
+-->
+<project name="envifile" default="envifile.jar" >
+
+	<!-- the 'sig' library -->
+	<property name="sig" value="../../_GENERATED/DIST/sig.jar"/>
+
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src/envifile"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<mkdir dir="${build}/classes"/>
+		<mkdir dir="${dist}"/>
+    </target>
+
+    <target name="envifile.jar" depends="compile"
+    description="Makes library envifile.jar">
+        <jar jarfile="${dist}/envifile.jar"
+         	basedir="${build}/classes"
+			includes="envifile/**"
+		/>
+    </target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+			classpath="${sig}"
+		/>
+	</target>
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+</project>

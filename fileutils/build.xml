@@ -1,0 +1,44 @@
+<!--
+	Build for fileutils
+	$Id$
+-->
+<project name="fileutils" default="fileutils.jar" >
+
+	<!-- Directory to put compiled classes -->
+	<property name="build" value="../../_GENERATED/BUILD"/>
+
+	<!-- Directory to put distribution -->
+	<property name="dist" value="../../_GENERATED/DIST"/>
+
+	<property name="src.dir" value="src"/>
+	<property name="dest.dir" value="${build}/classes"/>
+
+    <target name="init">
+		<tstamp/>
+		<mkdir dir="${build}/classes"/>
+		<mkdir dir="${dist}"/>
+    </target>
+
+    <target name="fileutils.jar" depends="compile"
+    description="Makes library fileutils.jar">
+        <jar jarfile="${dist}/fileutils.jar"
+         	basedir="${build}/classes"
+			includes="fileutils/**"
+		/>
+    </target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			debug="on"
+		/>
+	</target>
+
+    <target name="clean">
+		<delete dir="${build}"/>
+    </target>
+
+    <target name="clean-dist" depends="clean">
+		<delete dir="${dist}"/>
+    </target>
+
+</project>
