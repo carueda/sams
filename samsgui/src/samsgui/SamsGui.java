@@ -451,6 +451,7 @@ public class SamsGui {
 		window.pack();
 		if ( parent != null )
 			window.setLocationRelativeTo(parent);
+		ok.requestFocus();
 		window.setVisible(true);
 	}
 
