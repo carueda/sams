@@ -669,6 +669,7 @@ public class SamsGui {
 		String name = "SAMS";
 		String version = "v";
 		String build = "b";
+		String samsDir = "samsDir";
 		
 		String licenseText = null;  // License text (loaded on demand):
 		
@@ -694,6 +695,7 @@ public class SamsGui {
 				name    = props.getProperty("sams.name");
 				version = props.getProperty("sams.version");
 				build   = props.getProperty("sams.build");
+				samsDir  = props.getProperty("sams.dir");
 			}
 		}
 
@@ -711,6 +713,10 @@ public class SamsGui {
 		
 		public String getBuild() {
 			return build;
+		}
+		
+		public String getSAMSDirectory() {
+			return samsDir;
 		}
 		
 		public String getLicense() {
