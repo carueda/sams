@@ -640,17 +640,19 @@ class SamsDb implements ISamsDb {
 
 	class Order implements IOrder, Comparator {
 		String text;
-		String[] orderByAttrNames;
+		// the list of expressions:
+		// currently, the only possibility for an expression is an attribute name:
+		String[] orderByExpressions;
 
 		Order(String text) throws Exception {
 			if ( text == null || text.trim().length() == 0 )
 				text = "location,name";
 			this.text = text;
 			// check attr names in orderBy:
-			orderByAttrNames = text.split("(:|,|\\s)+");
-			for ( int i = 0; i < orderByAttrNames.length; i++ ) {
-				if ( !isDefinedAttributeName(orderByAttrNames[i]) )
-					throw new Exception(orderByAttrNames[i]+ ": undefined attribute");
+			orderByExpressions = text.split("(:|,|\\s)+");
+			for ( int i = 0; i < orderByExpressions.length; i++ ) {
+				if ( !isDefinedAttributeName(orderByExpressions[i]) )
+					throw new Exception(orderByExpressions[i]+ ": undefined attribute");
 			}
 		}
 
@@ -661,8 +663,8 @@ class SamsDb implements ISamsDb {
 		public int compare(Object o1, Object o2) {
 			ISpectrum s1 = (ISpectrum) o1;
 			ISpectrum s2 = (ISpectrum) o2;
-			for ( int i = 0; i < orderByAttrNames.length; i++ ) {
-				int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
+			for ( int i = 0; i < orderByExpressions.length; i++ ) {
+				int c = s1.getString(orderByExpressions[i]).compareTo(s2.getString(orderByExpressions[i]));
 				if ( c != 0 )
 					return c;
 			}
