@@ -3,6 +3,8 @@ Carlos A. Rueda.
 $Id$
 
  08/29/03 - version 3.0
+ 	- New Info.getSAMSDirectory() (based on "sams.dir" system property).
+	- Initialization with getSAMSDirectory()/opers/
  	- izpack now used to build installer, which allows for
 	  shortcuts (among many other things).
 	
