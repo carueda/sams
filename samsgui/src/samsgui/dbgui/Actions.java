@@ -157,7 +157,7 @@ public final class Actions {
 			}
 		);
 		actions.put("import-files", new BaseAction("Specific files",
-			"Import signatures from a directory", KeyEvent.VK_D) {
+			"Import signatures from a directory", KeyEvent.VK_S) {
 				public void run() {
 					Controller.importFiles();
 				}
