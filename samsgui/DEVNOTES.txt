@@ -14,10 +14,8 @@ $Id$
 	- new grouping by filename (?)
 	- About
 	- Splash, initialization progress
-	- improve renaming from dialog (from tree). See DbGui.rename().
 		
  Pending bugs:
-	- rename of a root child makes disappear the element in tree display
 	- CorrectionOperation: check operation when forward=false, additive=false
 	  (it's giving out a "reflection"--check sign in correction variable)
 		
