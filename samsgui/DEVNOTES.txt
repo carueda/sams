@@ -3,6 +3,7 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
+ 	- allow group operations when clicking a "virtual" group
  	- Some About info and identification management
 	- import from envi
 	- Splash, initialization progress
