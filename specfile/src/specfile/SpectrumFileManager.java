@@ -23,12 +23,12 @@ import java.io.*;
 public final class SpectrumFileManager {
 	// the list of currently recognized file types:
 	private static final String[] filetypes = 
-		{"GER", "ASD", "ASDb", "Only-Reflectance"};
+		{"GER", "ASD", "ASDb", "CSV", "Only-Reflectance"};
 
 	/**
 	 * Gets the list of recognized file types.
 	 *
-	 * @return The arrays of String's containing the type codes.
+	 * @return The array of String's containing the type codes.
 	 */
 	public static String[] getFileTypes() {
 		return filetypes;
@@ -60,6 +60,8 @@ public final class SpectrumFileManager {
 				return new ASDBinaryFile(filename);
 			if ( filetype.equals("ASD") )
 				return new ASDFile(filename);
+			if ( filetype.equals("CSV") )
+				return new CSVFile(filename);
 			if ( filetype.equals("Only-Reflectance") )
 				return new OnlyReflectanceFile(filename);
 			
@@ -69,27 +71,47 @@ public final class SpectrumFileManager {
 		// automatically recognize the format:
 
 		ISpectrumFile sf = null;
+		
+		//
+		// Some preference seems reasonable to be applied 
+		// according to file name extension.
+		// However this is still ad hoc since there are no standard
+		// extensions for most of the considered formats.
+		// Note also that this could be improved more properly with
+		// a factory design pattern.
+		//
+		
+		// .csv if currently the only extension considered in advance
+		if ( filename.toLowerCase().endsWith(".csv") ) {
+			try {
+				sf = new CSVFile(filename);
+				return sf;
+			}
+			catch ( Exception ex ) {
+				// ignore; try the formats below.
+			}
+		}
 
 		try {
 			// try GER:
 			sf = new GERFile(filename);
 		}
-		catch ( InvalidSpectrumFormatException ex1 ) {
+		catch ( Exception ex1 ) {
 			try {
 				// try ASDb:
 				sf = new ASDBinaryFile(filename);
 			}
-			catch ( InvalidSpectrumFormatException ex2 ) {
+			catch ( Exception ex2 ) {
 				try {
 					// try ASD:
 					sf = new ASDFile(filename);
 				}
-				catch ( InvalidSpectrumFormatException ex3 ) {
+				catch ( Exception ex3 ) {
 					try {
 						// try OnlyReflectanceFile:
 						sf = new OnlyReflectanceFile(filename);
 					}
-					catch ( InvalidSpectrumFormatException ex4 ) {
+					catch ( Exception ex4 ) {
 						// 
 						// Include here for other formats ...
 						//
