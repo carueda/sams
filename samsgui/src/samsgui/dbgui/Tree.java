@@ -394,6 +394,10 @@ public class Tree extends JPanel {
             jtree.scrollPathToVisible(new TreePath(childNode.getPath()));
         return childNode;
     }
+	
+	public void scrollToVisible(MyNode node) {
+		jtree.scrollPathToVisible(new TreePath(node.getPath()));
+	}
 
 	class MyRenderer extends DefaultTreeCellRenderer  {
 		Font normalFont = null;

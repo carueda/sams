@@ -643,7 +643,8 @@ public class DbGui extends JPanel {
 		submenu = new JMenu("Import signatures from");
 		m.add(submenu);
 		submenu.setMnemonic(KeyEvent.VK_I);
-		submenu.add(Actions.getAction("import-files-database"));
+		submenu.add(Actions.getAction("import-directory"));
+		submenu.add(Actions.getAction("import-files"));
 		submenu.add(Actions.getAction("import-envi-signatures"));
 		submenu.add(Actions.getAction("import-signatures-from-ascii"));
 		

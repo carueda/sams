@@ -324,7 +324,7 @@ public class SamsGui {
 		};
 	}
 	
-	public static void importFiles() {
+	public static void importFilesFromDirectory() {
 		if ( focusedDbGui == null )
 			return;
 		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
@@ -333,6 +333,17 @@ public class SamsGui {
 			return;
 		
 		Importer.importFilesFromDirectory(focusedDbGui);
+	}
+	
+	public static void importFiles() {
+		if ( focusedDbGui == null )
+			return;
+		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
+		String filename = dbframe.filename;
+		if ( NO_DB_NAME.equals(filename) )
+			return;
+		
+		Importer.importFiles(focusedDbGui);
 	}
 	
 	public static void importAscii() {
@@ -599,7 +610,7 @@ public class SamsGui {
 			text_label.addMouseListener(ml);
 			fields.add(text_label);
 			
-			status_label = new JLabel("Starting...");
+			status_label = new JLabel("Starting...", JLabel.CENTER);
 			status_label.setFont(status_label.getFont().deriveFont(10f));
 			status_label.setHorizontalAlignment(JLabel.LEFT);
 			status_label.setBackground(bg_color);
@@ -641,7 +652,7 @@ public class SamsGui {
 		
 		/** Displays the splash window. */
 		static Splash showSplash(JFrame frame) {
-			return new Splash("SAMS"+ "  " +info.getVersion(), frame, 30 * 1000);
+			return new Splash("SAMS"+ "  " +info.getVersion(), frame, 30*1000);
 		}
 	}
 
@@ -724,14 +735,18 @@ public class SamsGui {
 		public String getAboutMessage() {
 			return
 				"<html>\n" + "<div align='center'>\n"+
+				"<br>\n"+
 				"<b>SAMS - Spectral Analysis and Management System</b><br>\n"+
 				"Version " +getVersion()+ " (Build " +getBuild()+ ")<br>\n"+
 				"<br>\n"+
-				"http://www.cstars.ucdavis.edu/software/sams/<br>\n"+
+				"<code>http://www.cstars.ucdavis.edu/software/sams/</code><br>\n"+
 				"<br>\n"+
 				"Center for Spatial Technologies and Remote Sensing<br>\n"+
 				"Department of Land, Air, and Water Resources<br>\n"+
 				"University of California, Davis<br>\n"+
+				"<br>\n"+
+				"<br>\n"+
+				"Please read the copyright notice.\n"+
 				"</div>\n" + "</html>\n"
 			;
 		}

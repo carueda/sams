@@ -1,6 +1,8 @@
 package samsgui.dbgui;
 
+import samsgui.dbgui.Tree.MyNode;
 import samsgui.*;
+
 import samscore.*;
 import samscore.SamsDbManager.DirectoryImporter;
 import specfile.SpectrumFileManager;
@@ -34,15 +36,15 @@ public class Importer {
 	
 	/** Interacts with the user to import files from a given directory. */
 	public static void importFilesFromDirectory(DbGui dbgui) {
-		new ImportFilesFromDirectory().go(dbgui);
+		new ImportFilesFromDirectory(dbgui).go();
 	}
 
-	static class ImportFilesFromDirectory {	
-		StringBuffer task_message = new StringBuffer();
-		boolean task_isDone;
-		Timer timer;
+	static class ImportFilesFromDirectory extends BaseImport {
+		ImportFilesFromDirectory(DbGui dbgui) {
+			super(dbgui);
+		}
 		
-		void go(final DbGui dbgui) {
+		void go() {
 			JFrame frame = dbgui.getFrame();
 			final ISamsDb db = dbgui.getDatabase();
 			if ( db == null )
@@ -65,8 +67,8 @@ public class Importer {
 				}
 			});
 			final JCheckBox cb_recurse = new JCheckBox("Search subdirectories?");
-			final JList l_filetypes = new JList(getFileTypes());
-			l_filetypes.setSelectedValue(getFileTypes()[0], true);
+			final JComboBox l_filetypes = new JComboBox(getFileTypes());
+			l_filetypes.setSelectedItem(getFileTypes()[0]);
 			l_filetypes.setBorder(SamsGui.createTitledBorder("Only import files with type"));
 			final JLabel status = new JLabel();
 			status.setFont(status.getFont().deriveFont(Font.ITALIC));
@@ -103,6 +105,7 @@ public class Importer {
 				p_file,
 				cb_recurse,
 				l_filetypes,
+				cb_targetGroup,
 				status,
 				progressBar,
 				new JScrollPane(taskOutput),
@@ -144,11 +147,12 @@ public class Importer {
 					
 					final String dirname = f_file.getText();
 					final boolean recurse = cb_recurse.isSelected();
-					String finaltryfiletype = (String) l_filetypes.getSelectedValue();
+					String finaltryfiletype = (String) l_filetypes.getSelectedItem();
 					if ( finaltryfiletype != null && finaltryfiletype.equals(guess_type) )
 						finaltryfiletype = null;
 					
 					final String tryfiletype = finaltryfiletype;
+					final String grp_loc = (String) cb_targetGroup.getSelectedItem();
 					
 					// do importation:
 					Thread thread = new Thread(new Runnable() {
@@ -172,7 +176,8 @@ public class Importer {
 							try {
 								successful = 0;
 								DirectoryImporter importer = dbman.createDirectoryImporter(
-									dirname, recurse, tryfiletype, new SamsDbManager.ImportDirectoryListener() {
+									dirname, recurse, tryfiletype, grp_loc, 
+									new SamsDbManager.ImportDirectoryListener() {
 									public void importing(int file_number, String relative_filename, String filetype) {
 										task_message.append("\n" +file_number+ " - " +relative_filename+ ": ");
 										if ( filetype != null ) {
@@ -206,7 +211,187 @@ public class Importer {
 								progressBar.setValue(progressBar.getMaximum());
 								
 								task_isDone = true;
-								task_message.append("\nDone. " +successful+ " files successfully imported");
+								task_message.append("\nDone. " +successful+ " files imported");
+								btnAccept.setText("Close");
+								btnAccept.setEnabled(true);
+							}
+							catch(Exception ex) {
+								task_message.append("\nError: " +ex.getMessage());
+								task_isDone = true;
+							}
+							
+						}
+					});
+					
+					progressBar.setString("Starting...");
+					progressBar.setIndeterminate(true);
+					thread.start();
+					timer.start();
+					return false;
+				}
+			};
+			form.activate();
+			form.pack();
+			form.setLocationRelativeTo(frame);
+			form.setVisible(true);
+		}
+	}
+
+	/** Interacts with the user to import files from a given directory. */
+	public static void importFiles(DbGui dbgui) {
+		new ImportFiles(dbgui).go();
+	}
+
+	static class ImportFiles extends BaseImport {	
+		File[] selectedFiles = new File[0];
+		ImportFiles(DbGui dbgui) {
+			super(dbgui);
+		}
+		
+		void go() {
+			JFrame frame = dbgui.getFrame();
+			final ISamsDb db = dbgui.getDatabase();
+			if ( db == null )
+				return;
+			
+			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			final JTextField f_files = new JTextField(0+ " file(s) selected");
+			f_files.setEditable(false);
+			p_file.setBorder(SamsGui.createTitledBorder("Selected files"));
+			p_file.add(f_files);
+			final JButton b_choose = new JButton("Choose");
+			p_file.add(b_choose);
+			b_choose.setMnemonic(KeyEvent.VK_C);
+			b_choose.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent ev) {
+					File[] files = Controller.Dialogs.selectImportFiles(
+						"Select the files you want to import"
+					);
+					if ( files != null ) {
+						selectedFiles = files;
+						f_files.setText(selectedFiles.length+ " file(s) selected");
+					}
+				}
+			});
+			final JComboBox l_filetypes = new JComboBox(getFileTypes());
+			l_filetypes.setSelectedItem(getFileTypes()[0]);
+			l_filetypes.setBorder(SamsGui.createTitledBorder("Only import files with type"));
+			final JLabel status = new JLabel();
+			status.setFont(status.getFont().deriveFont(Font.ITALIC));
+			final JProgressBar progressBar = new JProgressBar(0, 1000);
+			progressBar.setValue(0);
+			progressBar.setStringPainted(true); //get space for the string
+			progressBar.setString("");          //but don't paint it
+			progressBar.setEnabled(false);
+			final JTextArea taskOutput = new JTextArea(5, 30);
+			taskOutput.setMargin(new Insets(5,5,5,5));
+			taskOutput.setEditable(false);
+			taskOutput.setEnabled(false);
+			
+			
+			// timer.
+			timer = new Timer(ONE_SECOND, new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					String s = task_message.toString();
+					task_message.setLength(0);
+					if ( s.length() > 0 ) {
+						String last = s.substring(s.lastIndexOf('\n') + 1); 
+						taskOutput.append(s + "\n");
+						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
+					}
+						
+					if ( task_isDone ) {
+						Toolkit.getDefaultToolkit().beep();
+						timer.stop();
+					}
+				}
+			});
+			
+			Object[] array = {
+				p_file,
+				l_filetypes,
+				cb_targetGroup,
+				status,
+				progressBar,
+				new JScrollPane(taskOutput),
+			};
+			
+			String diag_title = "Import spectra files";
+			final BaseDialog form = new BaseDialog(frame, diag_title, array) {
+				public boolean dataOk() {
+					String msg = null;
+					if ( selectedFiles.length == 0 )
+						msg = "Please specify the files to import";
+					if ( msg == null ) {
+						status.setForeground(Color.gray);
+						status.setText("OK");
+					}
+					else {
+						status.setForeground(Color.red);
+						status.setText(msg);
+					}
+					return msg == null;
+				}
+				
+				public void notifyUpdate(String comp_name, Object value) {
+					if ( !timer.isRunning() )
+						super.notifyUpdate(comp_name, value);
+				}
+				
+				int successful;
+				
+				public boolean preAccept() {
+					if ( task_isDone )
+						return true;
+					
+					if ( !dataOk() )
+						return false;
+					
+					String finaltryfiletype = (String) l_filetypes.getSelectedItem();
+					if ( finaltryfiletype != null && finaltryfiletype.equals(guess_type) )
+						finaltryfiletype = null;
+					
+					final String tryfiletype = finaltryfiletype;
+					final String grp_loc = (String) cb_targetGroup.getSelectedItem();
+					final MyNode grp_node = dbgui.getTree().findLocationNode(grp_loc, false);
+					
+					// do importation:
+					Thread thread = new Thread(new Runnable() {
+						public void run() {
+							Controller.doUpdate(new Runnable() {
+								public void run() {
+									b_choose.setEnabled(false);
+									l_filetypes.setEnabled(false);
+									
+									btnAccept.setEnabled(false);
+									btnCancel.setEnabled(false);
+									progressBar.setEnabled(true);
+									taskOutput.setEnabled(true);
+								}
+							});
+	
+							PrintWriter writer = new PrintWriter(System.out, true);
+							SamsDbManager dbman = new SamsDbManager(db, writer);
+							try {
+								int ii = 0;
+								progressBar.setMaximum(selectedFiles.length +1);
+								progressBar.setIndeterminate(false);
+								progressBar.setString(null); //display % string
+								
+								for ( int i = 0; i < selectedFiles.length; i++ ) {
+									File file = selectedFiles[i];
+									String filename = file.getAbsolutePath();
+									task_message.append("\nimporting " +file.getName());
+									String path = dbman.importFile(filename, tryfiletype, grp_loc);
+									dbgui.getTree().addChild(grp_node, file.getName(), true, false);
+									progressBar.setValue(++ii);
+								}
+								
+								dbgui.getTree().scrollToVisible(grp_node);
+								progressBar.setValue(progressBar.getMaximum());
+								
+								task_isDone = true;
+								task_message.append("\nDone. " +ii+ " signatures imported");
 								btnAccept.setText("Close");
 								btnAccept.setEnabled(true);
 							}
@@ -306,15 +491,15 @@ public class Importer {
 
 	/** Interacts with the user to import files from a given ASCII file. */
 	public static void importSignaturesFromAsciiFile(DbGui dbgui) {
-		new ImportSignaturesFromAsciiFile().go(dbgui);
+		new ImportSignaturesFromAsciiFile(dbgui).go();
 	}
 	
-	static class ImportSignaturesFromAsciiFile {	
-		StringBuffer task_message = new StringBuffer();
-		boolean task_isDone;
-		Timer timer;
+	static class ImportSignaturesFromAsciiFile extends BaseImport {	
+		ImportSignaturesFromAsciiFile(DbGui dbgui) {
+			super(dbgui);
+		}
 		
-		void go(final DbGui dbgui) {
+		void go() {
 			JFrame frame = dbgui.getFrame();
 			final ISamsDb db = dbgui.getDatabase();
 			if ( db == null )
@@ -369,6 +554,7 @@ public class Importer {
 			
 			Object[] array = {
 				p_file,
+				cb_targetGroup,
 				status,
 				progressBar,
 				new JScrollPane(taskOutput),
@@ -409,6 +595,8 @@ public class Importer {
 						return false;
 					
 					final String filename = f_file.getText();
+					final String grp_loc = (String) cb_targetGroup.getSelectedItem();
+					final MyNode grp_node = dbgui.getTree().findLocationNode(grp_loc, false);
 					
 					// do importation:
 					Thread thread = new Thread(new Runnable() {
@@ -438,7 +626,7 @@ public class Importer {
 								
 								for ( Iterator it = sigs.iterator(); it.hasNext(); ) {
 									Signature sig = (Signature) it.next();
-									String path = "imported" + "/" +basefilename+ "_" +ii;
+									String path = grp_loc+ "/" +basefilename+ "_" +ii;
 									db.addSpectrum(path, sig);
 									task_message.append("\nimporting " +path);
 									progressBar.setValue(ii++);
@@ -457,7 +645,7 @@ public class Importer {
 								progressBar.setValue(progressBar.getMaximum());
 								
 								task_isDone = true;
-								task_message.append("\nDone. " +ii+ " signatures successfully imported");
+								task_message.append("\nDone. " +ii+ " signatures imported");
 								btnAccept.setText("Close");
 								btnAccept.setEnabled(true);
 							}
@@ -482,4 +670,22 @@ public class Importer {
 			form.setVisible(true);
 		}
 	}
+	
+	static abstract class BaseImport {
+		DbGui dbgui;
+		StringBuffer task_message = new StringBuffer();
+		boolean task_isDone;
+		Timer timer;
+		JComboBox cb_targetGroup;
+		
+		BaseImport(DbGui dbgui) {
+			this.dbgui = dbgui;
+			List loc_groups = dbgui.getTree().getLocationGroups();
+			cb_targetGroup = new JComboBox(loc_groups.toArray());
+			cb_targetGroup.setSelectedItem("/imported"); // if it exists
+			cb_targetGroup.setBorder(SamsGui.createTitledBorder("Put new signature(s) under location"));
+
+		}
+	}
+		
 }

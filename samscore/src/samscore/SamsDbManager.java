@@ -59,18 +59,20 @@ public class SamsDbManager {
 		mddef.add(attrName, defaultValue);
 	}
 	
-	public void importFile(String filename, String filetype) throws Exception {
+	public String importFile(String filename, String filetype, String groupPath) throws Exception {
 		ISpectrumFile sf = Sams.readSignatureFile(filename, filetype);
 		sig.Signature sig = sf.getSignature();
 		print(filename+ ":  recognized as a '" +sf.getFormatName()+ "' file. ");
-		String path = new File(filename).getName();
+		String path = groupPath+ "/" +new File(filename).getName();
 		path = db.addSpectrum(path, sig);
 		db.save();
 		println(" => '" +path+ "'");
+		return path;
 	}
 	
-	public void importDirectory(final String dirname, boolean recurse, String tryfiletype) throws Exception {
-		importDirectory(dirname, recurse, tryfiletype, new ImportDirectoryListener() {
+	public void importDirectory(final String dirname, boolean recurse, String tryfiletype, String groupPath)
+	throws Exception {
+		importDirectory(dirname, recurse, tryfiletype, groupPath, new ImportDirectoryListener() {
 			public void importing(int file_number, String relative_filename, String filetype) {
 				println("(" +file_number+ ") " +relative_filename+ ": '" +filetype+ "' file. ");
 			}
@@ -81,28 +83,36 @@ public class SamsDbManager {
 		public void importing(int file_number, String relative_filename, String filetype);
 	}
 
-	public void importDirectory(String dirname, boolean recurse, String tryfiletype, ImportDirectoryListener lis) 
-	throws Exception {
-		new DirectoryImporter(dirname, recurse, tryfiletype, lis).importFiles();
+	public void importDirectory(String dirname, boolean recurse, String tryfiletype, 
+		String groupPath, ImportDirectoryListener lis
+	) throws Exception {
+		new DirectoryImporter(dirname, recurse, tryfiletype, groupPath, lis).importFiles();
 	}
 	
-	public DirectoryImporter createDirectoryImporter(String dirname, boolean recurse, String tryfiletype, ImportDirectoryListener lis) 
-	throws Exception {
-		return new DirectoryImporter(dirname, recurse, tryfiletype, lis);
+	public DirectoryImporter createDirectoryImporter(String dirname, boolean recurse, String tryfiletype, 
+		String groupPath, ImportDirectoryListener lis
+	) throws Exception {
+		return new DirectoryImporter(dirname, recurse, tryfiletype, groupPath, lis);
 	}
 	
 	public class DirectoryImporter {
 		final String dirname;
 		final boolean recurse;
 		final String tryfiletype;
+		final String groupPath;
 		final ImportDirectoryListener lis;
 		int estimated_files;
 		int file_number;
 		
-		public DirectoryImporter(String dirname, boolean recurse, String tryfiletype, final ImportDirectoryListener lis) {
+		public DirectoryImporter(
+			String dirname, boolean recurse, String tryfiletype, 
+			String groupPath,
+			final ImportDirectoryListener lis
+		) {
 			this.dirname = dirname;
 			this.recurse = recurse;
 			this.tryfiletype = tryfiletype;
+			this.groupPath = groupPath;
 			this.lis = lis;
 		}
 		
@@ -143,7 +153,7 @@ public class SamsDbManager {
 							ISpectrumFile sf = Sams.readSignatureFile(filename, tryfiletype);
 							lis.importing(++file_number, relative_filename, sf.getFormatName());
 							sig.Signature sig = sf.getSignature();
-							String path = "imported" + "/" +relative_filename;
+							String path = groupPath+ "/" +relative_filename;
 							db.addSpectrum(path, sig);
 						}
 						catch(Exception ex) {

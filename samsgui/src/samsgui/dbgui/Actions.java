@@ -149,7 +149,14 @@ public final class Actions {
 				}
 			}
 		);
-		actions.put("import-files-database", new BaseAction("Directory",
+		actions.put("import-directory", new BaseAction("Directory",
+			"Import signatures from a directory", KeyEvent.VK_D) {
+				public void run() {
+					Controller.importFilesFromDirectory();
+				}
+			}
+		);
+		actions.put("import-files", new BaseAction("Specific files",
 			"Import signatures from a directory", KeyEvent.VK_D) {
 				public void run() {
 					Controller.importFiles();

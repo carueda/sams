@@ -3,7 +3,6 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
- 	- Include a way to import specific files
 	- import from envi
  	- make plot legends optional
 	- allow to show legends only in legend window
@@ -19,6 +18,10 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/11/03
+	- Action: "import-files-database" renamed to "import-directory"
+	- Action: "import-files" created: to import specific files.
+	- Import options now allows the user to specify a target location group.
+	
  	- improved About window (with tabs).
  	- new grouping by attribute also enabled from a Database menu option.
 	- Import from system clipboard eliminated (never reimplemented).

@@ -98,11 +98,16 @@ public class Controller {
 		}
 	}
 	
+	public static void importFilesFromDirectory() {
+		SamsGui.importFilesFromDirectory();
+	}
+	
 	public static void importFiles() {
 		SamsGui.importFiles();
 	}
 	
 	public static void importEnvi() {
+		SamsGui.message("PENDING");
 	}
 	
 	public static void importAscii() {
@@ -477,6 +482,22 @@ public class Controller {
 				basedir = file.getParent();
 			File dir = selectDirectory(title, basedir);
 			return dir == null ? null : dir.getAbsolutePath(); 
+		}
+		
+		public static File[] selectImportFiles(String title) {
+			String basedir = Prefs.get(Prefs.IMPORT_DIR);
+			File[] files = null;
+			JFileChooser chooser = new JFileChooser(basedir);
+			chooser.setDialogTitle(title);
+			chooser.setMultiSelectionEnabled(true);
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			int retval = chooser.showDialog(SamsGui.getFocusedFrame(), null);
+			if ( retval == JFileChooser.APPROVE_OPTION ) {
+				files = chooser.getSelectedFiles();
+				if ( files.length > 0 )
+					Prefs.set(Prefs.IMPORT_DIR, files[0].getParent());
+			}
+			return files;
 		}
 		
 		public static String selectImportDirectory(String title) {
