@@ -603,7 +603,7 @@ public class DbGui extends JPanel {
 		if ( paths.size() == 0 )
 			SamsGui.message("No signatures were specified");
 		else
-			new Exporter(this, paths, format, info);
+			new Exporter(this, paths, format, info).export();
 	}
 	
     protected void treeSelectionChanged(TreeSelectionEvent e){

@@ -20,11 +20,14 @@ public final class BinaryExporter {
 	 *                 name filename + ".hdr", will be written.
 	 * @param header_description
 	 *                 To be included in the header file.
+	 * @param type
+	 *             The data type
 	 */
 	public static void exportBIP(
 		Signature[] sigs,
 		String filename,
-		String header_description
+		String header_description,
+		EnviDataType type
 	) throws IOException, Exception {
 		String header_filename = filename + ".hdr";
 		
@@ -45,7 +48,7 @@ public final class BinaryExporter {
 			header.samples = samples;
 			header.lines = lines;
 			header.bands = bands;
-			header.data_type = 4;
+			header.data_type = type.code();
 			header.interleave = "bip";
 			header.x_start = 0;
 			header.y_start = 0;
@@ -60,7 +63,11 @@ public final class BinaryExporter {
 			
 			// now, write the binary file:
 			File file = new File(filename);
-			dos = new DataOutputStream(new FileOutputStream(file));
+			dos = new DataOutputStream(
+				new BufferedOutputStream(
+					new FileOutputStream(file), 100*1024
+				)
+			);
 			for ( int i = 0; i < size; i++ ) {
 				sig = sigs[i];
 				int nbands = sig.getSize();
@@ -69,16 +76,14 @@ public final class BinaryExporter {
 
 				for ( int k = 0; k < bands; k++ ) {
 					Signature.Datapoint p = sig.getDatapoint(k);
-					float data = (float) p.y;
-					dos.writeFloat(data);
+					type.write(p.y, dos);
 				}
 			}
 			
 			// pad with zeros to complete image:			
 			for ( int i = size; i < total_size; i++ ) {
 				for ( int k = 0; k < bands; k++ ) {
-					float data = 0.0f;
-					dos.writeFloat(data);
+					type.write(0, dos);
 				}
 			}
 		}
@@ -101,12 +106,15 @@ public final class BinaryExporter {
 	 *                 name filename + ".hdr", will be written.
 	 * @param header_description
 	 *                 To be included in the header file.
+	 * @param type
+	 *             The data type
 	 */
 	public static void exportToEnviSpectralLibrary(
 		String[] sig_names,
 		Signature[] sigs,
 		String filename,
-		String header_description
+		String header_description,
+		EnviDataType type
 	) throws IOException, Exception {
 		String header_filename = filename + ".hdr";
 		
@@ -123,7 +131,7 @@ public final class BinaryExporter {
 			header.samples = samples;
 			header.lines = lines;
 			header.bands = bands;
-			header.data_type = 4;
+			header.data_type = type.code();
 			header.file_type = "ENVI Spectral Library";
 			header.interleave = "bip";
 			
@@ -142,7 +150,12 @@ public final class BinaryExporter {
 			
 			// now, write the binary file:
 			File file = new File(filename).getAbsoluteFile();
-			dos = new DataOutputStream(new FileOutputStream(file));
+			dos = new DataOutputStream(
+				new BufferedOutputStream(
+					new FileOutputStream(file), 100*1024
+				)
+			);
+
 			for ( int i = 0; i < lines; i++ ) {
 				sig = sigs[i];
 				int nbands = sig.getSize();
@@ -151,8 +164,7 @@ public final class BinaryExporter {
 
 				for ( int k = 0; k < samples; k++ ) {
 					Signature.Datapoint p = sig.getDatapoint(k);
-					float data = (float) p.y;
-					dos.writeFloat(data);
+					type.write(p.y, dos);
 				}
 			}
 		}

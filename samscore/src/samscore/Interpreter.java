@@ -3,6 +3,7 @@ package samscore;
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
 import samscore.ISamsDb.IMetadataDef.IAttributeDef;
+import envifile.EnviDataType;
 import specfile.ISpectrumFile;
 import sig.Signature;
 import sigoper.OpUtil;
@@ -10,6 +11,7 @@ import fileutils.Files;
 import sfsys.Shell;
 import sfsys.ISfsys;
 import sfsys.ISfsys.INode;
+
 import java.util.*;
 import java.io.*;
 
@@ -207,9 +209,9 @@ public class Interpreter {
 		if ( format.equals("ascii") )
 			dbman.exportAscii(paths, filename, null);
 		else if ( format.equals("envi") )
-			dbman.exportEnvi(paths, filename, null);
+			dbman.exportEnvi(paths, filename, null, EnviDataType.FLOAT32);
 		else if ( format.equals("envilib") )
-			dbman.exportEnviLibrary(paths, filename, null);
+			dbman.exportEnviLibrary(paths, filename, null, EnviDataType.FLOAT32);
 		else
 			pw.println(format+ ": unrecognized export format. Use one of ascii, envi, envilib");
 	}

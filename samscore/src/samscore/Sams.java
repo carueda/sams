@@ -20,7 +20,7 @@ public class Sams {
 	
 	/** Opens a database. */
 	public static String getVersion() {
-		String version = "3.1";   // pending
+		String version = "3.2";   // pending
 		return version;
 	}
 	

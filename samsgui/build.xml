@@ -5,7 +5,7 @@
 -->
 <project name="sams" default="sams.jar" >
 	<!-- Version -->
-	<property name="VERSION" value="3.1"/>
+	<property name="VERSION" value="3.2"/>
 
 	<!-- Base dir for generated files -->
 	<property name="generated" value="../../_GENERATED/sams"/>

@@ -6,6 +6,7 @@ import sigoper.OpUtil;
 import sigoper.DomainException;
 import fileutils.Files;
 import envifile.BinaryExporter;
+import envifile.EnviDataType;
 
 import java.util.*;
 import java.io.*;
@@ -214,8 +215,12 @@ public class SamsDbManager {
 		}
 	}
 	
-	/** exports elements to an envi standar file. */
-	public void exportEnvi(List paths, String filename, ExportListener lis) throws Exception {
+	/** exports elements to an envi standard file. */
+	public void exportEnvi(
+		List paths, String filename, 
+		ExportListener lis, EnviDataType type
+	) throws Exception {
+		
 		if ( paths.size() == 0 ) {
 			println("No paths were given");
 			return;
@@ -234,11 +239,15 @@ public class SamsDbManager {
 			"  SAMS2 " +Sams.getVersion()+ " - Spectral Management and Analysis System\n" +
 			"  " +sigs.length+ " signatures exported on " +(new java.util.Date())
 		;
-		BinaryExporter.exportBIP(sigs, filename, header_description);
+		BinaryExporter.exportBIP(sigs, filename, header_description, type);
 	}
 
 	/** exports elements to an envi spectral library. */
-	public void exportEnviLibrary(List paths, String filename, ExportListener lis) throws Exception {
+	public void exportEnviLibrary(
+		List paths, String filename, 
+		ExportListener lis, EnviDataType type
+	) throws Exception {
+		
 		if ( paths.size() == 0 ) {
 			println("No paths were given");
 			return;
@@ -260,6 +269,6 @@ public class SamsDbManager {
 			"  SAMS2 " +Sams.getVersion()+ " - Spectral Management and Analysis System\n" +
 			"  " +sigs.length+ " signatures exported on " +(new java.util.Date())
 		;
-		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description); 
+		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description, type); 
 	}
 }

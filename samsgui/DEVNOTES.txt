@@ -2,6 +2,15 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 03/17/05 - version 3.2
+ 	- Exporter now allows the user to specify the data type
+	  for Envi output formats (std image and spectral library).
+	  Changes were done in the envifile and samscore module to
+	  support this (in particular, through the new class 
+	  envifile.EnviDataType).
+ 	
+
+
  09/29/04 - version 3.1
  	- New operations included in base_dist/opers/:
 		sort.s.bsh
