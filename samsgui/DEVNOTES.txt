@@ -7,10 +7,10 @@ $Id$
 	- Import from Ascii file
 
 07/09/03
-	- Preferences for: 
+	- Preferences for:
 		- last directory used for import
 		- path to last open database
-		
+
 07/07/03
 	- EditMetadataDefinition
-
+	
