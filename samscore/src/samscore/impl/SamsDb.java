@@ -50,9 +50,6 @@ class SamsDb implements ISamsDb {
 	/** List of attribute definitions, AttributeDef */
 	private List attrDefList;
 
-	/** The spectrum elements. The mapping is path->Spectrum */
-	private Map spectrums;
-
 	private IMetadataDef mddef;
 	
 	/** my associated clipboard. */
@@ -72,10 +69,7 @@ class SamsDb implements ISamsDb {
 			new File(sigsDir, "computed").mkdirs();
 			
 			attrDefList = new ArrayList();	// basic metadata definition: 
-			attrDefList.add(new AttributeDef("location", "", false));
-			attrDefList.add(new AttributeDef("name", "", false));
 			attrDefList.add(new AttributeDef("status", "good"));
-			spectrums = new HashMap();	// empty element table
 			save();
 		}
 		else {
@@ -100,7 +94,6 @@ class SamsDb implements ISamsDb {
 		try {
 			stream = new ObjectOutputStream(new FileOutputStream(infoFile));
 			stream.writeObject(attrDefList);
-			stream.writeObject(spectrums);
 		}
 		catch ( Exception ex ) {
 			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
@@ -117,7 +110,6 @@ class SamsDb implements ISamsDb {
 		try {
 			stream = new ObjectInputStream(new FileInputStream(infoFile));
 			attrDefList = (List) stream.readObject();
-			spectrums = (Map) stream.readObject();
 		}
 		catch ( Exception ex ) {
 			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
@@ -126,12 +118,6 @@ class SamsDb implements ISamsDb {
 			if ( stream != null )
 				try{ stream.close(); }catch ( Exception ex ){}
 		}
-		
-		// update metadata definition for each spectrum
-		for ( Iterator it = spectrums.values().iterator(); it.hasNext(); ) {
-			Spectrum s = (Spectrum) it.next();
-			s.db = this;
-		}		
 	}
 
 	public String getInfo() {
@@ -147,7 +133,7 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public ISfsys getGroupingLocation() throws Exception {
-		return Sfsys.create(sigsDir.getPath());
+		return Sfsys.createDir(sigsDir.getPath(), ".sig");
 	}
 	
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
@@ -160,37 +146,24 @@ class SamsDb implements ISamsDb {
 		return fs;
 	}
 
-	private IAttributeDef[] _getAttrDefs(String[] attrNames) throws Exception {
-		IAttributeDef[] attrs = new IAttributeDef[attrNames.length];
-		for ( int i = 0; i < attrNames.length; i++ ) {
-			String attrName = attrNames[i];
-			attrs[i] = mddef.get(attrName);
-			if ( attrs[i] == null ) 
-				throw new Exception(attrName+ ": Undefined attribute");
-		}
-		return attrs;
-	}
-	
 	private ISfsys _makeGroupingBy(String[] attrNames) throws Exception {
-		IAttributeDef[] attrs = _getAttrDefs(attrNames);
-		ISfsys fs = Sfsys.create(null);
+		ISfsys fs = Sfsys.createMem();
 
-		for ( Iterator it = getSpectrumIterator(); it.hasNext(); ) {
-			 ISamsDb.ISpectrum s = (ISamsDb.ISpectrum) it.next();
-			 String path = s.getPath();
+		for ( Iterator it = getAllPaths(); it.hasNext(); ) {
+			String path = (String) it.next();
+			ISpectrum s = getSpectrum(path);
 			 
-			 ISfsys.IDirectory base = fs.getRoot();
-			 for ( int i = 0; i < attrNames.length; i++ ) {
-				 String attrName = attrNames[i];
-				 String attrVal = s.getString(attrName);
-				 ISfsys.IDirectory val_dir = (ISfsys.IDirectory) base.getNode(attrVal);
-				 if ( val_dir == null )
-					 val_dir = base.createDirectory(attrVal);
-				 base = val_dir;
-			 }
-			 base.createFile(path);
+			ISfsys.IDirectory base = fs.getRoot();
+			for ( int i = 0; i < attrNames.length; i++ ) {
+				String attrName = attrNames[i];
+				String attrVal = s.getString(attrName);
+				ISfsys.IDirectory val_dir = (ISfsys.IDirectory) base.getNode(attrVal);
+				if ( val_dir == null )
+					val_dir = base.createDirectory(attrVal);
+				base = val_dir;
+			}
+			base.createFile(path);
 		}
-		
 		return fs;
 	}
 	
@@ -198,18 +171,41 @@ class SamsDb implements ISamsDb {
 		return mddef;
 	}
 	
-	public Iterator getSpectrumIterator() {
-		return spectrums.values().iterator();
+	public Iterator getAllPaths() {
+		List paths = new ArrayList();
+		try {
+			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), ".sig");
+			_populatePaths(paths, fs.getRoot());
+		}
+		catch(Exception ex) {
+			throw new Error("Unexpected exception: " +ex.getMessage());
+		}
+		return paths.iterator();
+	}
+	
+	private void _populatePaths(List paths, IDirectory dir) {
+		List children = dir.getChildren();
+		for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
+			INode inode = (INode) iter.next();
+			if ( inode instanceof IFile ) {
+				String path = inode.getPath();
+				if ( path.endsWith(".sig") )
+					paths.add(path.substring(0, path.length() - ".sig".length()));
+			}
+			else if ( inode instanceof IDirectory )
+				_populatePaths(paths, (IDirectory) inode);
+		}
 	}
 	
 	public ICondition createCondition(String text) throws Exception {
 		return new Condition(text);
 	}
 
-	public Iterator select(ICondition condition, String orderBy) throws Exception {
+	public Iterator selectSpectrums(ICondition condition, String orderBy) throws Exception {
 		List result = new ArrayList();
-		for ( Iterator it = getSpectrumIterator(); it.hasNext(); ) {
-			ISpectrum s = (ISpectrum) it.next();
+		for ( Iterator it = getAllPaths(); it.hasNext(); ) {
+			String path = (String) it.next();
+			ISpectrum s = getSpectrum(path);
 			if ( condition == null || ((Condition) condition).accepts(s) )
 				result.add(s);
 		}
@@ -217,12 +213,11 @@ class SamsDb implements ISamsDb {
 			orderBy = "location,name";
  
 		final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
-		final IAttributeDef[] attrs = _getAttrDefs(orderByAttrNames);
 		Comparator comparator = new Comparator() {
 			public int compare(Object o1, Object o2){
 				ISpectrum s1 = (ISpectrum) o1;
 				ISpectrum s2 = (ISpectrum) o2;
-				for ( int i = 0; i < attrs.length; i++ ) {
+				for ( int i = 0; i < orderByAttrNames.length; i++ ) {
 					int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
 					if ( c != 0 )
 						return c;
@@ -236,38 +231,30 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public ISpectrum getSpectrum(String path) throws Exception {
-		path = normalizePath(path);
-		return (ISpectrum) spectrums.get(path);
+		return new Spectrum(path);
 	}
 	
-	public ISpectrum addSpectrum(String path, Signature sig) throws Exception {
-		path = normalizePath(path);
-		ISpectrum spectrum = (ISpectrum) spectrums.get(path);
-		if ( spectrum == null ) {
-			spectrum = new Spectrum(this, path);
-			spectrums.put(path, spectrum);
-		}
+	public String addSpectrum(String path, Signature sig) throws Exception {
 		setSignature(path, sig);
-		return spectrum;
+		return path;
 	}
 	
 	public void deleteSpectrum(String path) throws Exception {
-		path = normalizePath(path);
-		// remove entry:
-		ISpectrum spectrum = (ISpectrum) spectrums.get(path);
-		if ( spectrum != null )
-			spectrums.remove(path);
+		File file;
 		// remove signature:
-		File file = new File(sigsDir, path);
+		file = new File(sigsDir, normalizePath(path));
+		if ( file.exists() )
+			file.delete();
+		// remove metadata:
+		file = new File(sigsDir, normalizePath(path)+ "md");
 		if ( file.exists() )
 			file.delete();
 	}
 	
 	public Signature getSignature(String path) throws Exception {
-		path = normalizePath(path);
-		File file = new File(sigsDir, path);
+		File file = new File(sigsDir, normalizePath(path));
 		if ( !file.exists() )
-			return null;
+			throw new Exception(path+ ": Signature not found");
 
 		BufferedReader stream = null;
 		try {
@@ -305,8 +292,7 @@ class SamsDb implements ISamsDb {
 	}
 
 	public void setSignature(String path, Signature sig) throws Exception {
-		path = normalizePath(path);
-		File file = new File(sigsDir, path);
+		File file = new File(sigsDir, normalizePath(path));
 		File parent = file.getParentFile();
 		if ( !parent.exists() && !parent.mkdirs() )
 			throw new Exception("Cannot make directory for: " +file.getAbsolutePath());
@@ -331,83 +317,99 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
-	final static class Spectrum implements ISpectrum, Serializable {
-		String path;
+	public String renameSpectrum(String oldPath, String newPath) throws Exception {
+		oldPath = normalizePath(oldPath);
+		newPath = normalizePath(newPath);
+		if ( oldPath.equals(newPath) )
+			return null;   // no renaming neccesary.
+		
+		// rename files:
+		String[] exts = { ".sig", ".md", };
+		for ( int i = 0; i < exts.length; i++ ) {
+			String ext = exts[i];
+			File oldfile = new File(sigsDir, oldPath + ext);
+			if ( oldfile.exists() ) {
+				File newfile = new File(sigsDir, newPath + ext);
+				if ( !oldfile.renameTo(newfile) )
+					throw new Exception("Cannot rename signature: " +oldPath+ " -> " +newPath);
+			}
+		}
+		return newPath;
+	}
+	
+	final class Spectrum implements ISpectrum {
+		String location;
+		String name;
 		
 		/** Attribute name->value mapping. */
 		Map attrValues;
 		
-		/** my database. */
-		transient SamsDb db;
-		
 		/** creates an element */
-		Spectrum(SamsDb db, String path) {
-			this.db = db;
-			this.path = path;
+		Spectrum(String path) {
 			int index = path.lastIndexOf("/") + 1;
-			String location = path.substring(0, index);
-			String name = path.substring(index);
+			location = path.substring(0, index);
+			name = path.substring(index);
+			
 			attrValues = new HashMap();
-			attrValues.put("location", location);
-			attrValues.put("name", name);
+			File file = new File(normalizePath(path)+ "md");
+			if ( file.exists() ) {
+				// read attributes:
+				// PENDING			
+			}
 		}
 		
 		/** convenience no-arg constructor for clone() */
 		Spectrum() { }
 		
-		/** creates a copy but with path/location/name updated according to new_path. */
+		/** creates a copy but with location/name updated according to new_path. */
 		Spectrum clone(String new_path) {
 			Spectrum clone = new Spectrum();
 			clone.attrValues = new HashMap();
 			for ( Iterator iter = attrValues.keySet().iterator(); iter.hasNext(); ) {
-				String name = (String) iter.next();
-				String value = (String) attrValues.get(name);
-				clone.attrValues.put(name, value);
+				String attrName = (String) iter.next();
+				String attrValue = (String) attrValues.get(attrName);
+				clone.attrValues.put(attrName, attrValue);
 			}
-			clone.db = db;
-			clone.path = new_path;
-			int index = clone.path.lastIndexOf("/") + 1;
-			String location = clone.path.substring(0, index);
-			String name = clone.path.substring(index);
-			clone.attrValues.put("location", location);
-			clone.attrValues.put("name", name);
+			int index = new_path.lastIndexOf("/") + 1;
+			clone.location = new_path.substring(0, index);
+			clone.name = new_path.substring(index);
 			return clone;
 		}
 		
+		public String getLocation() {
+			return location;
+		}
+		public String getName() {
+			return name;
+		}
 		public String getPath() {
-			return path;
+			return location + name;
 		}
 	
 		public String getString(String attrName) {
-			String val = null;
-			if ( attrName.equals("path") )
-				val = getPath();
-			else {
-				val = (String) attrValues.get(attrName);
-				if ( val == null ) {
-					IMetadataDef.IAttributeDef attr = db.mddef.get(attrName);
-					if ( attr != null )
-						val = attr.getDefaultValue();
-				}
+			assert !attrName.equals("path") ;
+			if ( attrName.equals("location") )
+				return location;
+			if ( attrName.equals("name") )
+				return name;
+			
+			String val = (String) attrValues.get(attrName);
+			if ( val == null ) {
+				IMetadataDef.IAttributeDef attr = mddef.get(attrName);
+				if ( attr != null )
+					val = attr.getDefaultValue();
 			}
 			return val;
 		}
 	
 		public void setString(String attrName, String attrValue) {
-			if ( attrName.equals("path") )
-				path = attrValue;
-			else
-				attrValues.put(attrName, attrValue);
+			assert !attrName.equals("path") ;
+			if ( attrName.equals("location") || attrName.equals("name") )
+				throw new IllegalArgumentException(attrName);
+			
+			attrValues.put(attrName, attrValue);
 		}
 		
-		public Signature getSignature() throws Exception {
-			return db.getSignature(getPath());
-		}
-
-		public void setSignature(Signature sig) throws Exception {
-			db.setSignature(getPath(), sig);
-		}
-	
 		void remove(String attrName) {
 			attrValues.remove(attrName);
 		}
@@ -447,10 +449,12 @@ class SamsDb implements ISamsDb {
 			attrDefList.remove(attribute);
 			
 			// update all spectrum elements:
-			for ( Iterator it = spectrums.values().iterator(); it.hasNext(); ) {
-				Spectrum s = (Spectrum) it.next();
-				s.remove(attrName);
+			/* PENDING
+			for ( Iterator it = getAllPaths(); it.hasNext(); ) {
+				String path = (String) it.next();
+				// PENDING ...
 			}
+			*/
 		}
 	}
 		
@@ -482,25 +486,28 @@ class SamsDb implements ISamsDb {
 		}
 	}
 
-	/** Normalizes the path to a regular file. See test_normalizePath for examples. */
-	static String normalizePath(String path) {
+	/** Normalizes the path to a signature file. */
+	private static String normalizePath(String path) {
 		assert path.trim().length() > 0;
 		path = path.replace('\\', '/');
 		path = path.replace(':', '/');
 		assert !path.endsWith("/");
 		path = path.replaceAll("//+", "/");
-		if ( !path.endsWith(".txt") )
-			path += ".txt";
+		path = path.replaceAll("\\.+$", "");
+		if ( !path.toLowerCase().endsWith(".sig") )
+			path += ".sig";
 		if ( !path.startsWith("/") )
 			path = "/" +path;
+		path = path.substring(0, path.length() - ".sig".length()) + ".sig";
 		return path;
 	}
-	static void test_normalizePath() {
+	private static void test_normalizePath() {
 		System.out.println("test_normalizePath()");
-		assert normalizePath("abc").equals("/abc.txt") ;
-		assert normalizePath("//abc//def").equals("/abc/def.txt") ;
-		assert normalizePath("abc\\def").equals("/abc/def.txt") ;
-		assert normalizePath("abc:def").equals("/abc/def.txt") ;
+		assert normalizePath("abc").equals("/abc.sig") ;
+		assert normalizePath("//abc//def").equals("/abc/def.sig") ;
+		assert normalizePath("abc\\def").equals("/abc/def.sig") ;
+		assert normalizePath("abc:def").equals("/abc/def.sig") ;
+		assert normalizePath("abc/def.SIG").equals("/abc/def.sig") ;
 	}
 	public static void main(String[]_) {
 		test_normalizePath();
@@ -616,15 +623,14 @@ class SamsDb implements ISamsDb {
 			int processed = 0;
 			for ( int i = 0; i < elements.size(); i++ ) {
 				ClipboardElement e = (ClipboardElement) elements.get(i);
-				String name = e.spectrum.getString("name");
+				String name = e.spectrum.getName();
 				String new_path = normalizePath(target_location+ "/" +name);
 				
-				Spectrum modified = (Spectrum) spectrums.get(new_path);
-				if ( modified == null ) {
-					modified = e.spectrum.clone(new_path);
-					spectrums.put(new_path, modified);
-				}
-				modified.setSignature(e.signature);
+				setSignature(new_path, e.signature);
+				
+				// PENDING  setSpectrum does not exist yet
+				//setSpectrum(new_path, e.spectrum.clone(new_path));
+				
 				processed++;
 				if ( obs.elementFinished(i+1, new_path) )
 					break;  // but go to endTask

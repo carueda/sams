@@ -27,7 +27,7 @@ public interface ISamsDb {
 	public ISpectrum getSpectrum(String path) throws Exception;
 	
 	/** Gets all elements */
-	public Iterator getSpectrumIterator();
+	public Iterator getAllPaths();
 	
 	/** Creates a condition. */
 	public ICondition createCondition(String text) throws Exception;
@@ -36,46 +36,60 @@ public interface ISamsDb {
 	 * @param condition can be null. 
 	 * @orderBy comma-separated field names. null or empty is equivalent to "location,name". 
 	 */
-	public Iterator select(ICondition condition, String orderBy) throws Exception ;
+	public Iterator selectSpectrums(ICondition condition, String orderBy) throws Exception ;
 	
-	/** Adds an element */
-	public ISpectrum addSpectrum(String path, Signature sig) throws Exception;
+	/** Adds an element 
+	 * Returns normalized path.
+	 */
+	public String addSpectrum(String path, Signature sig) throws Exception;
 
 	/** Removes an element including its signature file. */
 	public void deleteSpectrum(String path) throws Exception;
+	
+	/** Renames an element. 
+	 * Returns the normalized new path; null if not change was necessary at all.
+	 */
+	public String renameSpectrum(String oldPath, String newPath) throws Exception;
 
-	/** Gets a signature */
+	/** Gets a signature 
+	 * @throw  Exception if signature not found or cannot be read in.
+	 */
 	public Signature getSignature(String path) throws Exception;
 	
 	/** Sets a signature */
 	public void setSignature(String path, Signature sig) throws Exception;
 	
-	/** gets a sub-grouping by "location". */
+	/** gets a sub-grouping by getLocation(). */
 	public IDirectory getGroupingUnderLocation(String path) throws Exception;
 
 	/** gets a grouping structure according to attribute values. */
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception;
 	
-	/** gets the grouping by "location". */
+	/** gets the grouping by getLocation()". */
 	public ISfsys getGroupingLocation() throws Exception;
 	
 	/** Represents an element in this database. */
 	public interface ISpectrum {
-		/** Gets the path of this element. */
+		/** Gets the path of this element, which is equal to getLocation + getname() */
 		public String getPath();
+		
+		/** gets the location. Always ends with "/". */
+		public String getLocation();
+		
+		/** gets the name. */
+		public String getName();
 	
-		/** Gets the value of an attribute. */
+		/** Gets the value of an attribute.
+		 * @param attrName "location" -> getLocation()
+		 *                 "name" -> getName()
+		 */
 		public String getString(String attrName);
 	
-		/** Sets the value of an string attribute. */
+		/** Sets the value of an string attribute. 
+		 * Use db.renameSpectrum(*) to rename an element.
+		 * @throw IllegalArgumentException if attrName is "location" or "name".
+		 */
 		public void setString(String attrName, String attrValue);
-
-		/** Gets the associated signature */
-		public Signature getSignature() throws Exception;
-		
-		/** Sets the associated signature */
-		public void setSignature(Signature sig) throws Exception;
-	
 	}
 
 	/** Metadata definition */

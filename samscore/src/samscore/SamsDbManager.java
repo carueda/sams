@@ -64,9 +64,9 @@ public class SamsDbManager {
 		sig.Signature sig = sf.getSignature();
 		print(filename+ ":  recognized as a '" +sf.getFormatName()+ "' file. ");
 		String path = new File(filename).getName();
-		ISamsDb.ISpectrum s = db.addSpectrum(path, sig);
+		path = db.addSpectrum(path, sig);
 		db.save();
-		println(" => '" +s.getPath()+ "'");
+		println(" => '" +path+ "'");
 	}
 	
 	public void importDirectory(final String dirname, boolean recurse, String tryfiletype) throws Exception {

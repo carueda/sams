@@ -79,7 +79,7 @@ public class Interpreter {
 		}
 		pw.println();
 		ICondition condition = condition_text == null ? null : db.createCondition(condition_text);
-		for ( Iterator it2 = db.select(condition, orderBy); it2.hasNext(); ) {
+		for ( Iterator it2 = db.selectSpectrums(condition, orderBy); it2.hasNext(); ) {
 			ISamsDb.ISpectrum s = (ISamsDb.ISpectrum) it2.next();
 			for ( Iterator it = mddef.getDefinitions().iterator(); it.hasNext(); ) {
 				 IAttributeDef attrDef = (IAttributeDef) it.next();
