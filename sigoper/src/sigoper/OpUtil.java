@@ -168,7 +168,7 @@ public final class OpUtil {
 
 	/**
 	 * Gets the value of a signature at a given abscissa.
-	 *
+	 *                                                       
 	 * @return The resulting value. This could be the result of a linear 
 	 *         interpolation between the nearest available values.
 	 *
@@ -196,6 +196,48 @@ public final class OpUtil {
 		// make interpolation with next point
 		q = sig.getDatapoint(index + 1);
 		return interpolate(p.x, p.y, q.x, q.y, at);
+	}
+	
+	/**
+	 * Gets an averaged value of a signature at a given abscissa
+	 * according to a given window size.
+	 *
+	 * @param sig - the signature
+	 * @param at - desired abscissa
+	 * @param winsize - window size. Values in the interval
+	 *                 [at-winsize/2, at+winsize/2] will be
+	 *                 averaged.
+	 *
+	 * @return The resulting value: a simple average of the
+	 *          values in the window centered at the desired abscissa.
+	 *
+	 * @throws OperationException If signature is undefined at the given abscissa.
+	 */
+	public static double averagedValueAt(Signature sig, double at, double winsize)
+	throws OperationException {
+		int size = sig.getSize();
+		Signature.Datapoint p = null;
+
+		// interval of interest:
+		double winsize2 =  winsize/2;		
+		double at_inf = at - winsize2;		
+		double at_sup = at + winsize2;
+		
+		// corresponding indices:
+		int inf_idx = indexAt(sig, at_inf);
+		int sup_idx = indexAt(sig, at_sup);
+		
+		p = sig.getDatapoint(inf_idx);
+		if ( inf_idx == sup_idx )
+			return p.y;
+		
+		// else: compute average:
+		double sum = p.y;
+		for ( int i = inf_idx + 1; i <= sup_idx; i++ ) {
+			p = sig.getDatapoint(i);
+			sum += p.y;
+		}
+		return sum / (sup_idx - inf_idx + 1);
 	}
 	
 	/**
