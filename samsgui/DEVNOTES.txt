@@ -2,6 +2,10 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 09/11/03 - version 3.0
+ 	- izpack installer specification updated to work on unix
+	  targets.
+	  
  08/29/03 - version 3.0
  	- New Info.getSAMSDirectory() (based on "sams.dir" system property).
 	- Initialization with getSAMSDirectory()/opers/ (now with only two
