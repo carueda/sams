@@ -1,6 +1,7 @@
 package samsgui;
 
 import samsgui.dbgui.*;
+import samsgui.dbgui.Tree.MyNode;
 
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
@@ -247,12 +248,17 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		List paths = dbgui.getTree().getSelectedGroupPaths();
+		List paths = dbgui.getTree().getSelectedGroups();
 		if ( paths.size() != 1 ) {
 			SamsGui.message("One group under the location grouping must be selected to paste signatures onto it");
 			return;
 		}
-		final String target_path = (String) paths.get(0);
+		MyNode target_node = (MyNode) paths.get(0);
+		if ( !target_node.underLocationGrouping() ) {
+			SamsGui.message("Only the location grouping can be used for pasting");
+			return;
+		}
+		final String target_path = target_node.getLocationPath();
 		try {
 			db.getClipboard().setObserver(new ClipboardObserver(dbgui, "Pasting to " +target_path+ "...", true, true, false));
 			Thread thread = new Thread(new Runnable() {
@@ -331,8 +337,8 @@ public class Controller {
 		String confirm_msg;
 		
 		List selectedSpectraPaths = dbgui.getTree().getSelectedSpectraPaths();
-		List selectedGroupPaths = dbgui.getTree().getSelectedGroupPaths();
-		if ( selectedGroupPaths.size() == 0 ) {
+		List selectedGroups = dbgui.getTree().getSelectedGroups();
+		if ( selectedGroups.size() == 0 ) {
 			if ( selectedSpectraPaths.size() == 0 ) {
 				SamsGui.message("No selected spectra to delete");
 				return;
@@ -343,14 +349,23 @@ public class Controller {
 			confirm_msg = "Delete " +
 				(collect_paths.size()==1 ? (String)collect_paths.get(0) : collect_paths.size()+" selected elements")+ "?"; 
 		}
-		else { // selectedGroupPaths.size() > 0
+		else { // selectedGroups.size() > 0
 			if ( selectedSpectraPaths.size() > 0 ) {
 				SamsGui.message("Both groups and spectra are selected.");
 				return;
 			}
 			// Group selection.
+			collect_paths = new ArrayList();
+			// check ther are only deletable groups (not under "location:"
+			for ( Iterator iter = selectedGroups.iterator(); iter.hasNext(); ) {
+				MyNode grp_node = (MyNode) iter.next();
+				if ( !grp_node.underLocationGrouping() ) {
+					SamsGui.message("Only groups under locatiorn grouping can be deleted.");
+					return;
+				}
+				collect_paths.add(grp_node.getLocationPath());
+			}
 			collect_isSpectra = false;
-			collect_paths = selectedGroupPaths;
 			confirm_msg = "Delete " +
 				(collect_paths.size()==1 ? (String)collect_paths.get(0) : collect_paths.size()+" selected groups")+ "?\n"+
 				"All members and subgroups will also be deleted.";

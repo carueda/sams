@@ -261,12 +261,17 @@ public class Tree extends JPanel {
 	public List getSelectedSpectraNodes() {
 		return _getSelectedNodes(true, true);
 	}
+	
+	public List getSelectedGroups() {
+		return _getSelectedNodes(false, true);
+	}
+	
+	// TO BE ELIMINATED !!!!!!!
 	public List getSelectedSpectraPaths() {
 		return _getSelectedNodes(true, false);
 	}
-	public List getSelectedGroupNodes() {
-		return _getSelectedNodes(false, true);
-	}
+	
+	// TO BE ELIMINATED !!!!!!!
 	public List getSelectedGroupPaths() {
 		return _getSelectedNodes(false, false);
 	}
@@ -449,10 +454,17 @@ public class Tree extends JPanel {
 			return this;
 		}
 		
-		/** gets the real path under "location:" of the group or signature referenced by this node. */
+		/** tells if this node is under the "location:" grouping. */
+		public boolean underLocationGrouping() {
+			TreeNode[] node_path = getPath();
+			return node_path.length >= 2 && !((MyNode)node_path[1]).getName().equals("location:");
+		}
+		
+		/** gets the real path under "location:" of the group or signature referenced by this node.
+		 * Note that this.underLocationGrouping() can be false. */
 		public String getLocationPath() {
 			if ( name.startsWith("/") ) {
-				// this is tha case when the name is precisely the path
+				// this is the case when the name is precisely the path
 				return name;
 			}
 			else {
@@ -479,7 +491,7 @@ public class Tree extends JPanel {
 		}
 		
 		public boolean isGroup() {
-			return isGroup;
+			return !isSpectrum; //isGroup;
 		}
 		
 		public boolean isSpectrum() {

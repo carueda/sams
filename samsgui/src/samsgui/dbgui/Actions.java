@@ -71,8 +71,7 @@ public final class Actions {
 	 */
 	public static List getGroupActions(List selectedGroups) {
 		List list = new ArrayList();
-		if ( selectedGroups != null && selectedGroups.size() == 1 ) {
-			String group_path = (String) selectedGroups.get(0);
+		if ( selectedGroups.size() == 1 ) {
 			list.add(getAction("new-group"));
 			list.add(getAction("paste"));
 			list.add(null);

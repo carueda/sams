@@ -3,6 +3,7 @@ package samsgui.dbgui;
 import samsgui.SamsGui;
 import samsgui.BaseDialog;
 import samsgui.Prefs;
+import samsgui.dbgui.Tree.MyNode;
 
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
@@ -288,10 +289,10 @@ public class DbGui extends JPanel {
 				jtree.setSelectionPath(treePath);
 		}
 		Tree.MyNode node = (Tree.MyNode) treePath.getLastPathComponent();
-		if ( node.isGroup() )
-			clickGroup(node, me);
-		else if ( node.isSpectrum() )
+		if ( node.isSpectrum() )
 			clickSpectrum(node, me);
+		else // if ( node.isGroup() )
+			clickGroup(node, me);
 	}
 	
 	public void clickSpectrum(Tree.MyNode n, MouseEvent me) {
@@ -365,7 +366,7 @@ public class DbGui extends JPanel {
 	}
 	
 	JPopupMenu getPopupMenuGroup() {
-		List selectedGroups = tree.getSelectedGroupPaths();
+		List selectedGroups = tree.getSelectedGroups();
 		if ( selectedGroups.size() == 0 ) {
 			// no selection of group elements: show corresponding popup:
 			if ( popupGroupNoSelection == null ) {
@@ -377,7 +378,7 @@ public class DbGui extends JPanel {
 		}
 		String title;
 		if (  selectedGroups.size() == 1 )
-			title = "Selected: " +((String) selectedGroups.get(0));
+			title = "Selected: " +((MyNode) selectedGroups.get(0)).getLocationPath();
 		else
 			title = "Multiple selection: " +selectedGroups.size()+ " groups";
 	
@@ -713,11 +714,11 @@ public class DbGui extends JPanel {
 			signature_selection = selectedSpectra.size()+ " signatures";
 		
 		String group_selection; 
-		List selectedGroups = tree.getSelectedGroupPaths();
+		List selectedGroups = tree.getSelectedGroups();
 		if ( selectedGroups.size() == 0 )
 			group_selection = "None";
-		else if (  selectedGroups.size() == 1 )
-			group_selection = (String) selectedGroups.get(0);
+		else if ( selectedGroups.size() == 1 )
+			group_selection = ((MyNode) selectedGroups.get(0)).getLocationPath();
 		else
 			group_selection = selectedGroups.size()+ " groups selected";
 
@@ -883,10 +884,15 @@ public class DbGui extends JPanel {
 	public void createGroup() throws Exception {
 		if ( db == null )
 			return;
-		List selectedGroups = tree.getSelectedGroupPaths();
+		List selectedGroups = tree.getSelectedGroups();
 		if (  selectedGroups.size() != 1 )
 			return;
-		String path = (String) selectedGroups.get(0);
+		MyNode node_path = (MyNode) selectedGroups.get(0);
+		if ( !node_path.underLocationGrouping() ) {
+			SamsGui.message("Subgroups can only be created under the location grouping");
+			return;
+		}
+		String path = node_path.getLocationPath();
 		final INode dir = db.getGroupingUnderLocation(path);
 		if ( dir == null )
 			throw new Error(path+ ": directory not found!!");

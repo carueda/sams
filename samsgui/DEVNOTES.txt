@@ -3,7 +3,17 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
- 	- allow group operations when clicking a "virtual" group
+ 	- On progress: allow group operations when clicking a "virtual" group
+		These methods are being deleted:
+			Tree.getSelectedGroupPaths
+			Tree.getSelectedSpectraPaths
+		There will be only the queries for *nodes* in order for cliet code
+		to check when nodes are underLocationGrouping (new method)...
+		
+	  Now I'm to change DbGui.export()...
+	  
+	  (Compilation is OK now but need to complete changes..)
+		
  	- Some About info and identification management
 	- import from envi
 	- Splash, initialization progress
