@@ -250,12 +250,13 @@ public class Compute {
 								// b)
 								task_message.append("\nAdding result " +path);
 								progressBar.setValue(progressBar.getMaximum() -1);
-								final ISpectrum s = db.addSpectrum(path, sig);
+								path = db.addSpectrum(path, sig);
+								final ISpectrum s = db.getSpectrum(path);
 
 								// update GUI
 								Controller.doUpdate(new Runnable() {
 									public void run() {
-										dbgui.getTree().addChild(computedNode, s.getString("name"), true, true);
+										dbgui.getTree().addChild(computedNode, s.getName(), true, true);
 										dbgui.refreshTable();
 									}
 								});
@@ -434,14 +435,13 @@ public class Compute {
 									
 									if ( r_create.isSelected() ) {
 										String prefix = path.substring(path.lastIndexOf('/') + 1);
-										if ( prefix.endsWith(".txt") )
-											prefix = prefix.substring(0, prefix.length() - ".txt".length());
 										String resultname = f_resultname.getText();
 										String path_res = "/computed/" +prefix+resultname;
 										
 										task_message.append("Adding result " +path_res+ "\n");
-										ISpectrum s = db.addSpectrum(path_res, sig_res);
-										dbgui.getTree().addChild(computedNode, s.getString("name"), true, false);
+										path_res = db.addSpectrum(path_res, sig_res);
+										ISpectrum s = db.getSpectrum(path_res);
+										dbgui.getTree().addChild(computedNode, s.getName(), true, false);
 									}
 									else {
 										db.setSignature(path, sig_res);

@@ -1,6 +1,7 @@
 package samsgui.dbgui;
 
 import samsgui.SamsGui;
+import samsgui.BaseDialog;
 import samsgui.Prefs;
 
 import samscore.ISamsDb;
@@ -21,6 +22,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.Rectangle;
+import java.awt.Font;
 import java.util.*;
 
 /**
@@ -61,35 +63,12 @@ public class DbGui extends JPanel {
 
 		tree = new Tree(this);
 		table = new Table() {
-			protected boolean doRenaming(ISpectrum s, String new_name_value) {
-				assert new_name_value.length() > 0;
-				if ( !new_name_value.toLowerCase().endsWith(".txt") )
-					new_name_value += ".txt";
-				
-				String old_name_value = s.getString("name");
-				if ( old_name_value.equals(new_name_value) )
-					return false;
-				
-				String oldpath = s.getPath();
-				String newpath = s.getString("location")+ "/" +new_name_value;
+			protected void doRenaming(ISpectrum s, String new_name_value) {
 				try {
-					if ( db.getSpectrum(newpath) != null ) {
-						SamsGui.message(new_name_value+ ": This name already exists in the same location.");
-						return false;
-					}
-					Signature sig = s.getSignature();
-					db.deleteSpectrum(oldpath);
-					db.addSpectrum(newpath, sig);
-					saveDatabase();
-					// update other GUI elements.
-					// By now, just reset everything: (PENDING improvement)
-					tree.setInfo();
-					clearPlot();
-					return true;
+					_doRenaming(s, new_name_value);
 				}
 				catch(Exception ex) {
 					SamsGui.message("Error: " +ex.getMessage());
-					return false;
 				}
 			}
 		};
@@ -122,6 +101,18 @@ public class DbGui extends JPanel {
 		add(statusBar = new StatusBar(),  BorderLayout.SOUTH);
 		
 		setDatabase(db);
+	}
+	
+	private boolean _doRenaming(ISpectrum s, String new_name_value) throws Exception {
+		assert new_name_value.length() > 0;
+		String oldpath = s.getPath();
+		String newpath = db.renameSpectrum(oldpath, s.getLocation() + new_name_value); 
+		if ( newpath == null )
+			return false; // OK, there was no necessary change
+		tree.removeNode(oldpath);
+		tree.insertNode(newpath, true);
+		clearPlot();
+		return true;
 	}
 	
 	/** notifies */
@@ -326,7 +317,8 @@ public class DbGui extends JPanel {
 				plot.setSignature(sig, legend);
 		}
 		catch(Exception ex) {
-			plot.setTitle("Error: " +ex.getMessage());
+			ex.printStackTrace();
+			SamsGui.message("Error: " +ex.getMessage());
 		}
 		plot.repaint();
 	}
@@ -467,9 +459,9 @@ public class DbGui extends JPanel {
 				// Yes, include members from subgroups.
 				// easy strategy: for each spectrum check if it "belongs" to any of
 				// the selected groups or its subgroups:
-				for ( Iterator iter = db.getSpectrumIterator(); iter.hasNext(); ) {
-					ISpectrum s = (ISpectrum) iter.next();
-					String path = s.getPath();
+				for ( Iterator iter = db.getAllPaths(); iter.hasNext(); ) {
+					String path = (String) iter.next();
+					ISpectrum s = db.getSpectrum(path);
 					boolean include = false;
 					for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
 						String group_path = (String) iterg.next();
@@ -816,12 +808,64 @@ public class DbGui extends JPanel {
 		frame.setVisible(true);
 	}
 
-	public void rename() {
+	public void rename() throws Exception {
 		if ( db == null )
 			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
 		if (  selectedSpectra == null || selectedSpectra.size() != 1 )
 			return;
-		final String path = (String) selectedSpectra.get(0);
+		String path = (String) selectedSpectra.get(0);
+		final ISpectrum s = db.getSpectrum(path);
+		if ( s == null )
+			throw new Error(path+ ": spectrum not found!!");
+		
+		JTextField f_oldname = new JTextField(s.getName());
+		f_oldname.setEditable(false);
+		final JTextField f_newname = new JTextField(12);
+		final JLabel status = new JLabel();
+		status.setFont(status.getFont().deriveFont(Font.ITALIC));
+		
+		f_oldname.setBorder(SamsGui.createTitledBorder("Current name"));
+		f_newname.setBorder(SamsGui.createTitledBorder("New name"));
+		
+		Object[] array = {
+			f_oldname,
+			f_newname,
+			status
+		};
+		
+		String diag_title = "Rename signature";
+		final BaseDialog form = new BaseDialog(getFrame(), diag_title, array) {
+			public boolean dataOk() {
+				String msg = null;
+				String newname = f_newname.getText().trim();
+				if ( newname.length() == 0 )
+					msg = "Specify the new name";
+				if ( msg == null ) {
+					status.setForeground(Color.gray);
+					status.setText("OK");
+				}
+				else {
+					status.setForeground(Color.red);
+					status.setText(msg);
+				}
+				return msg == null;
+			}
+		};
+		form.activate();
+		form.pack();
+		form.setLocationRelativeTo(getFrame());
+		form.setVisible(true);
+		if ( form.accepted() ) {
+			String newname = f_newname.getText().trim();
+			try {
+				if ( _doRenaming(s, newname) )
+					table.updateData();
+			}
+			catch(Exception ex) {
+				SamsGui.message("Error: " +ex.getMessage());
+				return;
+			}
+		}
 	}
 }

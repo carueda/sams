@@ -3,19 +3,28 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
-		- where to allow for creation of subgroups .... See Actions
-		- delete group
-		- rename as a command from tree display
-		- rename from table: pending to improve (no saveDatabase, but cut/paste style...)
-		- import from envi
-		- import from ascii
-		- new grouping by attr value
-		- new grouping by filename (?)
+	- where to allow for creation of subgroups .... See Actions
+	- delete group
+	- rename as a command from tree display
+	- rename from table: pending to improve (no saveDatabase, but cut/paste style...)
+	- import from envi
+	- import from ascii
+	- new grouping by attr value
+	- new grouping by filename (?)
 		
  Pending bugs:
-	  - CorrectionOperation: check operation when forward=false, additive=false
-	    (it's giving out a "reflection"--check sign in correction variable) 
+	- CorrectionOperation: check operation when forward=false, additive=false
+	  (it's giving out a "reflection"--check sign in correction variable) 
 		
+ 07/29/03
+ 	- New scheme for SamsDb implementation:
+		- name.sig:   stores the signature
+		- name.sigmd: stores the metadata (PENDING to create/update)
+		- Spectrum not longer stored (serializable)
+		- "location", "name" are not longer explicit stored attributes
+		- Pending to show implicit "location", "name" attributes in Table...
+	  
+
  07/28/03
  	- rename already working from table.
  	- view-data ready: now uses a JTable and the user can modify/save the contents

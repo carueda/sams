@@ -199,7 +199,7 @@ public class SamsGui {
 	public static void delete() throws Exception {
 		if ( focusedDbGui == null )
 			return;
-		JFrame frame = focusedDbGui.getFrame();
+		DbFrame frame = (DbFrame) focusedDbGui.getFrame();
 		String filename = ((DbFrame) frame).filename;
 		if ( NO_DB_NAME.equals(filename) )
 			return;
@@ -226,11 +226,18 @@ public class SamsGui {
 		Files.deleteDirectory(filename); // PENDING to generalize to dir or file
 		if ( new File(filename).exists() )
 			message(filename+ "\nSAMS could not delete this directory.\nPlease, delete it manually.");
+		focusedDbGui.close();
 		openDbGuis.remove(filename);
-		if ( numOpen() > 0 ) {
-			frame.dispose();
-			focusedDbGui = null;
+		if ( numOpen() == 0 ) {  // was last window?
+			openDbGuis.put(NO_DB_NAME, focusedDbGui);
+			frame.filename = NO_DB_NAME;
+			frame.setTitle("SAMS - " +frame.filename);
 		}
+		else {
+			focusedDbGui = null;
+			frame.dispose();
+		}
+
 	}
 	
 	public static DbGui getFocusedDbGui() { 
@@ -285,10 +292,6 @@ public class SamsGui {
 				return true;
 			}
 			protected boolean delete(String attr_name) {
-				if ( attr_name.equals("location") || attr_name.equals("name") ) {
-					SamsGui.message(frame, attr_name+ ": This attribute cannot be deleted");
-					return false;
-				}
 				if ( SamsGui.confirm(frame, attr_name+ ": Are you sure you want to delete this attribute?") ) {
 					ISamsDb db = focusedDbGui.getDatabase();
 					db.getMetadata().delete(attr_name);
@@ -484,7 +487,7 @@ public class SamsGui {
 			focusedDbGui.viewData();
 	}
 	
-	public  static void rename() {
+	public  static void rename() throws Exception {
 		if ( focusedDbGui != null )
 			focusedDbGui.rename();
 	}

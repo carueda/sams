@@ -13,6 +13,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.Color;
 import java.util.*;
 
 /**
@@ -37,7 +38,33 @@ public abstract class Table extends JPanel {
 		add(new JLabel("No database"), BorderLayout.CENTER);
 	}
 
-	protected abstract boolean doRenaming(ISpectrum s, String new_name_value);
+	/** called to rename a row. */
+	protected abstract void doRenaming(ISpectrum s, String new_name_value);
+	
+	/*  ********** NOT USED -- COMMENTED OUT
+	 * Programatically lets the user change the name of a spectrum. 
+	 * Assumes that table is visible.
+	 */  /*
+	public void startEditName(String path) {
+		final int name_column = 1;   // MAGIC: try to fix this later.
+		// find row:
+		int row = -1;
+		for ( int i = 0; i < spectrums.size(); i++ ) {
+			ISpectrum s = (ISpectrum) spectrums.get(i);
+			if ( s.getPath().equals(path) ) {
+				row = i;
+				break;
+			}
+		}
+		if ( row < 0 )  // not found!
+			SamsGui.message(path+ ": path not found in the table!!");
+		else {
+			jtable.setRowSelectionInterval(row, row);
+			jtable.scrollRectToVisible(jtable.getCellRect(row, name_column, true));
+			jtable.editCellAt(row, name_column);
+			jtable.requestFocus();
+		}
+	}*/
 
 	/** Update the meta data. */
 	public void updateMetadata() {
@@ -64,6 +91,7 @@ public abstract class Table extends JPanel {
 			tableModel = new TableModel(db);
 		}
 		catch ( Exception ex ) {
+			ex.printStackTrace();
 			add(new JLabel(ex.getMessage()), BorderLayout.CENTER);
 			return;
 		}
@@ -152,23 +180,13 @@ public abstract class Table extends JPanel {
 		}
 	
 		public boolean isCellEditable(int row, int col) {
-			if ( attributes[col].isEditable() )
-				return true;
-			String colname = attributes[col].getName();
-			return colname.equals("name");
+			return attributes[col].isEditable();
 		}
 	
 		public void setValueAt(Object val, int row, int col) {
 			String newvalue = ((String) val).trim();
 			ISpectrum s = (ISpectrum) spectrums.get(row);
 			String colname = attributes[col].getName();
-			if ( colname.equals("name") ) {
-				String new_name_value = newvalue;
-				if ( new_name_value.length() == 0 )
-					return;
-				if ( !doRenaming(s, new_name_value) )
-					return;
-			}
 			s.setString(colname, newvalue);
 		}
 	}
@@ -194,8 +212,10 @@ public abstract class Table extends JPanel {
 	
 	private List _selectRows(ICondition condition, String orderBy) throws Exception {
 		List tmp = new ArrayList();
-		for ( Iterator it = db.select(condition, orderBy); it.hasNext(); ) 
-			tmp.add(it.next());
+		for ( Iterator it = db.selectSpectrums(condition, orderBy); it.hasNext(); ) { 
+			ISpectrum s = (ISpectrum) it.next();
+			tmp.add(s);
+		}
 		return tmp;
 	}
 
