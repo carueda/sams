@@ -1,11 +1,11 @@
 <!--
-	Build for SAMS2 GUI
+	Build for SAMS3 GUI
+	Carlos A. Rueda
 	$Id$
 -->
 <project name="samsgui" default="samsgui.jar" >
-
 	<!-- Version -->
-	<property name="VERSION" value="2.5"/>
+	<property name="VERSION" value="3.0"/>
 
 	<!-- Required libraries -->
 	<property name="plotapplication" value="../../_GENERATED/DIST/plotapplication.jar"/>

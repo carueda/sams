@@ -158,7 +158,7 @@ public final class Actions {
 			}
 		);
 		actions.put("import-files", new BaseAction("Specific files",
-			"Import signatures from a directory", KeyEvent.VK_S) {
+			"Import signatures from selected files", KeyEvent.VK_S) {
 				public void run() {
 					Controller.importFiles();
 				}
@@ -183,7 +183,7 @@ public final class Actions {
 		actions.put("export-ascii", new ExportAction("ascii", "Export to ASCII file"));
 
 		actions.put("new-grouping-by-attribute", new BaseAction("Attribute value",
-			"Creates a grouping according to attribute values", KeyEvent.VK_A) {
+			"Creates/updates a grouping according to attribute values", KeyEvent.VK_A) {
 				public void run() {
 					Controller.createGroupingBy();
 				}
