@@ -14,7 +14,7 @@
 	<property name="envifile"  value="../../_GENERATED/DIST/envifile.jar"/>
 	<property name="specfile"  value="../../_GENERATED/DIST/specfile.jar"/>
 	<property name="sfsys"     value="../../_GENERATED/DIST/sfsys.jar"/>
-	<property name="bsh"       value="../../_GENERATED/DIST/bsh-1.2b5.jar"/>
+	<property name="bsh"       value="../../_GENERATED/DIST/bsh-1.3b2.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>

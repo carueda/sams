@@ -586,106 +586,226 @@ class SamsDb implements ISamsDb {
 	public static void main(String[]_) {
 		test_normalizePath();
 	}
-
-	class Condition implements ICondition {
-		String text;
-		String attrName;
-		String attrValue;
-
-		Condition(String cond_text) throws Exception {
-			text = cond_text.trim();
-			if ( text.length() == 0 )
-				text = null;
-			if ( text != null ) {
-				StringTokenizer st = new StringTokenizer(text);
-				try {
-					attrName = st.nextToken();
-					String eq = st.nextToken();
-					if ( !eq.equals("=") )
-						throw new Exception("Syntax error: `=' expected");
-					attrValue = "";
-					try {
-						attrValue = st.nextToken();
-					}
-					catch ( NoSuchElementException ex ) {
-						// OK: attrValue is blank
-					}
-				}
-				catch ( NoSuchElementException ex ) {
-					throw new Exception("Syntax error:\n"+
-						"A condition must have one of these forms:\n"+
-						"  1) <attribute-name> = <attribute-value>\n"+
-						"  2) <attribute-name> = \n"+
-						"  3) (empty text)\n"
-					);
-				}
 	
-				if ( !isDefinedAttributeName(attrName) )
-					throw new Exception(attrName+ ": undefined attribute");
+	/** An evaluator of expression */ 
+	class Evaluator {
+		private bsh.Interpreter bsh;
+		private String src;
+		private Class returnType;
+		
+		Evaluator() throws Exception {
+			bsh = new bsh.Interpreter();
+		}
+		
+		String getSource() {
+			return src;
+		}
+		
+		Class getReturnType() {
+			return returnType;
+		}
+		
+		/** Unconditionally sets the source. */
+		Evaluator setValidSource(String source) throws Exception {
+			src = source;
+			return this;
+		}
+			
+		/** Also performs syntax and semantic checking */
+		Evaluator setSource(String source) throws Exception {
+			returnType = null;
+			// change every single quote for double quote (char is not considered): 
+			src = source.trim().replace('\'', '"');
+		
+			// to distinguish strings:  (escaped quotes are not processed yet)
+			String[] parts = src.split("\"");
+			boolean in_string = false;
+			for ( int j = 0; j < parts.length; j++, in_string = !in_string ) {
+				if ( !in_string ) {
+					// Add underscore to every atribute name (avoid conflict with Java reserved words):
+					for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
+						IAttributeDef def = (IAttributeDef) iter.next();
+						String name = def.getName();
+						
+						//System.out.println("<[" +parts[j]+ "]");
+						
+						// PENDING to make a clever replacement
+						parts[j] = parts[j].replaceAll("(" +name+ ")", "$1_");
+						//parts[j] = parts[j].replaceAll("\\b(" +name+ ")\\s*([^(])", "$1_$2");
+						
+						//System.out.println(">[" +parts[j]+ "]");
+					}
+				}
+			}
+			// restores quotes:
+			src = parts[0];
+			for ( int i = 1; i < parts.length; i++ )
+				src += "\"" +parts[i];
+			
+			// PENDING 
+			//	replace '==' -> .equals(..)
+			// Why beanshell evaluates "abc" == "abc" as false ??
+			
+			// check syntax:
+			try {
+				new bsh.Parser(new StringReader(src)).Expression();
+			}
+			catch(bsh.ParseException ex) {
+				throw new Exception("Syntax error", ex);
+			}
+			catch(bsh.TokenMgrError ex) {
+				throw new Exception("Syntax error", ex);
+			}
+			
+			// check semantics:
+			try {
+				bindFakeValues();
+				Object obj = bsh.eval(src);
+				if ( obj != null ) 
+					returnType = obj.getClass();
+			}
+			catch(bsh.EvalError ex) {
+				throw new Exception("bind error: " +ex.getMessage());
+			}
+			try {
+				// evaluate with those fake values:
+				Object obj = bsh.eval(src);
+				if ( obj != null ) 
+					returnType = obj.getClass();
+			}
+			catch(bsh.EvalError ex) {
+				throw new Exception("evaluation error: " +ex.getMessage());
+			}
+			return this; // OK
+		}
+		
+		Evaluator bindFakeValues() throws Exception {
+			try {
+				bsh.set("name", "name");
+				bsh.set("location", "location");
+				for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
+					IAttributeDef def = (IAttributeDef) iter.next();
+					String name = def.getName();
+					bsh.set(name+ "_", "val_" +name);
+				}
+				return this;
+			}
+			catch(bsh.EvalError ex) {
+				throw new Exception("bind error: " +ex.getMessage());
 			}
 		}
-
-		public String toString() {
-			return text != null ? text : "<empty>";
+		
+		Evaluator bind(ISpectrum s) throws Exception {
+			try {
+				bsh.set("name", s.getName());
+				bsh.set("location", s.getLocation());
+				for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
+					IAttributeDef def = (IAttributeDef) iter.next();
+					String name = def.getName();
+					bsh.set(name+ "_", s.getString(name));
+				}
+				return this;
+			}
+			catch(bsh.EvalError ex) {
+				throw new Exception("bind error: " +ex.getMessage());
+			}
 		}
-
-		/** Determines if a spectrum satisfies this query. */
-		boolean accepts(ISpectrum s) {
-			if ( text == null )
-				return true;
-			String val = s.getString(attrName);
-			return val != null && val.equals(attrValue);
+		
+		Object eval() throws Exception {
+			try {
+				return bsh.eval(src);
+			}
+			catch(bsh.EvalError ex) {
+				throw new Exception("Eval error: " +ex.getMessage());
+			}
 		}
 	}
 
-	/** beanshell based implementation of IOrder. */
-	class Order implements IOrder, Comparator {
-		bsh.Interpreter bsh1, bsh2;
-		String text;
-		// the list of expressions to be evaluated by beanshell:
-		String[] orderByExpressions;
+	class Condition implements ICondition {
+		Evaluator evaluator;
 
-		Order(String text) throws Exception {
-			// simple parsing by using String.split:
-			// FIXME: we better use a parser
-			orderByExpressions = text.replaceAll("(:|\\s)+$", "").split(":");
-			bsh1 = new bsh.Interpreter();
-			bsh2 = new bsh.Interpreter();
-			this.text = "";
-			for ( int i = 0; i < orderByExpressions.length; i++ )
-				this.text += orderByExpressions[i].trim()+ " : ";
+		Condition(String cond_text) throws Exception {
+			cond_text = cond_text.trim();
+			if ( cond_text.length() > 0 ) {
+				evaluator = new Evaluator();
+				Class type = evaluator.setSource(cond_text).getReturnType();
+				if ( Boolean.class != type )
+					throw new Exception("Expression is not a valid condition");
+			}
 		}
 
 		public String toString() {
-			return text;
+			return evaluator == null ? "true" : evaluator.toString();
+		}
+		
+		/** Determines if a spectrum satisfies this condition. */
+		boolean accepts(ISpectrum s) throws Exception {
+			if ( evaluator == null )
+				return true;
+			Boolean bool = null;
+			try {
+				Object obj = evaluator.bind(s).eval();
+				if ( !(obj instanceof Boolean) )
+					throw new Exception("Expression is not boolean");
+				bool = (Boolean) obj;
+			}
+			catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+			return bool != null && bool.booleanValue();
+		}
+	}
+
+	/** Implementation of IOrder. */
+	class Order implements IOrder, Comparator {
+		String src;
+		Evaluator evaluator1, evaluator2;
+		String[] orderByExpressions;  // the list of expressions
+
+		Order(String ord_text) throws Exception {
+			ord_text = ord_text.trim();
+			if ( ord_text.length() > 0 ) {
+				// simple expression split by using String.split:
+				orderByExpressions = ord_text.replaceAll("(:|\\s)+$", "").split(":");
+
+				// src only used for toString:
+				src = "";
+				for ( int i = 0; i < orderByExpressions.length; i++ )
+					src += orderByExpressions[i].trim()+ " : ";
+
+				evaluator1 = new Evaluator();
+				for ( int i = 0; i < orderByExpressions.length; i++ ) {
+					Class type = evaluator1.setSource(orderByExpressions[i]).getReturnType();
+					if ( type == null )
+						throw new Exception(evaluator1.getSource()+ ": invalid expression");
+					if ( String.class != type )
+						throw new Exception(evaluator1.getSource()+ ": result type must be a string (" +type+ ")");
+					orderByExpressions[i] = evaluator1.getSource();
+				}
+				evaluator2 = new Evaluator();
+			}
 		}
 
-		private void _bindVars(bsh.Interpreter bsh, ISpectrum s) throws bsh.EvalError {
-			bsh.set("name", s.getName());
-			bsh.set("location", s.getLocation());
-			for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
-				IAttributeDef def = (IAttributeDef) iter.next();
-				String name = def.getName();
-				bsh.set(name, s.getString(name));
-			}
+		public String toString() {
+			return src;
 		}
 		
 		public int compare(Object o1, Object o2) {
 			ISpectrum s1 = (ISpectrum) o1;
 			ISpectrum s2 = (ISpectrum) o2;
 			try {
-				_bindVars(bsh1, s1);
-				_bindVars(bsh2, s2);
+				evaluator1.bind(s1);
+				evaluator2.bind(s2);
 				for ( int i = 0; i < orderByExpressions.length; i++ ) {
-					String str1 = (String) bsh1.eval(orderByExpressions[i]);
-					String str2 = (String) bsh2.eval(orderByExpressions[i]);
+					String str1 = (String) evaluator1.setValidSource(orderByExpressions[i]).eval();
+					String str2 = (String) evaluator2.setValidSource(orderByExpressions[i]).eval();
 					int c = str1.compareTo(str2);
 					if ( c != 0 )
 						return c;
 				}
 			}
-			catch(bsh.EvalError ex) {
-				System.err.println("bsh.Error: " +ex.getMessage());
+			catch(Exception ex) {
+				System.err.println(ex.getMessage());
 			}
 			return 0;
 		}
@@ -695,10 +815,10 @@ class SamsDb implements ISamsDb {
 			for ( Iterator it = getAllPaths(); it.hasNext(); ) {
 				String path = (String) it.next();
 				ISpectrum s = getSpectrum(path);
-				_bindVars(bsh1, s);
+				evaluator1.bind(s);
 				ISfsys.INode base = fs.getRoot();
 				for ( int i = 0; i < orderByExpressions.length; i++ ) {
-					String str = (String) bsh1.eval(orderByExpressions[i]);
+					String str = (String) evaluator1.setValidSource(orderByExpressions[i]).eval();
 					String attrVal;
 					// assign attrVal depending on type:
 					if ( true )  // true: only string is supported now
