@@ -21,6 +21,7 @@ $Id$
  08/14/03 - version 3.0
  	- Set the new version 3.0
 	- minor changes in messages
+	- SamsGui.message's in Table.ControlPanel
 	
  08/13/03
  	- Plot no longer extends ptolemy.plot.Plot but delegates on it.

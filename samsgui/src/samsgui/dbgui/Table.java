@@ -240,7 +240,7 @@ public abstract class Table extends JPanel {
 						sort(sort_tf.getText());
 					}
 					catch(Exception ex) {
-						System.out.println("Table.ControlPanel.sort: " +ex.getMessage());
+						SamsGui.message(ex.getMessage());
 					}
 				}
 			});
@@ -250,7 +250,7 @@ public abstract class Table extends JPanel {
 						filter(filter_tf.getText());
 					}
 					catch(Exception ex) {
-						System.out.println("Table.ControlPanel.filter: " +ex.getMessage());
+						SamsGui.message(ex.getMessage());
 					}
 				}
 			});
