@@ -4,9 +4,6 @@
 	$Id$
 -->
 <project name="samscore" default="samscore.jar" >
-	<!-- Version -->
-	<property name="VERSION" value="3.0"/>
-
 	<!-- Base dir for generated files -->
 	<property name="generated" value="../../_GENERATED/sams"/>
 
@@ -17,7 +14,9 @@
 	<property name="envifile"  value="${generated}/DIST/envifile.jar"/>
 	<property name="specfile"  value="${generated}/DIST/specfile.jar"/>
 	<property name="sfsys"     value="${generated}/DIST/sfsys.jar"/>
-	<property name="bsh"       value="${generated}/DIST/bsh-1.3b2.jar"/>
+
+	<!-- External required libraries -->
+	<property name="bsh"       value="../lib/bsh-1.3b2.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="${generated}/BUILD"/>
@@ -30,7 +29,6 @@
 
     <target name="init">
 		<tstamp/>
-		<echo message="VERSION = ${VERSION}"/>
 		<mkdir dir="${build}/classes"/>
     </target>
 

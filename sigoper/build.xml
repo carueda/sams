@@ -10,7 +10,7 @@
 	<property name="sig" value="${generated}/DIST/sig.jar"/>
 	
 	<!-- the 'bsh' library -->
-	<property name="bsh" value="${generated}/DIST/bsh-1.3b2.jar"/>
+	<property name="bsh" value="../lib/bsh-1.3b2.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="${generated}/BUILD"/>

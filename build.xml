@@ -1,9 +1,30 @@
 <!--
 	Master Build for SAMS
 	$Id$
+	
+	External dependencies:
+		- The Izpack (http://izforge.com/izpack) tool is assumed to
+		  be intalled in /home/carueda/prg/IzPack/
+		  See samsgui/build.xml
+		- External required libraries for the final SAMS application
+		  are located in directory lib/.
+	
+	For a complete build including the installer for end users:
+		ant installer
 -->
 <project name="sams" default="compile" >
-	<target name="compile">
+	<!-- Base dir for generated files -->
+	<property name="generated" value="../_GENERATED/sams"/>
+
+    <target name="init">
+		<mkdir dir="${generated}"/>
+    </target>
+	
+    <target name="clean-dist">
+		<delete dir="${generated}"/>
+    </target>
+
+	<target name="compile" depends="init">
 		<ant dir="fileutils" inheritAll="false"/>
 		<ant dir="sig" inheritAll="false"/>
 		<ant dir="sigoper" inheritAll="false"/>
@@ -14,6 +35,10 @@
 		<ant dir="samsgui" inheritAll="false"/>
 	</target>
 	
+    <target name="installer" depends="compile">
+		<ant dir="samsgui" target="installer" inheritAll="false"/>
+    </target>
+	
 	<target name="clean">
 		<ant dir="fileutils" target="clean" inheritAll="false"/>
 		<ant dir="sig" target="clean" inheritAll="false"/>
@@ -23,17 +48,6 @@
 		<ant dir="envifile" target="clean" inheritAll="false"/>
 		<ant dir="samscore" target="clean" inheritAll="false"/>
 		<ant dir="samsgui" target="clean" inheritAll="false"/>
-	</target>
-
-	<target name="clean-dist">
-		<ant dir="fileutils" target="clean-dist" inheritAll="false"/>
-		<ant dir="sig" target="clean-dist" inheritAll="false"/>
-		<ant dir="sigoper" target="clean-dist" inheritAll="false"/>
-		<ant dir="specfile" target="clean-dist" inheritAll="false"/>
-		<ant dir="sfsys" target="clean-dist" inheritAll="false"/>
-		<ant dir="envifile" target="clean-dist" inheritAll="false"/>
-		<ant dir="samscore" target="clean-dist" inheritAll="false"/>
-		<ant dir="samsgui" target="clean-dist" inheritAll="false"/>
 	</target>
 
 </project>

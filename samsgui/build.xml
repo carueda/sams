@@ -11,7 +11,6 @@
 	<property name="generated" value="../../_GENERATED/sams"/>
 
 	<!-- Required libraries -->
-	<property name="plotapplication" value="${generated}/DIST/plotapplication.jar"/>
 	<property name="samscore"        value="${generated}/DIST/samscore.jar"/>
 	<property name="fileutils"       value="${generated}/DIST/fileutils.jar"/>
 	<property name="sig"             value="${generated}/DIST/sig.jar"/>
@@ -19,8 +18,11 @@
 	<property name="envifile"        value="${generated}/DIST/envifile.jar"/>
 	<property name="specfile"        value="${generated}/DIST/specfile.jar"/>
 	<property name="sfsys"           value="${generated}/DIST/sfsys.jar"/>
-	<property name="kunststoff"      value="${generated}/DIST/kunststoff.jar"/>
-	<property name="bsh"             value="${generated}/DIST/bsh-1.3b2.jar"/>
+
+	<!-- External required libraries -->
+	<property name="plotapplication" value="../lib/plotapplication.jar"/>
+	<property name="kunststoff"      value="../lib/kunststoff.jar"/>
+	<property name="bsh"             value="../lib/bsh-1.3b2.jar"/>
 	
 	<!-- IzPack is located here under my laptop -->
 	<property name="izdir" value="/home/carueda/prg/IzPack"/>
