@@ -43,7 +43,13 @@ public class SamsGui {
 	
 	public static void init(String operdirname) throws Exception {
 		info = new Info();
-		System.out.println("Starting from " +info.getSAMSDirectory());
+		if ( operdirname == null ) {
+			operdirname = info.getSAMSDirectory()+ "/opers";
+			if ( !new File(operdirname).isDirectory() ) {
+				System.err.println(operdirname+ ": inexistent directory");
+				operdirname = null;
+			}
+		}
 		nextFrame = new DbFrame();
 		Splash splash = Splash.showSplash(nextFrame);
 		Sams.init(operdirname);
