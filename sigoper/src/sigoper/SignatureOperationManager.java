@@ -12,20 +12,30 @@ import java.io.*;
  * @version $Id$ 
  */
 public final class SignatureOperationManager {
+	/** Directory with scripted operations. */
+	private static String scripted_dirname;
+	
 	/** Operation names. */
 	private static List operNames;
 
 	/** Mapping oper-code-name -> IOperation */
 	private static Map codOpers;
 	
+	private static List multi_opers;
+	private static List single_opers;
+	private static List binary_opers;
+	
+	
 	/**
 	 * Initializes the signature operation manager.
 	 *
-	 * Loads the scripted operations found in a given directory.
+	 * Also loads the scripted operations found in a given directory.
 	 */
-	public static void init(String scripted_dirname) {
+	public static void init(String _scripted_dirname) {
+		scripted_dirname = _scripted_dirname;
+		
 		// Initialization with "compiled" operators:
-		List multi_opers = new ArrayList();
+		multi_opers = new ArrayList();
 		multi_opers.add(new AverageOperation());
 		multi_opers.add(new StandardDeviationOperation());
 		multi_opers.add(new SumOperation());
@@ -36,7 +46,7 @@ public final class SignatureOperationManager {
 		multi_opers.add(new SimpleExtractionOperation());
 		multi_opers.add(new ExtractionMaxOperation());
 		
-		List single_opers = new ArrayList();
+		single_opers = new ArrayList();
 		single_opers.add(new ScaleOperation());
 		single_opers.add(new CropOperation());
 		single_opers.add(new SavitzkyGolayOperation());
@@ -45,36 +55,16 @@ public final class SignatureOperationManager {
 		single_opers.add(new MCTOperation());
 		single_opers.add(new ChangeAbscissaUnitsOperation());
 		
-		List binary_opers = new ArrayList();
+		binary_opers = new ArrayList();
 		binary_opers.add(new SimpleRatioOperation());
 		binary_opers.add(new SubtractionOperation());
 		binary_opers.add(new NormalizeOperation());
 			
-		// Now, load scripted operations:
-		if ( scripted_dirname != null ) {
-			File scripted_dir = new File(scripted_dirname);
-			if ( scripted_dir.isDirectory() ) {
-				File[] list = scripted_dir.listFiles();
-				if ( list != null ) {
-					for ( int i = 0; i < list.length; i++ ) {
-						File file = list[i];
-						String scriptname = file.getName();
-						try {
-							if ( scriptname.endsWith(".m.bsh") )
-								multi_opers.add(new BshMultiOperation(file.getAbsolutePath()));
-							else if ( scriptname.endsWith(".s.bsh") )
-								single_opers.add(new BshSingleOperation(file.getAbsolutePath()));
-							else if ( scriptname.endsWith(".b.bsh") )
-								binary_opers.add(new BshBinaryOperation(file.getAbsolutePath()));
-						}
-						catch(Exception ex) {
-							System.out.println(ex.getMessage());
-						}
-					}
-				}
-			}
-		}
-
+		_loadScriptedOperations();
+		_createMap();
+	}
+	
+	private static void _createMap() {
 		codOpers = new HashMap();
 		operNames = new ArrayList();
 
@@ -91,6 +81,69 @@ public final class SignatureOperationManager {
 				operNames.add(name);
 			}
 		}
+	}
+
+	private static void _loadScriptedOperations() {
+		if ( scripted_dirname == null )
+			return;
+		
+		File scripted_dir = new File(scripted_dirname);
+		if ( !scripted_dir.isDirectory() )
+			return;
+		
+		File[] list = scripted_dir.listFiles();
+		if ( list == null )
+			return;
+		
+		for ( int i = 0; i < list.length; i++ ) {
+			File file = list[i];
+			String scriptname = file.getName();
+			try {
+				if ( scriptname.endsWith(".m.bsh") )
+					multi_opers.add(new BshMultiOperation(file.getAbsolutePath()));
+				else if ( scriptname.endsWith(".s.bsh") )
+					single_opers.add(new BshSingleOperation(file.getAbsolutePath()));
+				else if ( scriptname.endsWith(".b.bsh") )
+					binary_opers.add(new BshBinaryOperation(file.getAbsolutePath()));
+			}
+			catch(Exception ex) {
+				System.out.println(ex.getMessage());
+			}
+		}
+	}
+	
+	/** Reloads all scripted operations under directory given in
+	  * initialization.
+	  */
+	public static void reloadScriptedOperations() {
+		//
+		// strategy: recreate the lists; keep the non-scripted 
+		// operations; _loadScriptedOperations, and _createMap().
+		//
+		
+		List old_multi_opers = multi_opers;
+		List old_single_opers = single_opers;
+		List old_binary_opers = binary_opers;
+		
+		multi_opers = new ArrayList();
+		single_opers = new ArrayList();
+		binary_opers = new ArrayList();
+		
+		List[] old_lists = { old_multi_opers, old_single_opers, old_binary_opers };
+		List[] new_lists = { multi_opers, single_opers, binary_opers };
+		
+		for ( int i = 0; i < old_lists.length; i++ ) {
+			List old_opers = old_lists[i];
+			List new_opers = new_lists[i];
+			for ( Iterator it = old_opers.iterator(); it.hasNext(); ) {
+				IOperation old_oper = (IOperation) it.next();
+				if ( !(old_oper instanceof BshOperation) )
+					new_opers.add(old_oper); // keep it
+			}
+		}
+		
+		_loadScriptedOperations();
+		_createMap();
 	}
 	
 	/**
