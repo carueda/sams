@@ -792,21 +792,23 @@ class SamsDb implements ISamsDb {
 		}
 		
 		public int compare(Object o1, Object o2) {
-			ISpectrum s1 = (ISpectrum) o1;
-			ISpectrum s2 = (ISpectrum) o2;
-			try {
-				evaluator1.bind(s1);
-				evaluator2.bind(s2);
-				for ( int i = 0; i < orderByExpressions.length; i++ ) {
-					String str1 = (String) evaluator1.setValidSource(orderByExpressions[i]).eval();
-					String str2 = (String) evaluator2.setValidSource(orderByExpressions[i]).eval();
-					int c = str1.compareTo(str2);
-					if ( c != 0 )
-						return c;
+			if ( orderByExpressions != null ) {
+				ISpectrum s1 = (ISpectrum) o1;
+				ISpectrum s2 = (ISpectrum) o2;
+				try {
+					evaluator1.bind(s1);
+					evaluator2.bind(s2);
+					for ( int i = 0; i < orderByExpressions.length; i++ ) {
+						String str1 = (String) evaluator1.setValidSource(orderByExpressions[i]).eval();
+						String str2 = (String) evaluator2.setValidSource(orderByExpressions[i]).eval();
+						int c = str1.compareTo(str2);
+						if ( c != 0 )
+							return c;
+					}
 				}
-			}
-			catch(Exception ex) {
-				System.err.println(ex.getMessage());
+				catch(Exception ex) {
+					System.err.println("Order.compare error:" +ex.getMessage());
+				}
 			}
 			return 0;
 		}
