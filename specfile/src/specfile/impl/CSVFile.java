@@ -45,9 +45,8 @@ public class CSVFile implements ISpectrumFile {
 		}
 		br.close();
 
-		// subjective: if the number of points is not large enough,
-		// then this is not a valid spectrum in CSV format:
-		if ( sig.getSize() < 3 ) {
+		// at least one point
+		if ( sig.getSize() == 0 ) {
 			throw new InvalidSpectrumFormatException(
 				new File(filename).getName()+
 				": not a valid spectrum in CSV format"
