@@ -107,7 +107,7 @@
 		<copy file="izshortcut.xml" todir="${dist}/base_dist/lib"/>
     </target>
 
-	<target name="install" depends="installer">
+	<target name="install">
 		<java jar="${dist}/install-sams-${VERSION}.jar" fork="true"/>
 	</target>
 
