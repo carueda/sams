@@ -17,6 +17,9 @@ $Id$
  	- who should define special groups? (like imported/ computed/)
 	  it should move from samscore to samsgui ...
 	
+ 08/13/03
+	- Cosmetic improvements in splash, import messages.
+	
  08/11/03
 	- Action: "import-files-database" renamed to "import-directory"
 	- Action: "import-files" created: to import specific files.

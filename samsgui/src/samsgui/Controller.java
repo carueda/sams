@@ -107,7 +107,7 @@ public class Controller {
 	}
 	
 	public static void importEnvi() {
-		SamsGui.message("PENDING");
+		SamsGui.message("Oops, option pending");
 	}
 	
 	public static void importAscii() {
