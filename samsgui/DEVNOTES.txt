@@ -3,7 +3,6 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
- 	- refresh-grouping
  	- make plot legends optional
 	- allow to show legends only in legend window
 	- clipboard operations to work also on groups as units
@@ -19,6 +18,9 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/13/03
+ 	- refresh-grouping action implemented
+	- No more grouping creation/update as a byproduct of sorting table:
+	  it's enough to have the option "new-grouping-by-attribute".
  	- Code factoring in import options (Importer).
 	- Import from envi implemented.
 	- Cosmetic improvements in splash, import messages.

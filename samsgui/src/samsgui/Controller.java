@@ -464,6 +464,16 @@ public class Controller {
 		}
 	}
 	
+	/** Refreshes structure of the main grouping associated to current selected group. */
+	public static void refreshGrouping() {
+		try {
+			SamsGui.refreshGrouping();
+		}
+		catch(Throwable ex) {
+			handleThrowable(ex);
+		}
+	}
+	
     public static void doUpdate(Runnable r) {
         try {
             SwingUtilities.invokeAndWait(r);

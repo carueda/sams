@@ -72,6 +72,7 @@ public class DbGui extends JPanel {
 				}
 			}
 			
+			/*{{{ TO BE ELIMINATED -- enough is the option to make groupings directly.
 			// also (re)creates read-only grouping branch in tree:
 			public void sort(String orderBy) throws Exception {
 				super.sort(orderBy);
@@ -82,6 +83,7 @@ public class DbGui extends JPanel {
 					_props_addGroupBy(orderBy);
 				}
 			}
+			}}}*/
 		};
 
 		JSplitPane splitPane2 = _createJSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -1068,5 +1070,19 @@ public class DbGui extends JPanel {
 				return;
 			}
 		}
+	}
+
+	public void refreshGrouping() throws Exception {
+		if ( db == null )
+			return;
+		List selectedGroups = tree.getSelectedGroups();
+		if (  selectedGroups.size() != 1 )
+			return;
+		MyNode node = (MyNode) selectedGroups.get(0);
+		MyNode grp_node = node.getGroupingNode();
+		if ( grp_node.getName().equals("location:") )
+			return;  // "location:" grouping should be always updated.
+		String[] attrNames = grp_node.getName().split(":");
+		tree.updateReadOnlyGroupingBy(attrNames);
 	}
 }

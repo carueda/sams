@@ -32,8 +32,6 @@ public class Tree extends JPanel {
 	// base structure:
 	protected final MyNode rootNode = new MyNode().reset("^");
 	protected final MyNode locationNode = new MyNode().reset("location:", false, true, true);
-	protected MyNode importedNode;
-	protected MyNode computedNode;
 	
 	protected DbGui dbgui;
     protected DefaultTreeModel treeModel;
@@ -164,7 +162,7 @@ public class Tree extends JPanel {
 		return loc_groups;
 	}
 		
-	private void _addLocationGroupsUnder(MyNode node, List loc_groups) {
+	private static void _addLocationGroupsUnder(MyNode node, List loc_groups) {
 		for ( int i = 0; i < node.getChildCount(); i++ ) {
 			MyNode child = (MyNode) node.getChildAt(i);
 			if ( child.isGroup() ) {
@@ -254,14 +252,6 @@ public class Tree extends JPanel {
 		treeModel.removeNodeFromParent(node);
 	}
 	
-	public MyNode getImportedNode() {
-		return importedNode;
-	}
-	
-	public MyNode getComputedNode() {
-		return computedNode;
-	}
-	
 	private void createGroupNode(MyNode parent, ISfsys.INode group) {
 		for ( Iterator iter = group.getChildren().iterator(); iter.hasNext(); ) {
 			ISfsys.INode node = (ISfsys.INode) iter.next();
@@ -274,12 +264,6 @@ public class Tree extends JPanel {
 				MyNode child = new MyNode().reset(node.getName(), false);
 				createGroupNode(child, node);
 				parent.add(child);
-				
-				String subpath = node.getPath();
-				if ( subpath.equals("/computed") )
-					computedNode = child;
-				else if ( subpath.equals("/imported") )
-					importedNode = child;
 			}
 			else
 				throw new RuntimeException("Unexpected object type");
@@ -503,10 +487,16 @@ public class Tree extends JPanel {
 			return this;
 		}
 		
+		/** gets the grouping node to which this node belongs. Maybe be this. */
+		public MyNode getGroupingNode() {
+			TreeNode[] node_path = getPath();
+			return node_path.length >= 2 ? (MyNode) node_path[1] : null;
+		}
+		
 		/** tells if this node is under (or equal to) the given grouping. */
 		public boolean underGrouping(String grouping_name) {
-			TreeNode[] node_path = getPath();
-			return node_path.length >= 2 && grouping_name.equals(((MyNode)node_path[1]).getName());
+			MyNode grp_node = getGroupingNode();
+			return grp_node != null && grouping_name.equals(grp_node.getName());
 		}
 		
 		/** gets the real path under "location:" of the group or signature referenced by this node.

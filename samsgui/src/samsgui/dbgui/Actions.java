@@ -70,6 +70,7 @@ public final class Actions {
 		if ( selectedGroups.size() == 1 ) {
 			list.add(getAction("new-group"));
 			list.add(getAction("paste"));
+			list.add(getAction("refresh-grouping"));
 			list.add(null);
 		}
 		list.add(getAction("delete"));
@@ -190,9 +191,17 @@ public final class Actions {
 		);
 		
 		actions.put("new-group", new BaseAction("New subgroup",
-			"Create a subgroup") {
+			"Creates a subgroup") {
 				public void run() {
 					Controller.createGroup();
+				}
+			}
+		);
+
+		actions.put("refresh-grouping", new BaseAction("Refresh grouping",
+			"Refreshes structure of the main grouping associated to this element") {
+				public void run() {
+					Controller.refreshGrouping();
 				}
 			}
 		);

@@ -560,6 +560,11 @@ public class SamsGui {
 			focusedDbGui.createGroup();
 	}
 
+	public static void refreshGrouping() throws Exception {
+		if ( focusedDbGui != null )
+			focusedDbGui.refreshGrouping();
+	}
+
 	/** (Re)creates a grouping. */
 	public static void createGroupingBy() throws Exception {
 		if ( focusedDbGui != null )
