@@ -30,7 +30,7 @@ public class SamsGui {
 	// Names of resources loaded via a classloader:
 	private static final String INFO_PROPS_FILENAME = "samsgui/info.properties";
 	private static final String LICENSE_FILENAME = "samsgui/copyright.txt";
-	private static final String SPLASH_FILENAME = "samsgui/img/splash.gif";
+	private static final String SPLASH_FILENAME = "samsgui/img/splash.png";
 	
 	private static final String NO_DB_NAME = "<No database>";
 	
