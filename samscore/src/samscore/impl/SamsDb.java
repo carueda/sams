@@ -4,7 +4,7 @@ import samscore.ISamsDb;
 import samscore.ISamsDb.IMetadataDef.IAttributeDef;
 import sig.Signature;
 import sfsys.ISfsys;
-import sfsys.ISfsys.IDirectory;
+import sfsys.ISfsys.*;
 import sfsys.Sfsys;
 
 import java.io.*;
@@ -15,7 +15,7 @@ import java.util.*;
  * Notes:
  * <ul>
  *	<li> Never use a path ending with '/'
- *	<li> Previous returned ISfsys objects are not automatically updated
+ *	<li> Previous returned ISfsys (or INode) objects are not automatically updated
  *		after a modification (say, addSpectrum); you have to retrieve
  *		a new ISfsys object (e.g getGroupingBy).	 
  * </ul>
@@ -139,7 +139,11 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public IDirectory getGroupingUnderLocation(String subpath) throws Exception {
-		return Sfsys.create(sigsDir.getPath()+ "/" +subpath).getRoot();
+		INode inode = getGroupingLocation().getNode(subpath);
+		if ( inode instanceof IDirectory )
+			return (IDirectory) inode;
+		else
+			return null;
 	}
 	
 	public ISfsys getGroupingLocation() throws Exception {

@@ -44,8 +44,8 @@ public class Controller {
 		try {
 			SamsGui.create(dirname);
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -56,8 +56,8 @@ public class Controller {
 		try {
 			SamsGui.open(dirname);
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -65,8 +65,8 @@ public class Controller {
 		try {
 			SamsGui.close();
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -74,8 +74,8 @@ public class Controller {
 		try {
 			SamsGui.save();
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -83,8 +83,8 @@ public class Controller {
 		try {
 			SamsGui.delete();
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -92,8 +92,8 @@ public class Controller {
 		try {
 			SamsGui.editMetadataDefinition();
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -143,8 +143,8 @@ public class Controller {
 		try {
 			SamsGui.compute(opername);
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -152,8 +152,8 @@ public class Controller {
 		try {
 			SamsGui.export(format);
 		}
-		catch(Exception ex) {
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -228,9 +228,8 @@ public class Controller {
 					try {
 						db.getClipboard().copy(paths);
 					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-						SamsGui.message("Error: " +ex.getMessage());
+					catch(Throwable ex) {
+						handleThrowable(ex);
 					}
 					finally {
 						_setEnabledClipboardActions(true);
@@ -239,9 +238,8 @@ public class Controller {
 			});
 			thread.start();
 		}
-		catch(Exception ex) {
-			ex.printStackTrace();
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -266,9 +264,8 @@ public class Controller {
 					try {
 						db.getClipboard().paste(target_path);
 					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-						SamsGui.message("Error: " +ex.getMessage());
+					catch(Throwable ex) {
+						handleThrowable(ex);
 					}
 					finally {
 						_setEnabledClipboardActions(true);
@@ -277,9 +274,8 @@ public class Controller {
 			});
 			thread.start();
 		}
-		catch(Exception ex) {
-			ex.printStackTrace();
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 
@@ -304,9 +300,8 @@ public class Controller {
 					try {
 						db.getClipboard().cut(paths);
 					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-						SamsGui.message("Error: " +ex.getMessage());
+					catch(Throwable ex) {
+						handleThrowable(ex);
 					}
 					finally {
 						_setEnabledClipboardActions(true);
@@ -315,9 +310,8 @@ public class Controller {
 			});
 			thread.start();
 		}
-		catch(Exception ex) {
-			ex.printStackTrace();
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 
@@ -344,9 +338,8 @@ public class Controller {
 					try {
 						db.getClipboard().delete(paths);
 					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-						SamsGui.message("Error: " +ex.getMessage());
+					catch(Throwable ex) {
+						handleThrowable(ex);
 					}
 					finally {
 						_setEnabledClipboardActions(true);
@@ -355,9 +348,8 @@ public class Controller {
 			});
 			thread.start();
 		}
-		catch(Exception ex) {
-			ex.printStackTrace();
-			SamsGui.message("Error: " +ex.getMessage());
+		catch(Throwable ex) {
+			handleThrowable(ex);
 		}
 	}
 	
@@ -365,7 +357,7 @@ public class Controller {
         try {
             SwingUtilities.invokeAndWait(r);
         }
-        catch (Exception e) {
+        catch(Exception e) {
             System.err.println(e);
         }
     }
@@ -447,5 +439,15 @@ public class Controller {
 			return file;
 		}
 	}
+	
+	public static void handleThrowable(Throwable t) {
+		if ( t instanceof RuntimeException || t instanceof Error ) {
+			t.printStackTrace();
+			SamsGui.message("Internal error: " +t.getMessage());
+		}
+		else
+			SamsGui.message("Error: " +t.getMessage());
+	}
+	
 }
 

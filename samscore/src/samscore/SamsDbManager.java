@@ -26,9 +26,7 @@ public class SamsDbManager {
 	};
 
 	
-	/**
-		@param w Some operations write messages to this stream only if not null.
-	 */
+	/** @param w Some operations write messages to this stream only if not null. */
 	public SamsDbManager(ISamsDb db, Writer w) {
 		setDatabase(db);
 		if ( w != null ) {
@@ -175,11 +173,10 @@ public class SamsDbManager {
 		try {
 			out = new PrintWriter(new FileOutputStream(filename));
 			// write header and notify listener:
+			out.print("Wavelength");
 			for ( int i = 0; i < sigs.length; i++ ) {
 				String path = (String) paths.get(i);
-				if ( i > 0 )
-					out.print(", ");
-				out.print(path);
+				out.print(", " +path);
 				sigs[i] = db.getSignature(path);
 				lis.exporting(i+1, path);
 			}
@@ -205,8 +202,6 @@ public class SamsDbManager {
 			if ( out != null )
 				try { out.close(); } catch (Exception ex ) {}
 		}
-
-		println("Exported " +sigs.length+ " element(s)");
 	}
 	
 	/** exports elements to an envi standar file. */
@@ -217,19 +212,19 @@ public class SamsDbManager {
 		}
 		if ( lis == null )
 			lis = defaultExportListener;
+		
 		Signature[] sigs = new Signature[paths.size()];
-		int i = 0;
-		for ( Iterator it = paths.iterator(); it.hasNext(); ) {
-			String path = (String) it.next();
-			sigs[i++] = db.getSignature(path);
+		for ( int i = 0; i < sigs.length; i++ ) {
+			String path = (String) paths.get(i);
+			sigs[i] = db.getSignature(path);
+			lis.exporting(i+1, path);
 		}
 
 		String header_description = 
 			"  SAMS2 " +Sams.getVersion()+ " - Spectral Management and Analysis System\n" +
 			"  " +sigs.length+ " signatures exported on " +(new java.util.Date())
 		;
-		BinaryExporter.exportBIP(sigs, filename, header_description, printWriter);
-		println("Exported " +sigs.length+ " element(s)");
+		BinaryExporter.exportBIP(sigs, filename, header_description);
 	}
 
 	/** exports elements to an envi spectral library. */
@@ -240,20 +235,21 @@ public class SamsDbManager {
 		}
 		if ( lis == null )
 			lis = defaultExportListener;
+		final ExportListener elis = lis;
+		
 		String[] sig_names = new String[paths.size()];
 		Signature[] sigs = new Signature[paths.size()];
-		int i = 0;
-		for ( Iterator it = paths.iterator(); it.hasNext(); ) {
-			String path = (String) it.next();
+		for ( int i = 0; i < sigs.length; i++ ) {
+			String path = (String) paths.get(i);
 			sig_names[i] = path;
-			sigs[i++] = db.getSignature(path);
+			sigs[i] = db.getSignature(path);
+			lis.exporting(i+1, path);
 		}
-
+		
 		String header_description = 
 			"  SAMS2 " +Sams.getVersion()+ " - Spectral Management and Analysis System\n" +
 			"  " +sigs.length+ " signatures exported on " +(new java.util.Date())
 		;
-		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description, printWriter);
-		println("Exported " +sigs.length+ " element(s)");
+		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description); 
 	}
 }

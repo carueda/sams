@@ -3,9 +3,12 @@ package samsgui.dbgui;
 import samsgui.SamsGui;
 
 import samscore.ISamsDb;
+import samscore.ISamsDb.*;
 import samscore.Sams;
 import sig.Signature;
 import sigoper.*;
+import sfsys.ISfsys;
+import sfsys.ISfsys.*;
 
 import javax.swing.tree.*;
 import javax.swing.*;
@@ -394,10 +397,84 @@ public class DbGui extends JPanel {
 	}
 
 	public void export(String format) throws Exception {
+		if ( db == null )
+			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
 		List selectedGroups = tree.getSelectedGroupPaths();
-		if ( selectedSpectra != null || selectedGroups != null )
-			new Exporter(this, selectedSpectra, selectedGroups);
+		if ( selectedSpectra == null && selectedGroups == null ) {
+			SamsGui.message("Please select the signatures to be exported.");
+			return;
+		}
+		StringBuffer info = null;
+		if ( selectedSpectra != null && selectedGroups != null ) {
+			info = new StringBuffer("<html>");
+			info.append("<b>Note:</b> " +
+				"The current selection includes both groups and specific spectra.<br>\n" +
+				"Only selected spectra will be exported.<br>\n"
+			);
+		}
+		
+		// list of all paths to be exported:
+		List paths = new ArrayList();
+		
+		if ( selectedSpectra != null ) {
+			// only selected spectra
+			for ( Iterator iter = selectedSpectra.iterator(); iter.hasNext(); )
+				paths.add(iter.next());
+		}
+		else { // selectedGroups != null
+			// include members from subgroups?
+			if ( SamsGui.confirm(
+				selectedGroups.size()+ " group(s) selected.\n" +
+				"Direct spectra members will be included.\n" +
+				"Do you want to include all members from subgroups as well?"
+				)
+			) {
+				// Yes, include members from subgroups.
+				// easy strategy: for each spectrum check if it "belongs" to any of
+				// the selected groups or its subgroups:
+				for ( Iterator iter = db.getSpectrumIterator(); iter.hasNext(); ) {
+					ISpectrum s = (ISpectrum) iter.next();
+					String path = s.getPath();
+					boolean include = false;
+					for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
+						String group_path = (String) iterg.next();
+						if ( path.startsWith(group_path+ "/") ) {
+							include = true;
+							break;
+						}
+					}
+						
+					if ( include && !paths.contains(path) )
+						paths.add(path);
+				}
+			}
+			else {
+				// No, only direct signature members:
+				for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
+					String group_path = (String) iterg.next();
+					IDirectory dir = db.getGroupingUnderLocation(group_path);
+					List children = dir.getChildren();
+					for ( Iterator iter = children.iterator(); iter.hasNext(); ) {
+						INode inode = (INode) iter.next();
+						if ( inode instanceof IFile ) {
+							String path = inode.getPath();
+							if ( !paths.contains(path) )
+								paths.add(path);
+						}
+					}
+				}
+			}
+		}
+		
+		// test:
+		//for ( Iterator iter = paths.iterator(); iter.hasNext(); )
+		//	System.out.println("[" +iter.next()+ "]");
+
+		if ( paths.size() == 0 )
+			SamsGui.message("No signatures were specified");
+		else
+			new Exporter(this, paths, format, info);
 	}
 	
     protected void treeSelectionChanged(TreeSelectionEvent e){

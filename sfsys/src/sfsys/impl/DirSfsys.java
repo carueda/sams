@@ -33,6 +33,10 @@ public class DirSfsys implements ISfsys {
 		return root;
 	}
 
+	public INode getNode(String path) {
+		return root.findNode(path);
+	}
+	
     public static ISfsys createSfsys(String dirname) throws Exception {
 		return new DirSfsys(dirname);
     }

@@ -30,6 +30,10 @@ public class MemSfsys implements ISfsys {
 		return root;
 	}
 
+	public INode getNode(String path) {
+		return root.findNode(path);
+	}
+	
 	public static ISfsys createSfsys() {
 		return new MemSfsys();
 	}

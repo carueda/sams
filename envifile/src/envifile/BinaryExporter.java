@@ -20,13 +20,11 @@ public final class BinaryExporter {
 	 *                 name filename + ".hdr", will be written.
 	 * @param header_description
 	 *                 To be included in the header file.
-	 * @param pw To write messages of progress, only if not null.
 	 */
 	public static void exportBIP(
 		Signature[] sigs,
 		String filename,
-		String header_description,
-		PrintWriter pw
+		String header_description
 	) throws IOException, Exception {
 		String header_filename = filename + ".hdr";
 		
@@ -58,13 +56,9 @@ public final class BinaryExporter {
 				header.wavelengths[i] = (float) p.x;
 			}
 			
-			if ( pw != null )
-				pw.println(" writing header " +header_filename);
 			EnviStandardFile.writeHeader(header, header_filename);
 			
 			// now, write the binary file:
-			if ( pw != null )
-				pw.println(" writing image " +filename);
 			File file = new File(filename);
 			dos = new DataOutputStream(new FileOutputStream(file));
 			for ( int i = 0; i < size; i++ ) {
@@ -107,14 +101,12 @@ public final class BinaryExporter {
 	 *                 name filename + ".hdr", will be written.
 	 * @param header_description
 	 *                 To be included in the header file.
-	 * @param pw To write messages of progress, only if not null.
 	 */
 	public static void exportToEnviSpectralLibrary(
 		String[] sig_names,
 		Signature[] sigs,
 		String filename,
-		String header_description,
-		PrintWriter pw
+		String header_description
 	) throws IOException, Exception {
 		String header_filename = filename + ".hdr";
 		
@@ -146,13 +138,9 @@ public final class BinaryExporter {
 				header.wavelengths[i] = (float) p.x;
 			}
 			
-			if ( pw != null )
-				pw.println(" writing header " +header_filename);
 			EnviStandardFile.writeHeader(header, header_filename);
 			
 			// now, write the binary file:
-			if ( pw != null )
-				pw.println(" writing image " +filename);
 			File file = new File(filename).getAbsoluteFile();
 			dos = new DataOutputStream(new FileOutputStream(file));
 			for ( int i = 0; i < lines; i++ ) {
@@ -166,7 +154,6 @@ public final class BinaryExporter {
 					float data = (float) p.y;
 					dos.writeFloat(data);
 				}
-
 			}
 		}
 		finally {

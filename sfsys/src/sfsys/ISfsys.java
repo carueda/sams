@@ -9,7 +9,12 @@ package sfsys;
  */
 public interface ISfsys {
 	public String getInfo();
+	
+	/** Gets the root directory. */
 	public IDirectory getRoot();
+	
+	/** Gets a node. */
+	public INode getNode(String path);
 	
 	/** Optional operation */
     public void save(String filename) throws java.io.IOException;

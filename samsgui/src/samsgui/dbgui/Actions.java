@@ -85,6 +85,7 @@ public final class Actions {
 			list.add(null);
 		}
 		list.add(getAction("delete-grouping"));
+		list.add(null);
 		list.add(getAction("export-envi"));
 		list.add(getAction("export-envi-sl"));
 		list.add(getAction("export-ascii"));

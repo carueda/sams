@@ -30,21 +30,19 @@ import java.io.*;
 public class Exporter {
 	static final int ONE_SECOND = 1000;
 	private DbGui dbgui;
-	private List selectedSpectraPaths;
-	private List selectedGroupPaths;
+	private List paths;
+	String format;
+	private StringBuffer info;
 	
-	public Exporter(DbGui dbgui, List selectedSpectraPaths, List selectedGroupPaths) {
+	public Exporter(DbGui dbgui, List paths, String format, StringBuffer info) {
 		this.dbgui = dbgui;
-		this.selectedSpectraPaths = selectedSpectraPaths;
-		this.selectedGroupPaths = selectedGroupPaths;
-		
-		if ( selectedGroupPaths != null && selectedGroupPaths.size() > 0 )
-			new ExportSelectedGroups().go();
-		else
-			new ExportSelectedSpectra().go();
+		this.paths = paths;
+		this.format = format;
+		this.info = info;
+		new ExportPaths().go();
 	}
 
-	class ExportSelectedSpectra {
+	class ExportPaths {
 		StringBuffer task_message = new StringBuffer();
 		boolean task_isDone;
 		Timer timer;
@@ -52,12 +50,11 @@ public class Exporter {
 		void go() {
 			JFrame frame = dbgui.getFrame();
 			final ISamsDb db = dbgui.getDatabase();
-			if ( db == null )
-				return;
+			assert db != null;
 			
 			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			final JTextField f_file = new JTextField(32);
-			p_file.setBorder(SamsGui.createTitledBorder("File"));
+			p_file.setBorder(SamsGui.createTitledBorder("Destination file"));
 			p_file.add(f_file);
 			final JButton b_choose = new JButton("Choose");
 			p_file.add(b_choose);
@@ -102,15 +99,20 @@ public class Exporter {
 				}
 			});
 			
-			Object[] array = {
-				p_file,
-				status,
-				progressBar,
-				new JScrollPane(taskOutput),
-			};
+			List array = new ArrayList();
+			if ( info != null ) {
+				JLabel l_info = new JLabel(info.toString());
+				l_info.setForeground(Color.gray);
+				array.add(l_info);
+			}
+			array.add(new JLabel("Number of signatures: " +paths.size()));
+			array.add(p_file);
+			array.add(status);
+			array.add(progressBar);
+			array.add(new JScrollPane(taskOutput));
 			
 			String diag_title = "Export spectra files";
-			final BaseDialog form = new BaseDialog(frame, diag_title, array) {
+			final BaseDialog form = new BaseDialog(frame, diag_title, array.toArray()) {
 				public boolean dataOk() {
 					String msg = null;
 					String filename = f_file.getText();
@@ -161,12 +163,32 @@ public class Exporter {
 							PrintWriter writer = new PrintWriter(System.out, true);
 							SamsDbManager dbman = new SamsDbManager(db, writer);
 							try {
-								dbman.exportAscii(selectedSpectraPaths, filename, new ExportListener() {	
-									public void exporting(final int file_number, final String relative_filename) {
-										task_message.append("(" +file_number+ ") " +relative_filename+ "\n");
-										progressBar.setValue(file_number);
-									}
-								});
+								if ( format.equals("ascii") ) {
+									dbman.exportAscii(paths, filename, new ExportListener() {	
+										public void exporting(final int file_number, final String relative_filename) {
+											task_message.append("(" +file_number+ ") " +relative_filename+ "\n");
+											progressBar.setValue(file_number);
+										}
+									});
+								}
+								else if ( format.equals("envi") ) {
+									dbman.exportEnvi(paths, filename, new ExportListener() {	
+										public void exporting(final int file_number, final String relative_filename) {
+											task_message.append("(" +file_number+ ") " +relative_filename+ "\n");
+											progressBar.setValue(file_number);
+										}
+									});
+								}
+								else if ( format.equals("envi-sl") ) {
+									dbman.exportEnviLibrary(paths, filename, new ExportListener() {	
+										public void exporting(final int file_number, final String relative_filename) {
+											task_message.append("(" +file_number+ ") " +relative_filename+ "\n");
+											progressBar.setValue(file_number);
+										}
+									});
+								}
+								else
+									throw new Error("Unexpected format: " +format);
 								
 								progressBar.setValue(progressBar.getMaximum());
 								
@@ -182,7 +204,7 @@ public class Exporter {
 						}
 					});
 					
-					progressBar.setMaximum(selectedSpectraPaths.size() + 1);
+					progressBar.setMaximum(paths.size() + 1);
 					progressBar.setIndeterminate(false);
 					progressBar.setString(null); //display % string
 					task_isDone = false;

@@ -2,52 +2,52 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
-07/28/03
-	- 
+ Pending features:
+		- where to allow for creation of subgroups .... See Actions
+		- delete group
+		
+ Pending bugs:
+	  - CorrectionOperation: check operation when forward=false, additive=false
+	    (it's giving out a "reflection"--check sign in correction variable) 
+		
+ 07/28/03
+	- Export (Envi, Envi-spectral-library, Ascii) ready. 
 	- clipboard interaction improvement: right-click now updates 
 	  selection. See DbGui.click()
 	  
-07/25/03
-	- Pending:
-		- where to allow for creation of subgroups .... See Actions
-		- Now on export actions. exportAscii working.  See Export.java ...
-		
+ 07/25/03
 	- clipboard operations: 
 		- Tree: new MyNode to simplify node management.
 		- new element in status bar for clipboard contents.
-07/24/03
+		
+ 07/24/03
 	- clipboard operations: 
 		- progress-bar now working very nicely.
 		- all copy-cut-paste-delete operations already implemented
 		- table updated.
-		- PENDING: Sychronize ISfsys vs. TreeModel !!
-07/23/03
+		
+ 07/23/03
 	- Now on copy-cut-paste-delete actions ...
-	  pending: update table, a progress-bar for lengthy actions...
-	
-	- Bug: FIX PENDING
-	  CorrectionOperation: check operation when forward=false, additive=false
-	  (it's giving out a "reflection"--check sign in correction variable) 
-
 	- Compute: All "string" parameters are required.
 	- Table updated after a computation.
 	- No repeated nodes in tree.
 	
-07/22/03
+ 07/22/03
 	- Compute: checking required paramters...
-07/21/03
+	
+ 07/21/03
 	- Now on single- and binary- operations ...
 	  See Compute.SingleForm.go()
 	
-07/10/03
+ 07/10/03
 	- Import from directory
 	- Import from Ascii file
 
-07/09/03
+ 07/09/03
 	- Preferences for:
 		- last directory used for import
 		- path to last open database
 
-07/07/03
+ 07/07/03
 	- EditMetadataDefinition
 	
