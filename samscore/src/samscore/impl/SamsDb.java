@@ -4,6 +4,7 @@ import samscore.ISamsDb;
 import samscore.ISamsDb.IMetadataDef.IAttributeDef;
 import sig.Signature;
 import sfsys.ISfsys;
+import sfsys.ISfsys.IDirectory;
 import sfsys.Sfsys;
 
 import java.io.*;
@@ -137,9 +138,14 @@ class SamsDb implements ISamsDb {
 		return baseDir.getPath();
 	}
 	
+	public IDirectory getGroupingUnderLocation(String subpath) throws Exception {
+		return Sfsys.create(sigsDir.getPath()+ "/" +subpath).getRoot();
+	}
+	
 	public ISfsys getGroupingLocation() throws Exception {
 		return Sfsys.create(sigsDir.getPath());
 	}
+	
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
 		ISfsys fs = null;
 		if ( attrNames.length == 1 && attrNames[0].equals("location") )
@@ -540,6 +546,8 @@ class SamsDb implements ISamsDb {
 		Spectrum spectrum;
 		Signature signature;
 		ClipboardElement(Spectrum spectrum, Signature signature) {
+			assert spectrum != null;
+			assert signature != null;
 			this.spectrum = spectrum;
 			this.signature = signature;
 		}
@@ -576,6 +584,8 @@ class SamsDb implements ISamsDb {
 				String path = (String) paths.get(i);
 				Spectrum spec = (Spectrum) getSpectrum(path);
 				Signature sig = getSignature(path);
+				if ( spec == null )
+					System.out.println(path+ ": Not found!!!");
 				new_elements.add(new ClipboardElement(spec, sig));
 				processed++;
 				if ( obs.elementFinished(i+1, path) ) {
@@ -597,15 +607,13 @@ class SamsDb implements ISamsDb {
 				ClipboardElement e = (ClipboardElement) elements.get(i);
 				String name = e.spectrum.getString("name");
 				String new_path = normalizePath(target_location+ "/" +name);
-				int index = new_path.lastIndexOf("/") + 1;
-				target_location = new_path.substring(0, index); // from normalized new_path
 				
-				String path = e.spectrum.getPath();
-				if ( !new_path.equals(path) ) {
-					Spectrum modified = e.spectrum.clone(new_path);
+				Spectrum modified = (Spectrum) spectrums.get(new_path);
+				if ( modified == null ) {
+					modified = e.spectrum.clone(new_path);
 					spectrums.put(new_path, modified);
-					setSignature(new_path, e.signature);
 				}
+				modified.setSignature(e.signature);
 				processed++;
 				if ( obs.elementFinished(i+1, new_path) )
 					break;  // but go to endTask
@@ -639,7 +647,6 @@ class SamsDb implements ISamsDb {
 			int processed = 0;
 			for ( int i = 0; i < paths.size(); i++ ) {
 				String path = (String) paths.get(i);
-				Spectrum spec = (Spectrum) getSpectrum(path);
 				deleteSpectrum(path);
 				processed++;
 				if ( obs.elementFinished(i+1, path) )
