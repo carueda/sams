@@ -438,7 +438,7 @@ public class Importer {
 								
 								for ( Iterator it = sigs.iterator(); it.hasNext(); ) {
 									Signature sig = (Signature) it.next();
-									String path = basefilename+ "_" +ii;
+									String path = "imported" + "/" +basefilename+ "_" +ii;
 									db.addSpectrum(path, sig);
 									task_message.append("\nimporting " +path);
 									progressBar.setValue(ii++);
