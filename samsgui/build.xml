@@ -28,9 +28,6 @@
 	<!-- Directory to put distribution -->
 	<property name="dist" value="../../_GENERATED/DIST"/>
 
-	<!-- The nanoInstaller compiler to make the installer: -->
-	<property name="nic" value="nic.jar"/>
-
 	<property name="src.dir" value="src/samsgui"/>
 	<property name="dest.dir" value="${build}/classes"/>
 
