@@ -2,5 +2,5 @@ SAMS GUI Known bugs
 Carlos A. Rueda.
 $Id$
 
-none		
+Check out the Bugs entry in http://casil.ucdavis.edu/tracker/?group_id=32		
 

@@ -4,28 +4,18 @@
 	$Id$
 -->
 <project name="sams" default="sams.jar" >
-	<!-- Version -->
-	<property name="VERSION" value="3.2"/>
-
-	<!-- Base dir for generated files -->
-	<property name="generated" value="../../_GENERATED/sams"/>
+	<!-- load basic properties -->
+	<property file="build.properties"/>
 
 	<!-- Required libraries -->
-	<property name="samscore"		 value="${generated}/DIST/samscore.jar"/>
-	<property name="fileutils"		 value="${generated}/DIST/fileutils.jar"/>
+	<property name="samscore"	 value="${generated}/DIST/samscore.jar"/>
+	<property name="fileutils"	 value="${generated}/DIST/fileutils.jar"/>
 	<property name="sig"			 value="${generated}/DIST/sig.jar"/>
 	<property name="sigoper"		 value="${generated}/DIST/sigoper.jar"/>
-	<property name="envifile"		 value="${generated}/DIST/envifile.jar"/>
-	<property name="specfile"		 value="${generated}/DIST/specfile.jar"/>
-	<property name="sfsys"			 value="${generated}/DIST/sfsys.jar"/>
+	<property name="envifile"	 value="${generated}/DIST/envifile.jar"/>
+	<property name="specfile"	 value="${generated}/DIST/specfile.jar"/>
+	<property name="sfsys"		 value="${generated}/DIST/sfsys.jar"/>
 
-	<!-- External required libraries -->
-	<property name="plotapplication" value="../lib/plotapplication.jar"/>
-	<property name="kunststoff"		 value="../lib/kunststoff.jar"/>
-	<property name="bsh"			 value="../lib/bsh-1.3b2.jar"/>
-	
-	<!-- IzPack is located here under my laptop -->
-	<property name="izdir" value="/home/carueda/prg/IzPack"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="${generated}/BUILD"/>
@@ -46,10 +36,15 @@
 
 	<target name="sams.jar" depends="compile, info, license, img"
 	description="Makes executable sams.jar">
-		<jar jarfile="${dist}/sams.jar" manifest="samsgui.manifest"
+		<jar jarfile="${dist}/sams.jar"
 			basedir="${build}/classes"
-			includes="samsgui/**"
-		/>
+			includes="samsgui/**">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Main-class" value="samsgui.Main"/>
+				<attribute name="Class-path" value="../lib/plotapplication.jar ../lib/samscore.jar ../lib/sig.jar ../lib/specfile.jar ../lib/sfsys.jar ../lib/sigoper.jar ../lib/bsh-1.3b2.jar ../lib/fileutils.jar ../lib/envifile.jar ../lib/kunststoff.jar"/>
+			</manifest>
+		</jar>
 	</target>
 
 	<target name="compile" depends="init">

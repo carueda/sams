@@ -2,7 +2,10 @@ SAMS GUI TO-DO
 Carlos A. Rueda.
 $Id$
 
-(Some may involve the core, of course.)
+Also check out the Feature Requests entry in
+http://casil.ucdavis.edu/tracker/?group_id=32
+
+Some of these features may involve the sams core as well.
 
 - F1, help window, maybe html documentation
 - make plot legends optional
