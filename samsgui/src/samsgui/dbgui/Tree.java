@@ -207,21 +207,20 @@ public class Tree extends JPanel {
 	/**
 	 * @param spectra true for spectra; false for groups (aka directories).
 	 * @param nodes true for nodes; false for paths
+	 * @return The list of elements, NEVER null.
 	 */
 	private List _getSelectedNodes(boolean spectra, boolean nodes) {
-		List list = null;
+		List list = new ArrayList();
 		TreePath[] paths = jtree.getSelectionPaths(); 
 		if ( paths != null ) {
 			for ( int i = 0; i < paths.length; i++ ) {
 				TreePath tree_path = paths[i];
 				MyNode n = (MyNode) tree_path.getLastPathComponent();
 				if ( spectra && n.isSpectrum()  ||  !spectra && n.isGroup() ) {
-					if ( list == null )
-						list = new ArrayList();
 					if ( nodes )
 						list.add(n);
 					else {
-						if ( n.getStringPath().trim().length() ==0 ) {
+						if ( n.getStringPath().trim().length() == 0 ) {
 							System.out.println(n._toString());
 							assert false;
 						}
