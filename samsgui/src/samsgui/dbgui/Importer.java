@@ -36,7 +36,8 @@ public class Importer {
 	
 	/** Interacts with the user to import files from a given directory. */
 	public static void importFilesFromDirectory(DbGui dbgui) {
-		new ImportFilesFromDirectory(dbgui).go();
+		if ( dbgui.getDatabase() != null )
+			new ImportFilesFromDirectory(dbgui).go();
 	}
 
 	static class ImportFilesFromDirectory extends BaseImport {
@@ -45,11 +46,6 @@ public class Importer {
 		}
 		
 		void go() {
-			JFrame frame = dbgui.getFrame();
-			final ISamsDb db = dbgui.getDatabase();
-			if ( db == null )
-				return;
-			
 			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			final JTextField f_file = new JTextField(32);
 			p_file.setBorder(SamsGui.createTitledBorder("Directory"));
@@ -70,36 +66,6 @@ public class Importer {
 			final JComboBox l_filetypes = new JComboBox(getFileTypes());
 			l_filetypes.setSelectedItem(getFileTypes()[0]);
 			l_filetypes.setBorder(SamsGui.createTitledBorder("Only import files with type"));
-			final JLabel status = new JLabel();
-			status.setFont(status.getFont().deriveFont(Font.ITALIC));
-			final JProgressBar progressBar = new JProgressBar(0, 1000);
-			progressBar.setValue(0);
-			progressBar.setStringPainted(true); //get space for the string
-			progressBar.setString("");          //but don't paint it
-			progressBar.setEnabled(false);
-			final JTextArea taskOutput = new JTextArea(5, 30);
-			taskOutput.setMargin(new Insets(5,5,5,5));
-			taskOutput.setEditable(false);
-			taskOutput.setEnabled(false);
-			
-			
-			// timer.
-			timer = new Timer(ONE_SECOND, new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					String s = task_message.toString();
-					task_message.setLength(0);
-					if ( s.length() > 0 ) {
-						String last = s.substring(s.lastIndexOf('\n') + 1); 
-						taskOutput.append(s + "\n");
-						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
-					}
-						
-					if ( task_isDone ) {
-						Toolkit.getDefaultToolkit().beep();
-						timer.stop();
-					}
-				}
-			});
 			
 			Object[] array = {
 				p_file,
@@ -239,7 +205,8 @@ public class Importer {
 
 	/** Interacts with the user to import files from a given directory. */
 	public static void importFiles(DbGui dbgui) {
-		new ImportFiles(dbgui).go();
+		if ( dbgui.getDatabase() != null )
+			new ImportFiles(dbgui).go();
 	}
 
 	static class ImportFiles extends BaseImport {	
@@ -249,11 +216,6 @@ public class Importer {
 		}
 		
 		void go() {
-			JFrame frame = dbgui.getFrame();
-			final ISamsDb db = dbgui.getDatabase();
-			if ( db == null )
-				return;
-			
 			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			final JTextField f_files = new JTextField(0+ " file(s) selected");
 			f_files.setEditable(false);
@@ -276,36 +238,6 @@ public class Importer {
 			final JComboBox l_filetypes = new JComboBox(getFileTypes());
 			l_filetypes.setSelectedItem(getFileTypes()[0]);
 			l_filetypes.setBorder(SamsGui.createTitledBorder("Only import files with type"));
-			final JLabel status = new JLabel();
-			status.setFont(status.getFont().deriveFont(Font.ITALIC));
-			final JProgressBar progressBar = new JProgressBar(0, 1000);
-			progressBar.setValue(0);
-			progressBar.setStringPainted(true); //get space for the string
-			progressBar.setString("");          //but don't paint it
-			progressBar.setEnabled(false);
-			final JTextArea taskOutput = new JTextArea(5, 30);
-			taskOutput.setMargin(new Insets(5,5,5,5));
-			taskOutput.setEditable(false);
-			taskOutput.setEnabled(false);
-			
-			
-			// timer.
-			timer = new Timer(ONE_SECOND, new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					String s = task_message.toString();
-					task_message.setLength(0);
-					if ( s.length() > 0 ) {
-						String last = s.substring(s.lastIndexOf('\n') + 1); 
-						taskOutput.append(s + "\n");
-						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
-					}
-						
-					if ( task_isDone ) {
-						Toolkit.getDefaultToolkit().beep();
-						timer.stop();
-					}
-				}
-			});
 			
 			Object[] array = {
 				p_file,
@@ -415,81 +347,10 @@ public class Importer {
 		}
 	}
 
-	/**
-	 * Gets the signatures contained in an ASCII file.
-	 * <ul>
-	 *	<li> The file is scanned one line at a time.
-	 *	<li> Separators for tokens are: simple spaces, commas, and/or tabs.
-	 *	<li> A line is "recognized" if it starts with at least two floating point values;
-	 *       otherwise, the line is ignored.
-	 *	<li> Recognized lines in the same file can contain different number of columns.
-	 *	<li> Let val_0, val_1, ..., val_n be the scanned, consecutive floating point values
-	 *       found in the line.
-	 *	<li> for 1 &lt;= i &lt;= n, signature (i-1)-th is added the point (val_0, val_i),
-	 *       that is, val_0 will be its abscissa and val_i its ordinate.
-	 * </ul>
-	 *
-	 * @param filename  Name of the file to read.
-	 * @return The list of signatures in the same order as they appear in the file.
-	 */
-	public static List getSignaturesFromAsciiFile(String filename) throws Exception {
-		String SEPARATORS = " ,\t";
-		BufferedReader stream = null;
-		int lineno = 0;
-		String line;
-		List sigs = new ArrayList();
-		try {
-			stream = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
-			while ( (line = stream.readLine()) != null ) {
-				lineno++;
-				StringTokenizer st = new StringTokenizer(line, SEPARATORS);
-				int columns = st.countTokens();
-				if ( columns <= 1 )
-					continue; // just ignore this line
-				
-				double x;
-				try {			
-					x = Double.parseDouble(st.nextToken());
-				}
-				catch (NumberFormatException ex) {
-					continue; // just ignore this line
-				}
-				
-				// scan next columns-1 columns:
-				for ( int ii = 0; ii < columns - 1; ii++ ) {
-					try {			
-						double y = Double.parseDouble(st.nextToken());
-						
-						// successfuly gotten y-value for ii-th signature
-						// check if a new signature must be created:
-						if ( ii == sigs.size() )
-							sigs.add(new Signature());
-						
-						Signature sig = (Signature) sigs.get(ii);
-						sig.addDatapoint(x, y);
-					}
-					catch (NumberFormatException ex) {
-						break; // stop scanning current line
-					}
-				}
-			}
-			return sigs;
-		}
-		catch ( IOException ex ) {
-			throw new Exception(
-				"At line " +lineno+ ":\n" +
-				ex.getClass().getName()+ " : " +ex.getMessage()
-			);
-		}
-		finally{
-			if ( stream != null )
-				try{ stream.close(); }catch ( Exception ex ){}
-		}
-	}
-
 	/** Interacts with the user to import files from a given ASCII file. */
 	public static void importSignaturesFromAsciiFile(DbGui dbgui) {
-		new ImportSignaturesFromAsciiFile(dbgui).go();
+		if ( dbgui.getDatabase() != null )
+			new ImportSignaturesFromAsciiFile(dbgui).go();
 	}
 	
 	static class ImportSignaturesFromAsciiFile extends BaseImport {	
@@ -498,11 +359,6 @@ public class Importer {
 		}
 		
 		void go() {
-			JFrame frame = dbgui.getFrame();
-			final ISamsDb db = dbgui.getDatabase();
-			if ( db == null )
-				return;
-			
 			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			final JTextField f_file = new JTextField(32);
 			p_file.setBorder(SamsGui.createTitledBorder("Ascii file"));
@@ -517,36 +373,6 @@ public class Importer {
 					);
 					if ( filename != null && new File(filename).isFile() )
 						f_file.setText(filename);
-				}
-			});
-			final JLabel status = new JLabel();
-			status.setFont(status.getFont().deriveFont(Font.ITALIC));
-			final JProgressBar progressBar = new JProgressBar(0, 1000);
-			progressBar.setValue(0);
-			progressBar.setStringPainted(true); //get space for the string
-			progressBar.setString("");          //but don't paint it
-			progressBar.setEnabled(false);
-			final JTextArea taskOutput = new JTextArea(5, 30);
-			taskOutput.setBackground(null);
-			taskOutput.setMargin(new Insets(5,5,5,5));
-			taskOutput.setEditable(false);
-			taskOutput.setEnabled(false);
-			
-			// timer.
-			timer = new Timer(ONE_SECOND, new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					String s = task_message.toString();
-					task_message.setLength(0);
-					if ( s.length() > 0 ) {
-						String last = s.substring(s.lastIndexOf('\n') + 1); 
-						taskOutput.append(s + "\n");
-						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
-					}
-						
-					if ( task_isDone ) {
-						Toolkit.getDefaultToolkit().beep();
-						timer.stop();
-					}
 				}
 			});
 			
@@ -616,7 +442,7 @@ public class Importer {
 							String basefilename = new File(filename).getName();
 							int ii = 1; // to make names
 							try {
-								List sigs = getSignaturesFromAsciiFile(filename);
+								List sigs = Sams.getSignaturesFromAsciiFile(filename);
 								// +2 : see a), b) below
 								progressBar.setMaximum(sigs.size() +2);
 								progressBar.setIndeterminate(false);
@@ -669,20 +495,201 @@ public class Importer {
 		}
 	}
 	
+	/** Interacts with the user to import signature from a given Envi file. */
+	public static void importSignaturesFromEnviFile(DbGui dbgui) {
+		if ( dbgui.getDatabase() != null )
+			new ImportSignaturesFromEnviFile(dbgui).go();
+	}
+	
+	static class ImportSignaturesFromEnviFile extends BaseImport {	
+		ImportSignaturesFromEnviFile(DbGui dbgui) {
+			super(dbgui);
+		}
+		
+		void go() {
+			JPanel p_file = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			final JTextField f_file = new JTextField(32);
+			p_file.setBorder(SamsGui.createTitledBorder("Envi file"));
+			p_file.add(f_file);
+			final JButton b_choose = new JButton("Choose");
+			p_file.add(b_choose);
+			b_choose.setMnemonic(KeyEvent.VK_C);
+			b_choose.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent ev) {
+					String filename = Controller.Dialogs.selectImportFile(
+						"Select the file"
+					);
+					if ( filename != null && new File(filename).isFile() )
+						f_file.setText(filename);
+				}
+			});
+			JPanel p_location = new JPanel(new GridLayout(1,2));
+			final JTextField tf_line = new JTextField(4);
+			tf_line.setBorder(SamsGui.createTitledBorder("Line"));
+			final JTextField tf_pixel = new JTextField(4);
+			tf_pixel.setBorder(SamsGui.createTitledBorder("Pixel"));
+			p_location.add(tf_line);
+			p_location.add(tf_pixel);
+			
+			Object[] array = {
+				p_file,
+				p_location,
+				cb_targetGroup,
+				status,
+				progressBar,
+				new JScrollPane(taskOutput),
+			};
+			
+			String diag_title = "Import spectrum from Envi file";
+			final BaseDialog form = new BaseDialog(frame, diag_title, array) {
+				public boolean dataOk() {
+					String msg = null;
+					String filename = f_file.getText();
+					String s_line = tf_line.getText();
+					String s_pixel = tf_pixel.getText();
+					if ( filename.trim().length() == 0 )
+						msg = "Please specify a file";
+					else if ( !new File(filename.trim()).isFile() )
+						msg = "Not a valid file";
+					else if ( !s_line.matches("\\d+") )
+						msg = "Please specify a valid line number";
+					else if ( !s_pixel.matches("\\d+") )
+						msg = "Please specify a valid pixel number";
+					if ( msg == null ) {
+						status.setForeground(Color.gray);
+						status.setText("OK");
+					}
+					else {
+						status.setForeground(Color.red);
+						status.setText(msg);
+					}
+					return msg == null;
+				}
+				
+				public void notifyUpdate(String comp_name, Object value) {
+					if ( !timer.isRunning() )
+						super.notifyUpdate(comp_name, value);
+				}
+				
+				int successful;
+				
+				public boolean preAccept() {
+					if ( task_isDone )
+						return true;
+					
+					if ( !dataOk() )
+						return false;
+					
+					final String filename = f_file.getText();
+					final int line = Integer.parseInt(tf_line.getText());
+					final int pixel = Integer.parseInt(tf_pixel.getText());
+					final String grp_loc = (String) cb_targetGroup.getSelectedItem();
+					final MyNode grp_node = dbgui.getTree().findLocationNode(grp_loc, false);
+					
+					// do importation:
+					Thread thread = new Thread(new Runnable() {
+						public void run() {
+							Controller.doUpdate(new Runnable() {
+								public void run() {
+									b_choose.setEnabled(false);
+									f_file.setEditable(false);
+									tf_line.setEditable(false);
+									tf_pixel.setEditable(false);
+									
+									btnAccept.setEnabled(false);
+									btnCancel.setEnabled(false);
+									progressBar.setEnabled(true);
+									taskOutput.setEnabled(true);
+								}
+							});
+	
+							String basefilename = new File(filename).getName();
+							try {
+								Signature sig = Sams.getSignatureFromEnviFile(filename, line, pixel);
+								progressBar.setString("reading");
+								String name = basefilename+ "_" +line+ "_" +pixel;
+								String path = grp_loc+ "/" +name;
+								task_message.append("\nimporting " +path);
+								db.addSpectrum(path, sig);
+								MyNode child = dbgui.getTree().addChild(grp_node, name, true, false);
+								dbgui.getTree().scrollToVisible(child);
+								progressBar.setString("done");
+							}
+							catch(Exception ex) {
+								progressBar.setString("Error: see below");
+								task_message.append("\nError: " +ex.getMessage());
+							}
+							finally {
+								progressBar.setIndeterminate(false);
+								task_message.append("\nDone.");
+								task_isDone = true;
+								btnAccept.setText("Close");
+								btnAccept.setEnabled(true);
+							}
+						}
+					});
+					
+					progressBar.setString("Starting...");
+					progressBar.setIndeterminate(true);
+					thread.start();
+					timer.start();
+					return false;
+				}
+			};
+			form.activate();
+			form.pack();
+			form.setLocationRelativeTo(frame);
+			form.setVisible(true);
+		}
+	}
+	
 	static abstract class BaseImport {
 		DbGui dbgui;
+		JFrame frame;
+		ISamsDb db;
 		StringBuffer task_message = new StringBuffer();
 		boolean task_isDone;
 		Timer timer;
 		JComboBox cb_targetGroup;
+		JLabel status;
+		JProgressBar progressBar;
+		JTextArea taskOutput;
 		
 		BaseImport(DbGui dbgui) {
 			this.dbgui = dbgui;
+			frame = dbgui.getFrame();
+			db = dbgui.getDatabase();
 			List loc_groups = dbgui.getTree().getLocationGroups();
 			cb_targetGroup = new JComboBox(loc_groups.toArray());
 			cb_targetGroup.setSelectedItem("/imported"); // if it exists
 			cb_targetGroup.setBorder(SamsGui.createTitledBorder("Put new signature(s) under location"));
 
+			status = new JLabel();
+			status.setFont(status.getFont().deriveFont(Font.ITALIC));
+			progressBar = new JProgressBar(0, 1000);
+			progressBar.setValue(0);
+			progressBar.setStringPainted(true); //get space for the string
+			progressBar.setString("");          //but don't paint it
+			progressBar.setEnabled(false);
+			taskOutput = new JTextArea(5, 30);
+			taskOutput.setMargin(new Insets(5,5,5,5));
+			taskOutput.setEditable(false);
+			taskOutput.setEnabled(false);
+			timer = new Timer(ONE_SECOND, new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					String s = task_message.toString();
+					task_message.setLength(0);
+					if ( s.length() > 0 ) {
+						String last = s.substring(s.lastIndexOf('\n') + 1); 
+						taskOutput.append(s + "\n");
+						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
+					}
+					if ( task_isDone ) {
+						Toolkit.getDefaultToolkit().beep();
+						timer.stop();
+					}
+				}
+			});
 		}
 	}
 		

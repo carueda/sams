@@ -3,10 +3,11 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
-	- import from envi
+ 	- refresh-grouping
  	- make plot legends optional
 	- allow to show legends only in legend window
 	- clipboard operations to work also on groups as units
+	- import a region or an entire Envi image (?)
 	- new grouping by filename (?)
 		
  Pending bugs:
@@ -18,6 +19,8 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/13/03
+ 	- Code factoring in import options (Importer).
+	- Import from envi implemented.
 	- Cosmetic improvements in splash, import messages.
 	
  08/11/03

@@ -328,11 +328,8 @@ public class SamsGui {
 		if ( focusedDbGui == null )
 			return;
 		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
-		String filename = dbframe.filename;
-		if ( NO_DB_NAME.equals(filename) )
-			return;
-		
-		Importer.importFilesFromDirectory(focusedDbGui);
+		if ( NO_DB_NAME.equals(dbframe.filename) )
+			Importer.importFilesFromDirectory(focusedDbGui);
 	}
 	
 	public static void importFiles() {
@@ -340,21 +337,24 @@ public class SamsGui {
 			return;
 		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
 		String filename = dbframe.filename;
-		if ( NO_DB_NAME.equals(filename) )
-			return;
-		
-		Importer.importFiles(focusedDbGui);
+		if ( !NO_DB_NAME.equals(dbframe.filename) )
+			Importer.importFiles(focusedDbGui);
 	}
 	
 	public static void importAscii() {
 		if ( focusedDbGui == null )
 			return;
 		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
-		String filename = dbframe.filename;
-		if ( NO_DB_NAME.equals(filename) )
+		if ( !NO_DB_NAME.equals(dbframe.filename) )
+			Importer.importSignaturesFromAsciiFile(focusedDbGui);
+	}
+	
+	public static void importEnvi() {
+		if ( focusedDbGui == null )
 			return;
-		
-		Importer.importSignaturesFromAsciiFile(focusedDbGui);
+		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
+		if ( !NO_DB_NAME.equals(dbframe.filename) )
+			Importer.importSignaturesFromEnviFile(focusedDbGui);
 	}
 	
 	private static DbFrame nextFrame = null;
