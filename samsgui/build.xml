@@ -7,26 +7,29 @@
 	<!-- Version -->
 	<property name="VERSION" value="3.0"/>
 
+	<!-- Base dir for generated files -->
+	<property name="generated" value="../../_GENERATED/sams"/>
+
 	<!-- Required libraries -->
-	<property name="plotapplication" value="../../_GENERATED/DIST/plotapplication.jar"/>
-	<property name="samscore"        value="../../_GENERATED/DIST/samscore.jar"/>
-	<property name="fileutils"       value="../../_GENERATED/DIST/fileutils.jar"/>
-	<property name="sig"             value="../../_GENERATED/DIST/sig.jar"/>
-	<property name="sigoper"         value="../../_GENERATED/DIST/sigoper.jar"/>
-	<property name="envifile"        value="../../_GENERATED/DIST/envifile.jar"/>
-	<property name="specfile"        value="../../_GENERATED/DIST/specfile.jar"/>
-	<property name="sfsys"           value="../../_GENERATED/DIST/sfsys.jar"/>
-	<property name="kunststoff"      value="../../_GENERATED/DIST/kunststoff.jar"/>
-	<property name="bsh"             value="../../_GENERATED/DIST/bsh-1.3b2.jar"/>
+	<property name="plotapplication" value="${generated}/DIST/plotapplication.jar"/>
+	<property name="samscore"        value="${generated}/DIST/samscore.jar"/>
+	<property name="fileutils"       value="${generated}/DIST/fileutils.jar"/>
+	<property name="sig"             value="${generated}/DIST/sig.jar"/>
+	<property name="sigoper"         value="${generated}/DIST/sigoper.jar"/>
+	<property name="envifile"        value="${generated}/DIST/envifile.jar"/>
+	<property name="specfile"        value="${generated}/DIST/specfile.jar"/>
+	<property name="sfsys"           value="${generated}/DIST/sfsys.jar"/>
+	<property name="kunststoff"      value="${generated}/DIST/kunststoff.jar"/>
+	<property name="bsh"             value="${generated}/DIST/bsh-1.3b2.jar"/>
 	
 	<!-- IzPack is located here under my laptop -->
 	<property name="izdir" value="/home/carueda/prg/IzPack"/>
 	
 	<!-- Directory to put compiled classes -->
-	<property name="build" value="../../_GENERATED/BUILD"/>
+	<property name="build" value="${generated}/BUILD"/>
 
 	<!-- Directory to put distribution -->
-	<property name="dist" value="../../_GENERATED/DIST"/>
+	<property name="dist" value="${generated}/DIST"/>
 
 	<property name="src.dir" value="src/samsgui"/>
 	<property name="dest.dir" value="${build}/classes"/>

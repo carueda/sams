@@ -3,12 +3,14 @@
 	$Id$
 -->
 <project name="sig" default="sig.jar" >
+	<!-- Base dir for generated files -->
+	<property name="generated" value="../../_GENERATED/sams"/>
 
 	<!-- Directory to put compiled classes -->
-	<property name="build" value="../../_GENERATED/BUILD"/>
+	<property name="build" value="${generated}/BUILD"/>
 
 	<!-- Directory to put distribution -->
-	<property name="dist" value="../../_GENERATED/DIST"/>
+	<property name="dist" value="${generated}/DIST"/>
 
 	<property name="src.dir" value="src/sig"/>
 	<property name="dest.dir" value="${build}/classes"/>
