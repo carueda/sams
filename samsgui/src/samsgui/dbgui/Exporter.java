@@ -66,6 +66,13 @@ public class Exporter {
 						f_file.setText(filename);
 				}
 			});
+			final JRadioButton r_header_no = new JRadioButton("No header");
+			final JRadioButton r_header_name = new JRadioButton("Name");
+			final JRadioButton r_header_loc_name = new JRadioButton("Location/Name");
+			ButtonGroup group_header = new ButtonGroup();
+			group_header.add(r_header_no);
+			group_header.add(r_header_name);
+			group_header.add(r_header_loc_name);
 			
 			final JLabel status = new JLabel();
 			status.setFont(status.getFont().deriveFont(Font.ITALIC));
