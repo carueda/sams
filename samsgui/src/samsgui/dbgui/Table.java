@@ -27,7 +27,7 @@ public abstract class Table extends JPanel {
 	TableModel tableModel;
 	JTable jtable;
 	ICondition condition = null;
-	String orderBy;
+	IOrder orderBy;
 	ControlPanel controlPanel;
 
 	/** Creates the Spectra panel. */
@@ -194,7 +194,8 @@ public abstract class Table extends JPanel {
 		}
 	}
 
-	public void sort(String orderBy) throws Exception {
+	public void sort(String orderBy_text) throws Exception {
+		IOrder orderBy = db.createOrder(orderBy_text);
 		spectrums = _selectRows(condition, orderBy);
 		this.orderBy = orderBy;
 		if ( tableModel != null )
@@ -213,7 +214,7 @@ public abstract class Table extends JPanel {
 		return _selectRows(condition, orderBy);
 	}
 	
-	private List _selectRows(ICondition condition, String orderBy) throws Exception {
+	private List _selectRows(ICondition condition, IOrder orderBy) throws Exception {
 		List tmp = new ArrayList();
 		for ( Iterator it = db.selectSpectrums(condition, orderBy); it.hasNext(); ) { 
 			ISpectrum s = (ISpectrum) it.next();

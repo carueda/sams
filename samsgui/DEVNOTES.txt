@@ -19,6 +19,7 @@ $Id$
 	  it should move from samscore to samsgui ...
 	
  08/18/03 - version 3.0
+ 	- Table changed to use IOrder
  	- "refresh-grouping" now updates all groupings.
 	
  08/17/03 - version 3.0
