@@ -19,8 +19,8 @@
 	<property name="kunststoff"      value="../../_GENERATED/DIST/kunststoff.jar"/>
 	<property name="bsh"             value="../../_GENERATED/DIST/bsh-1.3b2.jar"/>
 	
-	<!-- pending to make this dynamic -->
-	<property name="izdir" value="C:/Program Files/IzPack"/>
+	<!-- IzPack is located here under my laptop -->
+	<property name="izdir" value="/home/carueda/prg/IzPack"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
