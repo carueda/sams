@@ -80,7 +80,8 @@ public class Interpreter {
 		}
 		pw.println();
 		ICondition condition = condition_text == null ? null : db.createCondition(condition_text);
-		for ( Iterator it2 = db.selectSpectrums(condition, orderBy); it2.hasNext(); ) {
+		IOrder order = db.createOrder(orderBy);
+		for ( Iterator it2 = db.selectSpectrums(condition, order); it2.hasNext(); ) {
 			ISamsDb.ISpectrum s = (ISamsDb.ISpectrum) it2.next();
 			for ( Iterator it = mddef.getDefinitions().iterator(); it.hasNext(); ) {
 				 IAttributeDef attrDef = (IAttributeDef) it.next();

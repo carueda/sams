@@ -2,6 +2,9 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 08/18/03 - version 3.0
+ 	- IOrder defined as an abstraction to order specifications.
+	
  08/14/03 - version 3.0
  	- Set the new version 3.0
  	- SamsDb._makeGroupingBy(): string values are put in single quotes.

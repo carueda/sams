@@ -235,17 +235,12 @@ class SamsDb implements ISamsDb {
 		return new Condition(text);
 	}
 
-	public Iterator selectSpectrums(ICondition condition, String orderBy) throws Exception {
-		if ( orderBy == null || orderBy.trim().length() == 0 )
-			orderBy = "location,name";
-		
-		// check attr names in orderBy:
-		final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
-		for ( int i = 0; i < orderByAttrNames.length; i++ ) {
-			if ( !isDefinedAttributeName(orderByAttrNames[i]) )
-				throw new Exception(orderByAttrNames[i]+ ": undefined attribute");
-		}
-		
+	public IOrder createOrder(String text) throws Exception {
+		return new Order(text);
+	}
+
+	public Iterator selectSpectrums(ICondition condition, IOrder orderBy) throws Exception {
+		// first, filter:
 		List result = new ArrayList();
 		for ( Iterator it = getAllPaths(); it.hasNext(); ) {
 			String path = (String) it.next();
@@ -254,19 +249,9 @@ class SamsDb implements ISamsDb {
 				result.add(s);
 		}
  
-		Comparator comparator = new Comparator() {
-			public int compare(Object o1, Object o2){
-				ISpectrum s1 = (ISpectrum) o1;
-				ISpectrum s2 = (ISpectrum) o2;
-				for ( int i = 0; i < orderByAttrNames.length; i++ ) {
-					int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
-					if ( c != 0 )
-						return c;
-				}
-				return 0;
-			}
-		};
-		Collections.sort(result, comparator);
+ 		// second, order:
+		if ( orderBy != null )
+			Collections.sort(result, (Order) orderBy);
 
 		return result.iterator();
 	}
@@ -650,6 +635,38 @@ class SamsDb implements ISamsDb {
 				return true;
 			String val = s.getString(attrName);
 			return val != null && val.equals(attrValue);
+		}
+	}
+
+	class Order implements IOrder, Comparator {
+		String text;
+		String[] orderByAttrNames;
+
+		Order(String text) throws Exception {
+			if ( text == null || text.trim().length() == 0 )
+				text = "location,name";
+			this.text = text;
+			// check attr names in orderBy:
+			orderByAttrNames = text.split("(:|,|\\s)+");
+			for ( int i = 0; i < orderByAttrNames.length; i++ ) {
+				if ( !isDefinedAttributeName(orderByAttrNames[i]) )
+					throw new Exception(orderByAttrNames[i]+ ": undefined attribute");
+			}
+		}
+
+		public String toString() {
+			return "order by " +text;
+		}
+
+		public int compare(Object o1, Object o2) {
+			ISpectrum s1 = (ISpectrum) o1;
+			ISpectrum s2 = (ISpectrum) o2;
+			for ( int i = 0; i < orderByAttrNames.length; i++ ) {
+				int c = s1.getString(orderByAttrNames[i]).compareTo(s2.getString(orderByAttrNames[i]));
+				if ( c != 0 )
+					return c;
+			}
+			return 0;
 		}
 	}
 

@@ -30,14 +30,19 @@ public interface ISamsDb {
 	/** Gets all elements */
 	public Iterator getAllPaths();
 	
-	/** Creates a condition. */
+	/** Creates a condition specification to be used by selectSpectrums. */
 	public ICondition createCondition(String text) throws Exception;
 
-	/** Select elements that satisfy a condition and in a given order.
-	 * @param condition can be null. 
-	 * @orderBy comma-separated field names. null or empty is equivalent to "location,name". 
+	/** Creates a ordering specification to be used by selectSpectrums. */
+	public IOrder createOrder(String text) throws Exception;
+
+	/** Select elements that satisfy a condition and order.
+	 * @param condition Condition for desired elements.
+	 *		null is semantically equivalent to true.
+	 * @param OrderBy Order for selected elements. 
+	 *		null or empty is semantically equivalent to "order by location, then name." 
 	 */
-	public Iterator selectSpectrums(ICondition condition, String orderBy) throws Exception ;
+	public Iterator selectSpectrums(ICondition condition, IOrder orderBy) throws Exception ;
 	
 	/** Adds an element 
 	 * Returns normalized path.
@@ -132,6 +137,12 @@ public interface ISamsDb {
 	/** Represents a condition to select elements. */
 	public interface ICondition {
 		/** Gets a string representation of this condition. */
+		public String toString();	
+	}
+	
+	/** Represents an order to select elements. */
+	public interface IOrder {
+		/** Gets a string representation of this order specification. */
 		public String toString();	
 	}
 	
