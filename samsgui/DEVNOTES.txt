@@ -2,6 +2,10 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 03/21/05 - version 3.2
+ 	- ImportSignaturesFromAsciiFile: fixed the final message
+	  telling about the number of signatures imported.
+
  03/17/05 - version 3.2
  	- Exporter now allows the user to specify the data type
 	  for Envi output formats (std image and spectral library).

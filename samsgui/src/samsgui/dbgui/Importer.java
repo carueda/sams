@@ -486,7 +486,7 @@ public class Importer {
 								task_message.append("\nError: " +ex.getMessage());
 							}
 							finally {
-								task_message.append("\nDone. " +ii+ " signatures imported");
+								task_message.append("\nDone. " +(ii-1)+ " signatures imported");
 								task_isDone = true;
 								btnAccept.setText("Close");
 								btnAccept.setEnabled(true);
