@@ -634,7 +634,7 @@ class SamsDb implements ISamsDb {
 		// a default observer
 		final IObserver null_obs = new IObserver() {
 			public void startTask(int total) {}
-			public boolean elementFinished(int index, String path) { return false; } 
+			public boolean elementFinished(int index, String path, boolean isSpectrum) { return false; } 
 			public void endTask(int processed) { }
 		};
 		IObserver obs = null_obs;
@@ -661,7 +661,7 @@ class SamsDb implements ISamsDb {
 					System.out.println(path+ ": Not found!!!");
 				new_elements.add(new ClipboardElement(spec, sig));
 				processed++;
-				if ( obs.elementFinished(i+1, path) ) {
+				if ( obs.elementFinished(i+1, path, true) ) {
 					obs.endTask(0);  // no element was actually copied.
 					return;
 				}
@@ -685,7 +685,7 @@ class SamsDb implements ISamsDb {
 				_storeSpectrumMetadata(new_path, e.spectrum.attrValues);
 				
 				processed++;
-				if ( obs.elementFinished(i+1, new_path) )
+				if ( obs.elementFinished(i+1, new_path, true) )
 					break;  // but go to endTask
 			}
 			obs.endTask(processed);
@@ -704,7 +704,7 @@ class SamsDb implements ISamsDb {
 				elements.add(new ClipboardElement(spec, sig));
 				deleteSpectrum(path);
 				processed++;
-				if ( obs.elementFinished(i+1, path) )
+				if ( obs.elementFinished(i+1, path, true) )
 					break;  // but go to endTask
 			}
 			obs.endTask(processed);
@@ -734,7 +734,7 @@ class SamsDb implements ISamsDb {
 				String path = (String) paths.get(i);
 				deleteSpectrum(path);
 				processed++;
-				if ( obs.elementFinished(i+1, path) ) {
+				if ( obs.elementFinished(i+1, path, true) ) {
 					canceled = true;
 					break;
 				}
@@ -749,7 +749,7 @@ class SamsDb implements ISamsDb {
 						if ( dir.exists() )
 							dir.delete();  // should be empty
 						processed++;
-						if ( obs.elementFinished(i+1, group_path) )
+						if ( obs.elementFinished(i+1, group_path, false) )
 							break;
 					}
 					i++;
@@ -767,7 +767,7 @@ class SamsDb implements ISamsDb {
 				String path = (String) paths.get(i);
 				deleteSpectrum(path);
 				processed++;
-				if ( obs.elementFinished(i+1, path) )
+				if ( obs.elementFinished(i+1, path, true) )
 					break;  // but go to endTask
 			}
 			obs.endTask(processed);

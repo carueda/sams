@@ -167,7 +167,7 @@ public interface ISamsDb {
 			
 			/** called when an element has just been processed. Note: index in [1..total]. 
 			 * @return true to stop the task. */
-			public boolean elementFinished(int index, String path);
+			public boolean elementFinished(int index, String path, boolean isSpectrum);
 
 			/** called with the number of elements successfully processed in a task. */
 			public void endTask(int processed);

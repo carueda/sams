@@ -109,7 +109,7 @@ public class DbGui extends JPanel {
 		if ( newpath == null )
 			return null; // OK, there was no necessary change
 		s = db.getSpectrum(newpath);
-		tree.removeNode(oldpath);
+		tree.removeNode(oldpath, true);
 		tree.insertNode(newpath, true);
 		clearPlot();
 		return s;
@@ -796,13 +796,19 @@ public class DbGui extends JPanel {
 	public void rename() throws Exception {
 		if ( db == null )
 			return;
-		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if (  selectedSpectra.size() != 1 )
+		List selectedSpectraNodes = tree.getSelectedSpectraNodes();
+		if (  selectedSpectraNodes.size() != 1 )
 			return;
-		String path = (String) selectedSpectra.get(0);
+		Tree.MyNode mnode = (Tree.MyNode) selectedSpectraNodes.get(0);
+		String path = mnode.getStringPath();
 		final ISpectrum s = db.getSpectrum(path);
 		if ( s == null )
 			throw new Error(path+ ": spectrum not found!!");
+
+		String parent_path = ((Tree.MyNode) mnode.getParent()).getStringPath();
+		final IDirectory dir = db.getGroupingUnderLocation(parent_path);
+		if ( dir == null )
+			throw new Error(parent_path+ ": parent directory not found!!");
 		
 		JTextField f_loc = new JTextField(s.getLocation());
 		f_loc.setEditable(false);
@@ -830,6 +836,9 @@ public class DbGui extends JPanel {
 				String newname = f_newname.getText().trim();
 				if ( newname.length() == 0 )
 					msg = "Specify the new name";
+				INode node = dir.getNode(newname);
+				if ( node != null && node instanceof IFile )
+					msg = "Name already exists";
 				if ( msg == null ) {
 					status.setForeground(Color.gray);
 					status.setText("OK");
@@ -848,8 +857,11 @@ public class DbGui extends JPanel {
 		if ( form.accepted() ) {
 			String newname = f_newname.getText().trim();
 			try {
-				if ( _doRenaming(s, newname) != null )
+				if ( _doRenaming(s, newname) != null ) {
+					// the following works, but should be changed to something more efficient...
 					table.updateData();
+					// like going to the specific row a change the value directly. PENDING
+				}
 			}
 			catch(Exception ex) {
 				SamsGui.message("Error: " +ex.getMessage());
@@ -891,8 +903,9 @@ public class DbGui extends JPanel {
 				String newname = f_newname.getText().trim();
 				if ( newname.length() == 0 )
 					msg = "Specify a name";
-				else if ( dir.getNode(newname) != null )
-					msg = "Name already exists";
+				INode node = dir.getNode(newname);
+				if ( node != null && node instanceof IDirectory )
+					msg = "A group with this name already exists";
 				if ( msg == null ) {
 					status.setForeground(Color.gray);
 					status.setText("OK");

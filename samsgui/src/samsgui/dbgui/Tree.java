@@ -99,27 +99,33 @@ public class Tree extends JPanel {
 		treeModel.reload();
 	}		
 		
-	MyNode findNode(String path) {
+	MyNode findNode(String path, boolean isSpectrum) {
+		if ( path.length() == 0 )
+			return isSpectrum ? null : rootNode;
+		
 		MyNode parent = rootNode;
 		String[] parts = path.split("/");
 		for ( int i = 0; i < parts.length; i++ ) {
 			String part = parts[i];
 			if ( part.length() == 0 )
 				continue;
-			parent = findChildNode(parent, part);
+			parent = findChildNode(parent, part, i == parts.length-1 && isSpectrum);
 			if ( parent == null )
 				return null;
-			if ( i == parts.length - 1 )  // found;
+			if ( i == parts.length-1 )  // found;
 				return parent;
 		}
 		return null;
 	}
 	
-	MyNode findChildNode(MyNode parent, String name) {
+	MyNode findChildNode(MyNode parent, String name, boolean isSpectrum) {
 		for ( int i = 0; i < parent.getChildCount(); i++ ) {
 			MyNode n = (MyNode) parent.getChildAt(i);
-			if ( name.equals(n.getName()) )
-				return n;
+			if ( name.equals(n.getName()) ) {
+				if ( isSpectrum && n.isSpectrum()
+				||  !isSpectrum && n.isGroup() )
+					return n;
+			}
 		}
 		return null;
 	}
@@ -133,7 +139,7 @@ public class Tree extends JPanel {
 			return null;
 
 		String parent_path = path.substring(0, path.lastIndexOf('/'));
-		MyNode parent = findNode(parent_path);
+		MyNode parent = findNode(parent_path, false);
 		if ( parent == null )
 			return null;
 
@@ -143,8 +149,8 @@ public class Tree extends JPanel {
 	}
 		
 	/** Returns path to affected parent */
-	public String removeNode(String path) {
-		MyNode node = findNode(path);
+	public String removeNode(String path, boolean isSpectrum) {
+		MyNode node = findNode(path, isSpectrum);
 		if ( node == null ) {
 			return null;
 		}
@@ -252,7 +258,7 @@ public class Tree extends JPanel {
 	) {
         if ( parent == null ) 
             parent = rootNode;
-        MyNode childNode = findChildNode(parent, child_name);
+        MyNode childNode = findChildNode(parent, child_name, isSpectrum);
 		if ( childNode == null ) {
 			childNode = new MyNode().reset(child_name, isSpectrum);
 	        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());

@@ -14,11 +14,19 @@ $Id$
 	- new grouping by filename (?)
 	- About
 	- Splash, initialization progress
+	- improve renaming from dialog (from tree). See DbGui.rename().
 		
  Pending bugs:
+	- rename of a root child makes disappear the element in tree display
 	- CorrectionOperation: check operation when forward=false, additive=false
-	  (it's giving out a "reflection"--check sign in correction variable) 
+	  (it's giving out a "reflection"--check sign in correction variable)
 		
+ 08/01/03
+	- synchronized group/spectra elements managenent: tree operations consider now
+	  when spectra or group elements are being processed. In particular, it is
+	  possible to have a group and a spectrum (siblings) having the same (visible)
+	  name (on disk they are 'xxx' for the group and 'xxx.sig' for the signature).
+	
  07/31/03
  	- create subgroup ready
  	- delete group included in clipboard management

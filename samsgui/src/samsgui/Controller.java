@@ -169,7 +169,6 @@ public class Controller {
 		boolean insertIntoTree;
 		boolean removeFromTree;
 		int total;
-		int index;
 		Component parent;
 		ProgressMonitor pm;
 		
@@ -188,13 +187,12 @@ public class Controller {
 			pm.setMillisToPopup(0);
 		}
 		
-		public boolean elementFinished(int index, String path) {
-			this.index = index;
+		public boolean elementFinished(int index, String path, boolean isSpectrum) {
 			pm.setProgress(index);
 			if ( insertIntoTree )
-				dbgui.getTree().insertNode(path, true);
+				dbgui.getTree().insertNode(path, isSpectrum);
 			if ( removeFromTree )
-				dbgui.getTree().removeNode(path);
+				dbgui.getTree().removeNode(path, isSpectrum);
 			return pm.isCanceled();
 		}
 		
