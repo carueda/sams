@@ -1,7 +1,15 @@
-SAMS GUI  DEVNOTES
+SAMS GUI DEVNOTES
 Carlos A. Rueda.
+$Id$
 
-07/01/03
-		- EditMetadataDefinition, edit table, but buttons ...
-		- BaseDialog, yet to be used
+07/09/03
+	- Preferences for: 
+		- last directory used for import
+		- path to last open database
+		
+07/08/03
+	- Import from directory in "progress"  ...
+
+07/07/03
+	- EditMetadataDefinition
 
