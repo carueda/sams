@@ -2,14 +2,15 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/10/03
+	- Import from directory
+	- Import from Ascii file
+
 07/09/03
 	- Preferences for: 
 		- last directory used for import
 		- path to last open database
 		
-07/08/03
-	- Import from directory in "progress"  ...
-
 07/07/03
 	- EditMetadataDefinition
 

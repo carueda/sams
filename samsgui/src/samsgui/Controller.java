@@ -92,6 +92,7 @@ public class Controller {
 	}
 	
 	public static void importAscii() {
+		SamsGui.importAscii();
 	}
 	
 	public static void importSystemClipboard() {
@@ -127,6 +128,25 @@ public class Controller {
 			JFileChooser chooser = new JFileChooser(basedir);
 			chooser.setDialogTitle(title);
 			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int retval = chooser.showDialog(SamsGui.getFocusedFrame(), null);
+			if ( retval == JFileChooser.APPROVE_OPTION )
+				file = chooser.getSelectedFile();
+			return file;
+		}
+	
+		public static String selectImportFile(String title) {
+			String basedir = Prefs.get(Prefs.IMPORT_DIR); 
+			File file = selectFile(title, basedir);
+			if ( file != null )
+				Prefs.set(Prefs.IMPORT_DIR, file.getParent());
+			return file.getAbsolutePath();
+		}
+		
+		public static File selectFile(String title, String basedir) {
+			File file = null;
+			JFileChooser chooser = new JFileChooser(basedir);
+			chooser.setDialogTitle(title);
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			int retval = chooser.showDialog(SamsGui.getFocusedFrame(), null);
 			if ( retval == JFileChooser.APPROVE_OPTION )
 				file = chooser.getSelectedFile();

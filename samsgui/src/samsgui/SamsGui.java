@@ -294,6 +294,17 @@ public class SamsGui {
 		Importer.importFilesFromDirectory(focusedDbGui);
 	}
 	
+	public static void importAscii() {
+		if ( focusedDbGui == null )
+			return;
+		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
+		String filename = dbframe.filename;
+		if ( NO_DB_NAME.equals(filename) )
+			return;
+		
+		Importer.importSignaturesFromAsciiFile(focusedDbGui);
+	}
+	
 	private static class DbFrame extends JFrame {
 		String filename;
 		DbGui dbgui;

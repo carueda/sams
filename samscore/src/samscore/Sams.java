@@ -37,8 +37,8 @@ public class Sams {
 	}
 	
 	/** Reads an external signature file. */
-	public static ISpectrumFile readSignatureFile(String filename) throws Exception {
-		return SpectrumFileManager.openSpectrumFile(filename, null);
+	public static ISpectrumFile readSignatureFile(String filename, String filetype) throws Exception {
+		return SpectrumFileManager.openSpectrumFile(filename, filetype);
 	}
 
 	/** Gets the list of available signature operations. */

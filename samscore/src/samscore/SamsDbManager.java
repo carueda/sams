@@ -54,8 +54,8 @@ public class SamsDbManager {
 		mddef.add(attrName, defaultValue);
 	}
 	
-	public void importFile(String filename) throws Exception {
-		ISpectrumFile sf = Sams.readSignatureFile(filename);
+	public void importFile(String filename, String filetype) throws Exception {
+		ISpectrumFile sf = Sams.readSignatureFile(filename, filetype);
 		sig.Signature sig = sf.getSignature();
 		print(filename+ ":  recognized as a '" +sf.getFormatName()+ "' file. ");
 		String path = new File(filename).getName();
@@ -64,41 +64,92 @@ public class SamsDbManager {
 		println(" => '" +s.getPath()+ "'");
 	}
 	
-	public void importDirectory(final String dirname, boolean recurse) throws Exception {
-		importDirectory(dirname, recurse, new ImportDirectoryListener() {
-			public void importing(String relative_filename, String filetype) {
-				println(relative_filename+ ": '" +filetype+ "' file. ");
+	public void importDirectory(final String dirname, boolean recurse, String tryfiletype) throws Exception {
+		importDirectory(dirname, recurse, tryfiletype, new ImportDirectoryListener() {
+			public void importing(int file_number, String relative_filename, String filetype) {
+				println("(" +file_number+ ") " +relative_filename+ ": '" +filetype+ "' file. ");
 			}
 		});
 	}
 	
-	public void importDirectory(final String dirname, boolean recurse, final ImportDirectoryListener lis)
+	public interface ImportDirectoryListener {
+		public void importing(int file_number, String relative_filename, String filetype);
+	}
+
+	public void importDirectory(String dirname, boolean recurse, String tryfiletype, ImportDirectoryListener lis) 
 	throws Exception {
-		File dirfile = new File(dirname);
-		Files.traverse(
-			dirfile,
-			false,	//boolean absolute,
-			false,	//boolean parent,
-			false,	//boolean inc_dirs,
-			true,	//boolean inc_files,
-			recurse ? Integer.MAX_VALUE : 1,	//int level,
-			new Files.IFileVisitor() {
-				public void visit(String relative_filename) {
-					String filename = dirname+ "/" +relative_filename;
-					try {
-						ISpectrumFile sf = Sams.readSignatureFile(filename);
-						lis.importing(relative_filename, sf.getFormatName());
-						sig.Signature sig = sf.getSignature();
-						String path = relative_filename;
-						ISamsDb.ISpectrum s = db.addSpectrum(path, sig);
-					}
-					catch(Exception ex) {
-						println("Exception: " +ex.getMessage());
+		new DirectoryImporter(dirname, recurse, tryfiletype, lis).importFiles();
+	}
+	
+	public DirectoryImporter createDirectoryImporter(String dirname, boolean recurse, String tryfiletype, ImportDirectoryListener lis) 
+	throws Exception {
+		return new DirectoryImporter(dirname, recurse, tryfiletype, lis);
+	}
+	
+	public class DirectoryImporter {
+		final String dirname;
+		final boolean recurse;
+		final String tryfiletype;
+		final ImportDirectoryListener lis;
+		int estimated_files;
+		int file_number;
+		
+		public DirectoryImporter(String dirname, boolean recurse, String tryfiletype, final ImportDirectoryListener lis) {
+			this.dirname = dirname;
+			this.recurse = recurse;
+			this.tryfiletype = tryfiletype;
+			this.lis = lis;
+		}
+		
+		/** gets a estimated number of files to be scanned. */
+		public int getEstimatedFiles() throws Exception {
+			estimated_files = 0;
+			File dirfile = new File(dirname);
+			Files.traverse(
+				dirfile,
+				false,	//boolean absolute,
+				false,	//boolean parent,
+				false,	//boolean inc_dirs,
+				true,	//boolean inc_files,
+				recurse ? Integer.MAX_VALUE : 1,	//int level,
+				new Files.IFileVisitor() {
+					public void visit(String relative_filename) {
+						estimated_files++;
 					}
 				}
-			}
-		);
-		db.save();
+			);
+			return estimated_files;
+		}
+		
+		public void importFiles()
+		throws Exception {
+			file_number = 0;
+			File dirfile = new File(dirname);
+			Files.traverse(
+				dirfile,
+				false,	//boolean absolute,
+				false,	//boolean parent,
+				false,	//boolean inc_dirs,
+				true,	//boolean inc_files,
+				recurse ? Integer.MAX_VALUE : 1,	//int level,
+				new Files.IFileVisitor() {
+					public void visit(String relative_filename) {
+						String filename = dirname+ "/" +relative_filename;
+						try {
+							ISpectrumFile sf = Sams.readSignatureFile(filename, tryfiletype);
+							lis.importing(++file_number, relative_filename, sf.getFormatName());
+							sig.Signature sig = sf.getSignature();
+							String path = relative_filename;
+							db.addSpectrum(path, sig);
+						}
+						catch(Exception ex) {
+							lis.importing(++file_number, relative_filename, null);
+						}
+					}
+				}
+			);
+			db.save();
+		}
 	}
 
 	/** exports elements to an ASCII (CSV) file. */
@@ -187,9 +238,5 @@ public class SamsDbManager {
 		;
 		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description, printWriter);
 		println("Exported " +sigs.length+ " element(s)");
-	}
-	
-	public interface ImportDirectoryListener {
-		public void importing(String relative_filename, String filetype);
 	}
 }

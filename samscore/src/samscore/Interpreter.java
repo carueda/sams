@@ -170,7 +170,7 @@ public class Interpreter {
 		String path = args[1];
 		String filename = args[2];
 
-		ISpectrumFile sf = Sams.readSignatureFile(filename);
+		ISpectrumFile sf = Sams.readSignatureFile(filename, null);
 		sig.Signature sig = sf.getSignature();
 		pw.println(filename+ ":");
 		pw.println("  recognized as a '" +sf.getFormatName()+ "' file. " +
@@ -183,13 +183,13 @@ public class Interpreter {
 	
 	public void importfile(String[] args) throws Exception {
 		String filename = args[1];
-		dbman.importFile(filename);
+		dbman.importFile(filename, null);
 	}
 	
 	public void importdir(String[] args) throws Exception {
 		String dirname = args[1];
 		boolean recurse = args.length == 3 && args[2].equals("-r");
-		dbman.importDirectory(dirname, recurse);
+		dbman.importDirectory(dirname, recurse, null);
 	}
 	
 	public void export(String[] args) throws Exception {

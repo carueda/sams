@@ -144,18 +144,6 @@ public class BaseDialog extends JDialog {
         });
     }
 	
-	public void setButtonAcceptEnabled(boolean enabled) {
-		btnAccept.setEnabled(enabled);
-	}
-
-	public void setAcceptText(String text) {
-		btnAccept.setText(text);
-	}
-
-	public String getAcceptText() {
-		return btnAccept.getText();
-	}
-
 	public boolean areComponentsEnabled() {
 		return componentsEnabled;
 	}

@@ -187,7 +187,7 @@ public class DbGui extends JPanel {
 	
 	public void clickSpectrum(DefaultMutableTreeNode n, MouseEvent e) {
 		IFile file = (IFile) n.getUserObject();
-		String path = file.getName();
+		String path = file.getPath();
 		System.out.println("clickSpectrum: " +path);
 		Signature sig = null;
 		try {
