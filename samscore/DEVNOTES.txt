@@ -2,6 +2,9 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 08/20/03 - version 3.0
+ 	- more beanshell (Evaluator) processing
+	
  08/18/03 - version 3.0
  	- SamsDb.Order: Starting to use beanshell to evaluate expressions for orders
 	  and groupings.
