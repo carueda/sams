@@ -15,6 +15,8 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import javax.swing.Timer;
+import java.text.DecimalFormat;
+
 
 /**
  * Importer services.
@@ -375,9 +377,19 @@ public class Importer {
 						f_file.setText(filename);
 				}
 			});
+
+			// format pattern for suffix in new names:
+			JPanel p_suffix = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			final JTextField f_suffix = new JTextField(8);
+			p_suffix.setBorder(SamsGui.createTitledBorder("To create names of new signatures"));
+			p_suffix.add(new JLabel("Pattern for suffix:"));
+			f_suffix.setText("_0000");
+			p_suffix.add(f_suffix);
+			
 			
 			Object[] array = {
 				p_file,
+				p_suffix,
 				cb_targetGroup,
 				status,
 				progressBar,
@@ -441,6 +453,7 @@ public class Importer {
 							SamsDbManager dbman = new SamsDbManager(db, writer);
 							String basefilename = new File(filename).getName();
 							int ii = 1; // to make names
+							DecimalFormat decform = new DecimalFormat(f_suffix.getText());
 							try {
 								List sigs = Sams.getSignaturesFromAsciiFile(filename);
 								// +2 : see a), b) below
@@ -450,7 +463,7 @@ public class Importer {
 								
 								for ( Iterator it = sigs.iterator(); it.hasNext(); ) {
 									Signature sig = (Signature) it.next();
-									String path = grp_loc+ "/" +basefilename+ "_" +ii;
+									String path = grp_loc+ "/" +basefilename+ decform.format(ii);
 									db.addSpectrum(path, sig);
 									task_message.append("\nimporting " +path);
 									progressBar.setValue(ii++);

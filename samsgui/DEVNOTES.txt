@@ -8,6 +8,10 @@ $Id$
 	  Changes were done in the envifile and samscore module to
 	  support this (in particular, through the new class 
 	  envifile.EnviDataType).
+	  
+	- Import signatures from ascii file: Now a pattern for
+	  the suffix of new names can be specified. This uses
+	  a java.text.Decimal.Format.
  	
 
 
