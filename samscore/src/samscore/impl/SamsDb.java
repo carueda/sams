@@ -115,12 +115,12 @@ class SamsDb implements ISamsDb {
 		}
 		// remove possible more definitions:
 		for ( ; ; i++ ) {
-			String name = infoProps.getProperty("samscore.attrdef" +i+ ".name");
+			String prefix = PROP_PREFIX+ ".attrdef" +i;
+			String name = infoProps.getProperty(prefix+ ".name");
 			if ( name == null )
 				break;
-			String prefix = PROP_PREFIX+ ".attrdef" +i;
-			infoProps.remove(PROP_PREFIX+ ".name");
-			infoProps.remove(PROP_PREFIX+ ".defvalue");
+			infoProps.remove(prefix+ ".name");
+			infoProps.remove(prefix+ ".defvalue");
 		}
 	}
 
@@ -139,7 +139,7 @@ class SamsDb implements ISamsDb {
 	public void save() throws Exception {
 		_setAttrDefPropsFromList();
 		File infoFile = new File(baseDir, infoFilename);
-		_storeProperties(infoFile, infoProps, "#Database properties. DO NOT EDIT!"); 
+		_storeProperties(infoFile, infoProps, "# SAMS Database properties. DO NOT EDIT!"); 
 	}
 
 	private void load() throws Exception {

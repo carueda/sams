@@ -3,11 +3,13 @@ Carlos A. Rueda
 $Id$
 
  08/10/03
+ 	- Bug fixed: Sometimes allowed for duplicate definitions.
+	
+ 08/10/03
  	- SamsDb: No more Serializable storage. Now, attribute definitions
 	  are stored as a properties file.
 	  This mechanism also allows a client to store its own properties:
 	  New service ISamsDb.getInfoProperties().
-	  Pending bug: Sometimes allows for duplicate definitions !!!
 	  
 	- ISamsDb.IMetadataDef.IAttributeDef.isEditable() eliminated: all
 	  defined attributes are editable.
