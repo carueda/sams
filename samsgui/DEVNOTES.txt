@@ -3,6 +3,11 @@ Carlos A. Rueda.
 $Id$
 
  03/22/05 - version 3.2
+	- envifile module now supports reading from various envi
+	  data types in both little and big endian byte orders.
+	  (Writing is always in big endian.)
+	
+ 03/22/05 - version 3.2
  	- SignatureTable: wavelength and reflectance column headers
 	  renamed to "x" and "y" (more general terms). I also added
 	  a new column to put the index. So the columns now are:
