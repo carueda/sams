@@ -131,8 +131,9 @@ public final class SignatureOperationManager {
 		BshOperation(String scriptname) throws Exception {
 			bsh = new bsh.Interpreter();
 			bsh.eval(
-				"import edu.ucdavis.cstars.sams.app.sigopers.*;\n"+
-				"import edu.ucdavis.cstars.sams.db.*;\n"
+				"import sig.Signature;\n"+
+				"import sigoper.*;\n"+
+				"import sigoper.impl.*;\n"
 			);
 			// initialization with default values and convenience stuff:
 			bsh.set("name", scriptname);
