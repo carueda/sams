@@ -18,6 +18,13 @@ import java.io.*;
 public class SamsDbManager {
 	ISamsDb db;
 	PrintWriter printWriter;
+
+	ExportListener defaultExportListener = new ExportListener() {	
+		public void exporting(int file_number, String relative_filename) {
+			println("(" +file_number+ ") " +relative_filename);
+		}
+	};
+
 	
 	/**
 		@param w Some operations write messages to this stream only if not null.
@@ -121,8 +128,7 @@ public class SamsDbManager {
 			return estimated_files;
 		}
 		
-		public void importFiles()
-		throws Exception {
+		public void importFiles() throws Exception {
 			file_number = 0;
 			File dirfile = new File(dirname);
 			Files.traverse(
@@ -152,27 +158,34 @@ public class SamsDbManager {
 		}
 	}
 
+	public interface ExportListener {
+		public void exporting(int file_number, String relative_filename);
+	}
+
 	/** exports elements to an ASCII (CSV) file. */
-	public void exportAscii(List paths, String filename) throws Exception {
+	public void exportAscii(List paths, String filename, ExportListener lis) throws Exception {
 		if ( paths.size() == 0 ) {
 			println("No paths were given");
 			return;
 		}
+		if ( lis == null )
+			lis = defaultExportListener;
 		Signature[] sigs = new Signature[paths.size()];
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new FileOutputStream(filename));
-			int i = 0;
-			for ( Iterator it = paths.iterator(); it.hasNext(); ){
-				String path = (String) it.next();
+			// write header and notify listener:
+			for ( int i = 0; i < sigs.length; i++ ) {
+				String path = (String) paths.get(i);
 				if ( i > 0 )
 					out.print(", ");
 				out.print(path);
-				sigs[i++] = db.getSignature(path);
+				sigs[i] = db.getSignature(path);
+				lis.exporting(i+1, path);
 			}
 			out.println();
 			int size = OpUtil.minSize(sigs);
-			for ( i = 0; i < size; i++ ) {
+			for ( int i = 0; i < size; i++ ) {
 				Signature.Datapoint dp = sigs[0].getDatapoint(i);
 				out.print(dp.x+ ", " +dp.y);
 				double x = dp.x;			
@@ -197,11 +210,13 @@ public class SamsDbManager {
 	}
 	
 	/** exports elements to an envi standar file. */
-	public void exportEnvi(List paths, String filename) throws Exception {
+	public void exportEnvi(List paths, String filename, ExportListener lis) throws Exception {
 		if ( paths.size() == 0 ) {
 			println("No paths were given");
 			return;
 		}
+		if ( lis == null )
+			lis = defaultExportListener;
 		Signature[] sigs = new Signature[paths.size()];
 		int i = 0;
 		for ( Iterator it = paths.iterator(); it.hasNext(); ) {
@@ -218,11 +233,13 @@ public class SamsDbManager {
 	}
 
 	/** exports elements to an envi spectral library. */
-	public void exportEnviLibrary(List paths, String filename) throws Exception {
+	public void exportEnviLibrary(List paths, String filename, ExportListener lis) throws Exception {
 		if ( paths.size() == 0 ) {
 			println("No paths were given");
 			return;
 		}
+		if ( lis == null )
+			lis = defaultExportListener;
 		String[] sig_names = new String[paths.size()];
 		Signature[] sigs = new Signature[paths.size()];
 		int i = 0;

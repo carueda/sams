@@ -3,6 +3,10 @@ Carlos A. Rueda.
 $Id$
 
 07/25/03
+	- Pending:
+		- where to allow for creation of subgroups .... See Actions
+		- Now on export actions. exportAscii working.  See Export.java ...
+		
 	- clipboard operations: 
 		- Tree: new MyNode to simplify node management.
 		- new element in status bar for clipboard contents.

@@ -82,6 +82,10 @@ public class Tree extends JPanel {
 		return tcr.getLeafIcon();
 	}
 	
+	public Icon getOpenIcon() {
+		return tcr.getOpenIcon();
+	}
+	
 	public void setInfo() {
 		rootNode.removeAllChildren();
 		ISamsDb db = dbgui.getDatabase();

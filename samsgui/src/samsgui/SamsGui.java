@@ -474,4 +474,8 @@ public class SamsGui {
 			focusedDbGui.compute(opername);
 	}
 
+	public static void export(String format) throws Exception {
+		if ( focusedDbGui != null )
+			focusedDbGui.export(format);
+	}
 }

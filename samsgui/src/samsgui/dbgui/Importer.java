@@ -79,7 +79,6 @@ public class Importer {
 			taskOutput.setMargin(new Insets(5,5,5,5));
 			taskOutput.setEditable(false);
 			taskOutput.setEnabled(false);
-			final JScrollPane sp_taskOutput = new JScrollPane(taskOutput);
 			
 			
 			// timer.
@@ -345,11 +344,10 @@ public class Importer {
 			progressBar.setString("");          //but don't paint it
 			progressBar.setEnabled(false);
 			final JTextArea taskOutput = new JTextArea(5, 30);
+			taskOutput.setBackground(null);
 			taskOutput.setMargin(new Insets(5,5,5,5));
 			taskOutput.setEditable(false);
 			taskOutput.setEnabled(false);
-			final JScrollPane sp_taskOutput = new JScrollPane(taskOutput);
-			
 			
 			// timer.
 			timer = new Timer(ONE_SECOND, new ActionListener() {

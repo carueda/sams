@@ -42,8 +42,9 @@ public class DbGui extends JPanel {
 	/** The popup menu for spectrum. */
 	private JPopupMenu popupSpectrum;
 
-	/** The popup menu for spectrum when selection is empty. */
+	/** Popup menus for empty selections. */
 	private JPopupMenu popupSpectrumNoSelection;
+	private JPopupMenu popupGroupNoSelection;
 
 		
 	public DbGui(JFrame parentFrame, ISamsDb db) throws Exception {
@@ -286,11 +287,16 @@ public class DbGui extends JPanel {
 	}
 
 	public void clickGroup(Tree.MyNode n, MouseEvent e) {
-		System.out.println("clickGroup");
+		if ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
+			JPopupMenu popup = getPopupMenuGroup();
+			Component c = (Component) e.getSource();
+			popup.show(c, e.getX(), e.getY());
+			return;
+		}
 	}
 
 	JPopupMenu getPopupMenuSpectrum() {
-		List selectedSpectra = tree.getSelectedSpectraNodes();
+		List selectedSpectra = tree.getSelectedSpectraPaths();
 		if ( selectedSpectra == null ) {
 			// no selection of spectra elements: show corresponding popup:
 			if ( popupSpectrumNoSelection == null ) {
@@ -301,12 +307,9 @@ public class DbGui extends JPanel {
 			return popupSpectrumNoSelection;
 		}
 
-
 		String title;
-		if (  selectedSpectra.size() == 1 ) {
-			Tree.MyNode n = (Tree.MyNode) selectedSpectra.get(0);
-			title = "Selected: " +n.getStringPath();
-		}
+		if (  selectedSpectra.size() == 1 )
+			title = "Selected: " +((String) selectedSpectra.get(0));
 		else
 			title = "Multiple selection: " +selectedSpectra.size()+ " signatures";
 	
@@ -326,8 +329,42 @@ public class DbGui extends JPanel {
 			else
 				popupSpectrum.add(action);
 		}
-
 		return popupSpectrum;
+	}
+	
+	JPopupMenu getPopupMenuGroup() {
+		List selectedGroups = tree.getSelectedGroupPaths();
+		if ( selectedGroups == null ) {
+			// no selection of group elements: show corresponding popup:
+			if ( popupGroupNoSelection == null ) {
+				popupGroupNoSelection = new JPopupMenu();
+				popupGroupNoSelection.add(new JLabel(" No groups selected ", JLabel.RIGHT));
+				popupGroupNoSelection.addSeparator();
+			}
+			return popupGroupNoSelection;
+		}
+		String title;
+		if (  selectedGroups.size() == 1 )
+			title = "Selected: " +((String) selectedGroups.get(0));
+		else
+			title = "Multiple selection: " +selectedGroups.size()+ " groups";
+	
+		JLabel label = new JLabel(title, tree.getOpenIcon(), JLabel.LEFT);
+		label.setForeground(Color.gray);
+		JPopupMenu popupGroup = new JPopupMenu();
+		popupGroup.add(label);
+		popupGroup.addSeparator();
+
+		List list = Actions.getGroupActions(selectedGroups);
+		JMenu menu;
+		for ( Iterator it = list.iterator(); it.hasNext(); ) {
+			Action action = (Action) it.next();
+			if ( action == null )
+				popupGroup.addSeparator();
+			else
+				popupGroup.add(action);
+		}
+		return popupGroup;
 	}
 	
 	public void compute(String opername) throws Exception {
@@ -346,6 +383,13 @@ public class DbGui extends JPanel {
 		List selectedSpectra = tree.getSelectedSpectraPaths();
 		if ( selectedSpectra != null )
 			new Compute(this, sigOper, selectedSpectra, reference_sig);
+	}
+
+	public void export(String format) throws Exception {
+		List selectedSpectra = tree.getSelectedSpectraPaths();
+		List selectedGroups = tree.getSelectedGroupPaths();
+		if ( selectedSpectra != null || selectedGroups != null )
+			new Exporter(this, selectedSpectra, selectedGroups);
 	}
 	
     protected void treeSelectionChanged(TreeSelectionEvent e){

@@ -58,14 +58,41 @@ public final class Actions {
 		list.add(getAction("paste"));
 		list.add(getAction("delete"));
 		list.add(null);
-		//list.add(new GroupExportAction("envi"));
-		//list.add(new GroupExportAction("envi-sl"));
-		//list.add(new GroupExportAction("ascii"));
+		list.add(getAction("export-envi"));
+		list.add(getAction("export-envi-sl"));
+		list.add(getAction("export-ascii"));
 		
 		return list;
 	}
 
+	/**
+	 * Gets the list of actions on groups.
+	 *
+	 * @param selectedSpectra    The list of selected signatures.
+	 *
+	 * @return A list (Action) containing the actions.
+	 */
+	public static List getGroupActions(List selectedGroups) {
+		List list = new ArrayList();
 
+		if ( selectedGroups != null && selectedGroups.size() == 1 ) {
+			String group_path = (String) selectedGroups.get(0);
+			// PENDING where to allow for creation of subgroups ....
+			if ( group_path.startsWith("My groups") ) {
+				list.add(getAction("new-group"));
+			}
+			list.add(getAction("paste"));
+			list.add(null);
+		}
+		list.add(getAction("delete-grouping"));
+		list.add(getAction("export-envi"));
+		list.add(getAction("export-envi-sl"));
+		list.add(getAction("export-ascii"));
+		
+		return list;
+	}
+
+	
 	/** Gets the list of clipboard actions. */
 	public static List getClipboardActions() {
 		if ( clipboardActions == null ) {
@@ -162,6 +189,9 @@ public final class Actions {
 				}
 			}
 		);
+		actions.put("export-envi", new ExportAction("envi", "Export to Envi Standard file"));
+		actions.put("export-envi-sl", new ExportAction("envi-sl", "Export to Envi Spectral Library"));
+		actions.put("export-ascii", new ExportAction("ascii", "Export to ASCII file"));
 
 		actions.put("new-grouping-by-attribute", new BaseAction("Attribute value",
 			"Creates a grouping according to attribute values", KeyEvent.VK_A)
@@ -299,10 +329,13 @@ public final class Actions {
 		}
 	}
 	
-	/** Base class for compute action objects */
+	/** Class for compute action objects */
 	static class ComputeAction extends BaseAction {
 		ComputeAction(String opername) {
 			super(opername, SignatureOperationManager.getSignatureOperation(opername).getDescription());
+		}
+		public void run() {
+			Controller.compute(name);
 		}
 	}
 	
@@ -311,19 +344,26 @@ public final class Actions {
 			list = new ArrayList();
 		List on = Sams.getOperationNames();
 		for ( Iterator it = on.iterator(); it.hasNext(); ) {
-			final String opername = (String) it.next();
+			String opername = (String) it.next();
 			if ( opername == null )
 				list.add(null);
-			else {
-				list.add(new ComputeAction(opername) {
-					public void run() {
-						Controller.compute(opername);
-					}
-				});
-			}
+			else
+				list.add(new ComputeAction(opername));
 		}
 		return list;
 	}
 
+	/** Class for export action objects */
+	static class ExportAction extends BaseAction {
+		String format;
+		ExportAction(String format, String name) {
+			super(name);
+			this.format = format;
+		}
+		public void run() {
+			Controller.export(format);
+		}
+	}
+	
 }
 

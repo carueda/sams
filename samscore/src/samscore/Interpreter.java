@@ -202,11 +202,11 @@ public class Interpreter {
 			paths.add(path);
 		}
 		if ( format.equals("ascii") )
-			dbman.exportAscii(paths, filename);
+			dbman.exportAscii(paths, filename, null);
 		else if ( format.equals("envi") )
-			dbman.exportEnvi(paths, filename);
+			dbman.exportEnvi(paths, filename, null);
 		else if ( format.equals("envilib") )
-			dbman.exportEnviLibrary(paths, filename);
+			dbman.exportEnviLibrary(paths, filename, null);
 		else
 			pw.println(format+ ": unrecognized export format. Use one of ascii, envi, envilib");
 	}

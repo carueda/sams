@@ -148,6 +148,15 @@ public class Controller {
 		}
 	}
 	
+	public static void export(String format) {
+		try {
+			SamsGui.export(format);
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
+	}
+	
 	private static void _setEnabledClipboardActions(boolean b) {
 		for ( Iterator iter = Actions.getClipboardActions().iterator(); iter.hasNext(); ) {
 			((Action) iter.next()).setEnabled(b);
@@ -196,7 +205,7 @@ public class Controller {
 				dbgui.refreshTable();
 			dbgui.updateStatus();
 		}
-	};
+	}
 	
 	public static void copy() {
 		DbGui dbgui = SamsGui.getFocusedDbGui();
@@ -414,6 +423,10 @@ public class Controller {
 			return file;
 		}
 	
+		public static String selectExportFile(String title) {
+			return selectExportFile(title, null);
+		}
+		
 		public static String selectExportFile(String title, Files.FileFilter ff) {
 			String basedir = Prefs.get(Prefs.EXPORT_DIR); 
 			File file = selectSaveFile(title, ff, basedir);

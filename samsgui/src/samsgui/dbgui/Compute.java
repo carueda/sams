@@ -150,8 +150,8 @@ public class Compute {
 				}
 			});
 		}
-			
 	}
+	
 	class MultiForm extends BaseForm {
 		IMultiSignatureOperation sigOper;
 		

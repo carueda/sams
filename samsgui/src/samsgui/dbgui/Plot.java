@@ -328,10 +328,7 @@ public class Plot extends ptolemy.plot.Plot {
 	}
 
 	public void exportToEPS() {
-		String filename = Dialogs.selectExportFile(
-			"Please give a file name to export the plot",
-			null
-		);
+		String filename = Dialogs.selectExportFile("Please give a file name to export the plot");
 		if ( filename == null )
 			return;
 		
