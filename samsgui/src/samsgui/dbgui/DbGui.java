@@ -72,7 +72,7 @@ public class DbGui extends JPanel {
 				}
 			}
 			
-			// also (re)creates read-only branch in tree:
+			// also (re)creates read-only grouping branch in tree:
 			public void sort(String orderBy) throws Exception {
 				super.sort(orderBy);
 				if ( orderBy != null && orderBy.trim().length() > 0 ) {
@@ -166,6 +166,71 @@ public class DbGui extends JPanel {
 		}
 		catch(Exception ex) {
 			SamsGui.message(db.getInfo()+ "\n\nCould not save database: " +ex.getMessage());
+		}
+	}
+	
+	public void createGroupingBy() throws Exception {
+		if ( db == null )
+			return;
+		
+		final JTextField f_groupBy = new JTextField(16);
+		f_groupBy.setEditable(true);
+		final JLabel status = new JLabel();
+		status.setFont(status.getFont().deriveFont(Font.ITALIC));
+		
+		f_groupBy.setBorder(SamsGui.createTitledBorder("Attributes"));
+		
+		Object[] array = {
+			f_groupBy,
+			status
+		};
+		
+		String diag_title = "Grouping by";
+		final BaseDialog form = new BaseDialog(getFrame(), diag_title, array) {
+			public boolean dataOk() {
+				String msg = null;
+				String groupBy = f_groupBy.getText().trim();
+				if ( groupBy.length() == 0 )
+					msg = "Specify one or more attribute names";
+				else {
+					groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+					String[] attrNames = groupBy.split(",");
+					for ( int i = 0; i < attrNames.length; i++ ) {
+						if ( !attrNames[i].equals("location")
+						&&   !attrNames[i].equals("name")
+						&&   db.getMetadata().get(attrNames[i]) == null ) {
+							msg = attrNames[i]+ ": undefined attribute";
+							break;
+						}
+					}
+				}
+				if ( msg == null ) {
+					status.setForeground(Color.gray);
+					status.setText("OK");
+				}
+				else {
+					status.setForeground(Color.red);
+					status.setText(msg);
+				}
+				return msg == null;
+			}
+		};
+		form.activate();
+		form.pack();
+		form.setLocationRelativeTo(getFrame());
+		form.setVisible(true);
+		if ( form.accepted() ) {
+			String groupBy = f_groupBy.getText().trim();
+			try {
+				groupBy = groupBy.replaceAll("(,|:|\\s)+", ",").replaceAll(",$", "");
+				String[] attrNames = groupBy.split(",");
+				tree.updateReadOnlyGroupingBy(attrNames);
+				_props_addGroupBy(groupBy);
+			}
+			catch(Exception ex) {
+				SamsGui.message("Error: " +ex.getMessage());
+				return;
+			}
 		}
 	}
 
@@ -356,9 +421,6 @@ public class DbGui extends JPanel {
 		JButton[] buttons = plot.getButtons();
 		for ( int i = 0; i < buttons.length; i++ )
 			tb.add(buttons[i]);
-		//tb.add(Actions.getAction("range-plot"));
-		//tb.add(Actions.getAction("export-plot"));
-		//tb.add(Actions.getAction("print-plot"));   FOR INTERNAL TESTING
 		tb.addSeparator();
 		loc_label = new JLabel("x: y:");
 		loc_label.setForeground(Color.gray);
@@ -584,13 +646,11 @@ public class DbGui extends JPanel {
 		submenu.add(Actions.getAction("import-files-database"));
 		submenu.add(Actions.getAction("import-envi-signatures"));
 		submenu.add(Actions.getAction("import-signatures-from-ascii"));
-		submenu.add(Actions.getAction("import-system-clipboard"));
 		
 		submenu = new JMenu("New grouping by...");
 		m.add(submenu);
 		submenu.setMnemonic(KeyEvent.VK_G);
 		submenu.add(Actions.getAction("new-grouping-by-attribute"));
-		submenu.add(Actions.getAction("new-grouping-filename"));
 
 		m.addSeparator();
 		m.add(Actions.getAction("quit"));

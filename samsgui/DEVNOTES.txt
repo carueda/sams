@@ -3,11 +3,12 @@ Carlos A. Rueda.
 $Id$
 
  Pending features:
+ 	- Include a way to import specific files
 	- import from envi
-	- new grouping by filename (?)
  	- make plot legends optional
 	- allow to show legends only in legend window
 	- clipboard operations to work also on groups as units
+	- new grouping by filename (?)
 		
  Pending bugs:
 	- CorrectionOperation: check operation when forward=false, additive=false
@@ -16,6 +17,11 @@ $Id$
  Pending design aspects:
  	- who should define special groups? (like imported/ computed/)
 	  it should move from samscore to samsgui ...
+	
+ 08/11/03
+ 	- improved About window (with tabs).
+ 	- new grouping by attribute also enabled from a Database menu option.
+	- Import from system clipboard eliminated (never reimplemented).
 	
  08/10/03
  	- Grouping definitions are now stored (using the properties associated

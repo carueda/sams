@@ -109,9 +109,6 @@ public class Controller {
 		SamsGui.importAscii();
 	}
 	
-	public static void importSystemClipboard() {
-	}
-	
 	public static void quit() {
 		if ( SamsGui.confirm("Really quit SAMS?") )
 			SamsGui.quit();
@@ -431,6 +428,16 @@ public class Controller {
 	public static void rename() {
 		try {
 			SamsGui.rename();
+		}
+		catch(Throwable ex) {
+			handleThrowable(ex);
+		}
+	}
+	
+	/** (Re)creates a grouping. */
+	public static void createGroupingBy() {
+		try {
+			SamsGui.createGroupingBy();
 		}
 		catch(Throwable ex) {
 			handleThrowable(ex);

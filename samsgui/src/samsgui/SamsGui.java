@@ -418,13 +418,29 @@ public class SamsGui {
 		String about = info.getAboutMessage();
 		String license = info.getLicense();
 		String msg = about+ "\n" +license;
-		JOptionPane.showMessageDialog(
-			getFocusedFrame(),
-			msg,
-			"About SAMS...",
-			JOptionPane.INFORMATION_MESSAGE,
-			info.getIcon("samsgui/img/splash.gif")
-		);
+		JFrame parent = focusedDbGui == null ? null : focusedDbGui.getFrame();
+        final JDialog window = new JDialog(parent, "About", true); 
+		JTabbedPane tabs = new JTabbedPane();
+		window.getContentPane().add(tabs, BorderLayout.CENTER);
+		JButton ok = new JButton("OK");
+		window.getContentPane().add(ok, BorderLayout.SOUTH);
+		JLabel about_l = new JLabel(about, info.getIcon(SPLASH_FILENAME), JLabel.CENTER);
+		about_l.setVerticalTextPosition(JLabel.BOTTOM);
+		about_l.setHorizontalTextPosition(JLabel.CENTER);
+		tabs.addTab("About", about_l);
+		JTextArea ta = new JTextArea(license);
+		ta.setEditable(false);
+		ta.setFont(new Font("monospaced", 0, 12));
+		tabs.addTab("Copyright", new JScrollPane(ta));
+		ok.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				window.setVisible(false);
+			}
+		});
+		window.pack();
+		if ( parent != null )
+			window.setLocationRelativeTo(parent);
+		window.setVisible(true);
 	}
 
 	public static boolean confirm(String msg) {
@@ -532,6 +548,12 @@ public class SamsGui {
 			focusedDbGui.createGroup();
 	}
 
+	/** (Re)creates a grouping. */
+	public static void createGroupingBy() throws Exception {
+		if ( focusedDbGui != null )
+			focusedDbGui.createGroupingBy();
+	}
+
 	/** Splash Window. */
 	static class Splash extends JWindow {
 		private JLabel status_label;
@@ -551,7 +573,7 @@ public class SamsGui {
 		/** Creates a splash window. */
 		private Splash(String text, Frame f, int waitTime) {
 			super(f);
-			Color bg_color = new Color(210,255,255);
+			Color bg_color = null;//new Color(210,255,255);
 			getContentPane().setBackground(bg_color);
 			ImageIcon ii = info.getIcon(SPLASH_FILENAME);
 			MouseListener ml = new MouseAdapter()  {
@@ -701,16 +723,16 @@ public class SamsGui {
 		
 		public String getAboutMessage() {
 			return
-				" \n"+
-				"SAMS - Spectral Analysis and Management System\n"+
-				"Version " +getVersion()+ " (Build " +getBuild()+ ")\n"+
-				" \n"+
-				"http://www.cstars.ucdavis.edu/software/sams/\n"+
-				" \n"+
-				"Center for Spatial Technologies and Remote Sensing\n"+
-				"Department of Land, Air, and Water Resources\n"+
-				"University of California, Davis\n"+
-				" \n"
+				"<html>\n" + "<div align='center'>\n"+
+				"<b>SAMS - Spectral Analysis and Management System</b><br>\n"+
+				"Version " +getVersion()+ " (Build " +getBuild()+ ")<br>\n"+
+				"<br>\n"+
+				"http://www.cstars.ucdavis.edu/software/sams/<br>\n"+
+				"<br>\n"+
+				"Center for Spatial Technologies and Remote Sensing<br>\n"+
+				"Department of Land, Air, and Water Resources<br>\n"+
+				"University of California, Davis<br>\n"+
+				"</div>\n" + "</html>\n"
 			;
 		}
 	}

@@ -482,6 +482,4 @@ public class Importer {
 			form.setVisible(true);
 		}
 	}
-	
-	
 }

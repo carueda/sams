@@ -170,22 +170,16 @@ public final class Actions {
 				}
 			}
 		);
-		actions.put("import-system-clipboard", new BaseAction("System clipboard",
-			"Import from the system clipboard", KeyEvent.VK_S) {
-				public void run() {
-					Controller.importSystemClipboard();
-				}
-			}
-		);
 		actions.put("export-envi", new ExportAction("envi", "Export to Envi Standard file"));
 		actions.put("export-envi-sl", new ExportAction("envi-sl", "Export to Envi Spectral Library"));
 		actions.put("export-ascii", new ExportAction("ascii", "Export to ASCII file"));
 
 		actions.put("new-grouping-by-attribute", new BaseAction("Attribute value",
-			"Creates a grouping according to attribute values", KeyEvent.VK_A)
-		);
-		actions.put("new-grouping-filename", new BaseAction("Filename",
-			"Creates a grouping according to file names", KeyEvent.VK_F)
+			"Creates a grouping according to attribute values", KeyEvent.VK_A) {
+				public void run() {
+					Controller.createGroupingBy();
+				}
+			}
 		);
 		
 		actions.put("new-group", new BaseAction("New subgroup",
@@ -259,9 +253,6 @@ public final class Actions {
 			}
 		);
 		
-		actions.put("range-plot", new BaseAction("Range", "Changes the displayed X-range"));
-		actions.put("export-plot", new BaseAction("Export", "Exporting options"));
-		actions.put("analysis", new BaseAction("Analysis", "Operations on spectra"));
 		actions.put("format-plot", new BaseAction("Format", "Sets the plot format", KeyEvent.VK_F) {
 				public void run() {
 					Controller.formatPlot();
