@@ -280,6 +280,10 @@ public class SamsGui {
 			protected String dataOk4new(String attr_name, String attr_defval) {
 				if ( attr_name.trim().length() == 0 )
 					return "Missing name";
+				if ( !attr_name.matches("\\w+") )
+					return "Invalid name";
+				if ( attr_name.equalsIgnoreCase("location") || attr_name.equalsIgnoreCase("name") )
+					return "Reserved name";
 				ISamsDb db = focusedDbGui.getDatabase();
 				if ( db.getMetadata().get(attr_name) != null )
 					return "Duplicate name";
