@@ -1,5 +1,6 @@
 package samsgui.dbgui;
 
+import samsgui.SamsGui;
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
 import samscore.ISamsDb.IMetadataDef.IAttributeDef;
@@ -19,7 +20,7 @@ import java.util.*;
  * @author Carlos A. Rueda
  * @version $Id$ 
  */
-public class Table extends JPanel {
+public abstract class Table extends JPanel {
 	ISamsDb db;
 	List /*ISpectrum*/ spectrums; // for TableModel
 	TableModel tableModel;
@@ -35,6 +36,8 @@ public class Table extends JPanel {
 		add(controlPanel = new ControlPanel(), BorderLayout.NORTH);
 		add(new JLabel("No database"), BorderLayout.CENTER);
 	}
+
+	protected abstract boolean doRenaming(ISpectrum s, String new_name_value);
 
 	/** Update the meta data. */
 	public void updateMetadata() {
@@ -143,18 +146,30 @@ public class Table extends JPanel {
 		}
 	
 		public Object getValueAt(int row, int col) {
-			String cn = attributes[col].getName();
-			String val = ((ISpectrum) spectrums.get(row)).getString(cn);
+			String colname = attributes[col].getName();
+			String val = ((ISpectrum) spectrums.get(row)).getString(colname);
 			return val;
 		}
 	
 		public boolean isCellEditable(int row, int col) {
-			return attributes[col].isEditable();
+			if ( attributes[col].isEditable() )
+				return true;
+			String colname = attributes[col].getName();
+			return colname.equals("name");
 		}
 	
 		public void setValueAt(Object val, int row, int col) {
+			String newvalue = ((String) val).trim();
 			ISpectrum s = (ISpectrum) spectrums.get(row);
-			s.setString(attributes[col].getName(), (String) val);
+			String colname = attributes[col].getName();
+			if ( colname.equals("name") ) {
+				String new_name_value = newvalue;
+				if ( new_name_value.length() == 0 )
+					return;
+				if ( !doRenaming(s, new_name_value) )
+					return;
+			}
+			s.setString(colname, newvalue);
 		}
 	}
 

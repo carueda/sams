@@ -1,6 +1,7 @@
 package samsgui.dbgui;
 
 import samsgui.SamsGui;
+import samsgui.Prefs;
 
 import samscore.ISamsDb;
 import samscore.ISamsDb.*;
@@ -19,6 +20,7 @@ import java.awt.FlowLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Component;
+import java.awt.Rectangle;
 import java.util.*;
 
 /**
@@ -58,7 +60,39 @@ public class DbGui extends JPanel {
 		splitPane2 = getJSplitPane2();
 
 		tree = new Tree(this);
-		table = new Table();
+		table = new Table() {
+			protected boolean doRenaming(ISpectrum s, String new_name_value) {
+				assert new_name_value.length() > 0;
+				if ( !new_name_value.toLowerCase().endsWith(".txt") )
+					new_name_value += ".txt";
+				
+				String old_name_value = s.getString("name");
+				if ( old_name_value.equals(new_name_value) )
+					return false;
+				
+				String oldpath = s.getPath();
+				String newpath = s.getString("location")+ "/" +new_name_value;
+				try {
+					if ( db.getSpectrum(newpath) != null ) {
+						SamsGui.message(new_name_value+ ": This name already exists in the same location.");
+						return false;
+					}
+					Signature sig = s.getSignature();
+					db.deleteSpectrum(oldpath);
+					db.addSpectrum(newpath, sig);
+					saveDatabase();
+					// update other GUI elements.
+					// By now, just reset everything: (PENDING improvement)
+					tree.setInfo();
+					clearPlot();
+					return true;
+				}
+				catch(Exception ex) {
+					SamsGui.message("Error: " +ex.getMessage());
+					return false;
+				}
+			}
+		};
 
 		splitPane2.add(table);
 		splitPane2.add(createPlotPanel());
@@ -736,5 +770,58 @@ public class DbGui extends JPanel {
 		}
 		referenceSID = focusedNode.getStringPath();
 		updateStatus();
+	}
+
+	public void viewData() {
+		if ( db == null )
+			return;
+		List selectedSpectra = tree.getSelectedSpectraPaths();
+		if (  selectedSpectra == null || selectedSpectra.size() != 1 )
+			return;
+		final String path = (String) selectedSpectra.get(0);
+		SignatureTable sigTable;
+		try {
+			final Signature sig = db.getSignature(path);
+			sigTable = new SignatureTable(sig) {
+				protected boolean save() {
+					try {
+						db.setSignature(path, sig);
+						return true;
+					}
+					catch(Exception ex) {
+						SamsGui.message("Error: " +ex.getMessage());
+						return false;
+					}			
+				}
+			};
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+			return;
+		}			
+		
+		final JDialog frame = new JDialog(getFrame(), path, false);
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowClosing(java.awt.event.WindowEvent _) {
+				if ( frame.isShowing() )
+					Prefs.updateRectangle(Prefs.VIEW_RECT, frame); 
+				frame.dispose();
+			}
+		});
+		frame.getContentPane().add(sigTable);
+		Rectangle r = Prefs.getRectangle(Prefs.VIEW_RECT);
+		frame.setLocation(r.x, r.y);
+		frame.setSize(r.width, r.height);
+		frame.setVisible(true);
+	}
+
+	public void rename() {
+		if ( db == null )
+			return;
+		List selectedSpectra = tree.getSelectedSpectraPaths();
+		if (  selectedSpectra == null || selectedSpectra.size() != 1 )
+			return;
+		final String path = (String) selectedSpectra.get(0);
 	}
 }

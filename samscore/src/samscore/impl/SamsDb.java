@@ -279,7 +279,14 @@ class SamsDb implements ISamsDb {
 				try {
 					double x = Double.parseDouble(st.nextToken());
 					double y = Double.parseDouble(st.nextToken());
-					sig.addDatapoint(x, y);
+					String info = null;
+					try {
+						info = st.nextToken();
+					}
+					catch ( NoSuchElementException ex ) {
+						// ignore
+					}
+					sig.addDatapoint(x, y, info);
 				}
 				catch ( NoSuchElementException ex ) {
 					// ignore
@@ -311,7 +318,7 @@ class SamsDb implements ISamsDb {
 				Signature.Datapoint p = sig.getDatapoint(i);
 				stream.print(p.x+ " , " +p.y);
 				if ( p.obj != null )
-					stream.print("   # " +p.obj);
+					stream.print(" , " +p.obj);
 				stream.println();
 			}
 		}

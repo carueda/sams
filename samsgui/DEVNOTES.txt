@@ -5,9 +5,8 @@ $Id$
  Pending features:
 		- where to allow for creation of subgroups .... See Actions
 		- delete group
-		- view data
-		- view source
-		- rename
+		- rename as a command from tree display
+		- rename from table: pending to improve (no saveDatabase, but cut/paste style...)
 		- import from envi
 		- import from ascii
 		- new grouping by attr value
@@ -18,6 +17,10 @@ $Id$
 	    (it's giving out a "reflection"--check sign in correction variable) 
 		
  07/28/03
+ 	- rename already working from table.
+ 	- view-data ready: now uses a JTable and the user can modify/save the contents
+	  including the user object (info) if any. See DbGui.viewData().  
+	  (Old command view-source was eliminated).
 	- Export (Envi, Envi-spectral-library, Ascii) ready. 
 	- clipboard interaction improvement: right-click now updates 
 	  selection. See DbGui.click()

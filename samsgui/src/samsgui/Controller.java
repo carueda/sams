@@ -353,6 +353,26 @@ public class Controller {
 		}
 	}
 	
+	/** View the data of current selected signature. */
+	public static void viewData() {
+		try {
+			SamsGui.viewData();
+		}
+		catch(Throwable ex) {
+			handleThrowable(ex);
+		}
+	}
+	
+	/** Renames the current selected signature. */
+	public static void rename() {
+		try {
+			SamsGui.rename();
+		}
+		catch(Throwable ex) {
+			handleThrowable(ex);
+		}
+	}
+	
     public static void doUpdate(Runnable r) {
         try {
             SwingUtilities.invokeAndWait(r);

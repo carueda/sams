@@ -44,7 +44,6 @@ public final class Actions {
 
 		if ( selectedSpectra != null && selectedSpectra.size() == 1 ) {
 			list.add(getAction("view-data"));
-			list.add(getAction("view-source"));
 			list.add(getAction("rename"));
 			list.add(null);
 		}
@@ -238,10 +237,19 @@ public final class Actions {
 				}
 			}
 		);
-		actions.put("rename", new BaseAction("Rename", "Renames a signature"));
+		actions.put("rename", new BaseAction("Rename", "Renames a signature") {
+				public void run() {
+					Controller.rename();
+				}
+			}
+		);
 		
-		actions.put("view-source", new BaseAction("View source", "View source of a signature"));
-		actions.put("view-data", new BaseAction("View data", "View data of a signature"));
+		actions.put("view-data", new BaseAction("View data", "View contents of a signature") {
+				public void run() {
+					Controller.viewData();
+				}
+			}
+		);
 		actions.put("set-reference", new BaseAction("Set as reference",
 			"Sets the focused signature as the reference for reference-based operations", 0, "alt ENTER") {
 				public void run() {

@@ -126,6 +126,11 @@ public class Plot extends ptolemy.plot.Plot {
 		updateLegends();
 	}
 
+	/** Tells if a signature is currently plotted. */
+	public boolean isPlotted(String legend) {
+		return selected.get(legend) != null;
+	}
+		
 	/** Adds a signature to the plot. */
 	public void addSignature(Signature sig, String legend) {
 		if ( selected.get(legend) != null )

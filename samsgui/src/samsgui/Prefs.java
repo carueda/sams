@@ -3,6 +3,7 @@ package samsgui;
 import java.awt.Rectangle;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Window;
 
 import java.util.prefs.*;
 import java.util.*;
@@ -41,15 +42,30 @@ public class Prefs {
 	private static Map default_rects = new HashMap();
 	static {
 		java.awt.Toolkit tk = java.awt.Toolkit.getDefaultToolkit();
-		Dimension d = tk.getScreenSize();
-		Dimension s = new Dimension(800, 700);
-		Rectangle rect = new Rectangle(
-				(d.width - s.width) / 2, (d.height - s.height) / 2,
-				s.width, s.height
+		Dimension screen = tk.getScreenSize();
+		Dimension dim;
+		Rectangle rect;
+		
+		// MAIN_RECT
+		dim = new Dimension(800, 700);
+		rect = new Rectangle(
+			(screen.width - dim.width) / 2, (screen.height - dim.height) / 2,
+			dim.width, dim.height
 		);
 		default_rects.put(MAIN_RECT, new Rectangle(
-					(d.width - s.width) / 2, (d.height - s.height) / 2,
-					s.width, s.height
+			(screen.width - dim.width) / 2, (screen.height - dim.height) / 2,
+			dim.width, dim.height
+		));
+		
+		// VIEW_RECT
+		dim = new Dimension(300, 400);
+		rect = new Rectangle(
+			(screen.width - dim.width) / 2, (screen.height - dim.height) / 2,
+			dim.width, dim.height
+		);
+		default_rects.put(VIEW_RECT, new Rectangle(
+			(screen.width - dim.width) / 2, (screen.height - dim.height) / 2,
+			dim.width, dim.height
 		));
 	}
 	
@@ -85,6 +101,14 @@ public class Prefs {
 		return prefs.get(key, "");
 	}
 
+	public static void updateRectangle(String key, Window frame) {
+		if ( frame.isShowing() ) {
+			Point loc = frame.getLocationOnScreen();
+			if ( loc != null )
+				setRectangle(key, new Rectangle(loc, frame.getSize()));
+		}
+	}
+	
 	// --
 	private Prefs() {}
 }

@@ -126,9 +126,7 @@ public class SamsGui {
 		if ( frame.filename == null || NO_DB_NAME.equals(frame.filename) )
 			return;
 		Prefs.set(Prefs.RECENT, frame.filename);
-		Point loc = frame.getLocationOnScreen();
-		if ( loc != null )
-			Prefs.setRectangle(Prefs.MAIN_RECT, new Rectangle(loc, frame.getSize()));
+		Prefs.updateRectangle(Prefs.MAIN_RECT, frame);
 	}
 	
 	/** Closes all open databases and quits the application. */
@@ -479,5 +477,15 @@ public class SamsGui {
 	public static void export(String format) throws Exception {
 		if ( focusedDbGui != null )
 			focusedDbGui.export(format);
+	}
+
+	public  static void viewData() {
+		if ( focusedDbGui != null )
+			focusedDbGui.viewData();
+	}
+	
+	public  static void rename() {
+		if ( focusedDbGui != null )
+			focusedDbGui.rename();
 	}
 }
