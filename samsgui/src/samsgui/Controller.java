@@ -51,7 +51,7 @@ public class Controller {
 	}
 	
 	public static void openDatabase() {
-		String dirname = Dialogs.selectDatabaseDirectory("Select the directory");
+		String dirname = Dialogs.selectDatabaseDirectory("Select directory containing the SAMS database");
 		if ( dirname == null )
 			return;
 		try {
