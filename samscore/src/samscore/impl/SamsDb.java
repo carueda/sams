@@ -430,7 +430,8 @@ class SamsDb implements ISamsDb {
 	/** Normalizes the path to a regular file. See test_normalizePath for examples. */
 	static String normalizePath(String path) {
 		assert path.trim().length() > 0;
-		path = path.replace(File.separatorChar, '/');
+		path = path.replace('\\', '/');
+		path = path.replace(':', '/');
 		assert !path.endsWith("/");
 		path = path.replaceAll("//+", "/");
 		if ( !path.endsWith(".txt") )
@@ -444,6 +445,7 @@ class SamsDb implements ISamsDb {
 		assert normalizePath("abc").equals("/abc.txt") ;
 		assert normalizePath("//abc//def").equals("/abc/def.txt") ;
 		assert normalizePath("abc\\def").equals("/abc/def.txt") ;
+		assert normalizePath("abc:def").equals("/abc/def.txt") ;
 	}
 	public static void main(String[]_) {
 		test_normalizePath();
