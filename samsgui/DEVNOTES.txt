@@ -5,6 +5,13 @@ $Id$
  Pending features:
 		- where to allow for creation of subgroups .... See Actions
 		- delete group
+		- view data
+		- view source
+		- rename
+		- import from envi
+		- import from ascii
+		- new grouping by attr value
+		- new grouping by filename (?)
 		
  Pending bugs:
 	  - CorrectionOperation: check operation when forward=false, additive=false
