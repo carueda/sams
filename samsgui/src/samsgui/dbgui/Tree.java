@@ -80,6 +80,10 @@ public class Tree extends JPanel {
 		return tree;
 	}
 	
+	public Icon getLeafIcon(){
+		return tcr.getLeafIcon();
+	}
+	
 	public void setInfo(ISfsys	fs) {
 		rootNode.removeAllChildren();
 		this.fs = fs;
@@ -112,6 +116,10 @@ public class Tree extends JPanel {
 	}
 	
 	public List getSelectedNodes(Class clazz) {
+		return getSelectedNodes(clazz, true);
+	}
+	
+	public List getSelectedNodes(Class clazz, boolean nodes) {
 		List list = null;
 		TreePath[] paths = tree.getSelectionPaths(); 
 		if ( paths != null ) {
@@ -121,7 +129,10 @@ public class Tree extends JPanel {
 				if ( clazz.isInstance(obj) ) {
 					if ( list == null )
 						list = new ArrayList();
-					list.add(n);
+					if ( nodes )
+						list.add(n);
+					else
+						list.add(obj);
 				}
 			}
 		}

@@ -1,6 +1,8 @@
 package samsgui.dbgui;
 
 import  samsgui.Controller;
+import  samscore.Sams;
+import  sigoper.*;
 
 import java.util.*;
 import javax.swing.*;
@@ -181,7 +183,11 @@ public final class Actions {
 		actions.put("view-source", new BaseAction("View source", "View source of a signature"));
 		actions.put("view-data", new BaseAction("View data", "View data of a signature"));
 		actions.put("set-reference", new BaseAction("Set as reference",
-			"Sets the focused signature as the reference for reference-based operations", 0, "alt ENTER")
+			"Sets the focused signature as the reference for reference-based operations", 0, "alt ENTER") {
+				public void run() {
+					Controller.setAsReference();
+				}
+			}
 		);
 		actions.put("print-plot", new BaseAction("Print",
 			"Prints the plot", KeyEvent.VK_P, "control P") {
@@ -264,5 +270,31 @@ public final class Actions {
 		}
 	}
 	
+	/** Base class for compute action objects */
+	static class ComputeAction extends BaseAction {
+		ComputeAction(String opername) {
+			super(opername, SignatureOperationManager.getSignatureOperation(opername).getDescription());
+		}
+	}
+	
+	public static List getComputeActions(List list) {
+		if ( list == null )
+			list = new ArrayList();
+		List on = Sams.getOperationNames();
+		for ( Iterator it = on.iterator(); it.hasNext(); ) {
+			final String opername = (String) it.next();
+			if ( opername == null )
+				list.add(null);
+			else {
+				list.add(new ComputeAction(opername) {
+					public void run() {
+						Controller.compute(opername);
+					}
+				});
+			}
+		}
+		return list;
+	}
+
 }
 

@@ -122,6 +122,19 @@ public class Controller {
 		SamsGui.showLegendsWindow();
 	}
 	
+	public static void setAsReference() {
+		SamsGui.setAsReference();
+	}
+	
+	public static void compute(String opername) {
+		try {
+			SamsGui.compute(opername);
+		}
+		catch(Exception ex) {
+			SamsGui.message("Error: " +ex.getMessage());
+		}
+	}
+	
 	/** Dialog utilities. */
 	public static class Dialogs {
 		public static String selectDatabaseDirectory(String title) {

@@ -447,4 +447,14 @@ public class SamsGui {
 			focusedDbGui.plotSelectedSignatures(b);
 	}
 
+	public static void setAsReference() {
+		if ( focusedDbGui != null )
+			focusedDbGui.setAsReference();
+	}
+
+	public static void compute(String opername) throws Exception {
+		if ( focusedDbGui != null )
+			focusedDbGui.compute(opername);
+	}
+	
 }

@@ -7,6 +7,7 @@ import samscore.Sams;
 import sfsys.ISfsys;
 import sfsys.ISfsys.*;
 import sig.Signature;
+import sigoper.*;
 
 import javax.swing.tree.*;
 import javax.swing.*;
@@ -16,6 +17,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Component;
 import java.util.*;
 
 /**
@@ -40,6 +42,12 @@ public class DbGui extends JPanel {
 	private StatusBar statusBar;
 	/** the reference for reference-based operations. */
 	private String referenceSID;
+	
+	/** The popup menu for spectrum. */
+	private JPopupMenu popupSpectrum;
+
+	/** The popup menu for spectrum when selection is empty. */
+	private JPopupMenu popupSpectrumNoSelection;
 	
 		
 	public DbGui(JFrame parentFrame, ISamsDb db) throws Exception {
@@ -112,6 +120,10 @@ public class DbGui extends JPanel {
 		table.revalidate();
 		plot.reset();
 		plot.repaint();
+	}
+	
+	public Tree getTree() {
+		return tree;
 	}
 	
 	public void showLegendsWindow() {
@@ -256,9 +268,14 @@ public class DbGui extends JPanel {
 	}
 	
 	public void clickSpectrum(DefaultMutableTreeNode n, MouseEvent e) {
-		IFile file = (IFile) n.getUserObject();
-		String path = file.getPath();
-		System.out.println("clickSpectrum: " +path);
+		if ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0 ) {
+			JPopupMenu popup = getPopupMenuSpectrum();
+			Component c = (Component) e.getSource();
+			popup.show(c, e.getX(), e.getY());
+			return;
+		}
+		IFile s = (IFile) n.getUserObject();
+		String path = s.getPath();
 		Signature sig = null;
 		try {
 			sig = db.getSignature(path);
@@ -278,8 +295,65 @@ public class DbGui extends JPanel {
 		System.out.println("clickGroup");
 	}
 
+	JPopupMenu getPopupMenuSpectrum() {
+		List selectedSpectra = tree.getSelectedNodes(IFile.class);
+		if ( selectedSpectra == null ) {
+			// no selection of spectra elements: show corresponding popup:
+			if ( popupSpectrumNoSelection == null ) {
+				popupSpectrumNoSelection = new JPopupMenu();
+				popupSpectrumNoSelection.add(new JLabel(" No signatures selected ", JLabel.RIGHT));
+				popupSpectrumNoSelection.addSeparator();
+			}
+			return popupSpectrumNoSelection;
+		}
+
+
+		String title;
+		if (  selectedSpectra.size() == 1 ) {
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) selectedSpectra.get(0);
+			IFile s = (IFile) n.getUserObject();
+			title = "Selected: " +s.getPath();
+		}
+		else
+			title = "Multiple selection: " +selectedSpectra.size()+ " signatures";
+	
+		popupSpectrum = new JPopupMenu();
+		JLabel label = new JLabel(title, JLabel.LEFT);
+		label.setIcon(tree.getLeafIcon());
+		label.setForeground(Color.gray);
+		popupSpectrum.add(label);
+		popupSpectrum.addSeparator();
+		popupSpectrum.add(createComputeMenu());
+		popupSpectrum.addSeparator();
+		List list = Actions.getSelectedSpectraActions(selectedSpectra);
+		for ( Iterator it = list.iterator(); it.hasNext(); ) {
+			Action action = (Action) it.next();
+			if ( action == null )
+				popupSpectrum.addSeparator();
+			else
+				popupSpectrum.add(action);
+		}
+
+		return popupSpectrum;
+	}
+	
+	public void compute(String opername) throws Exception {
+		Signature reference_sig = null;
+		IOperation sigOper = SignatureOperationManager.getSignatureOperation(opername);
+		if ( sigOper instanceof IBinarySignatureOperation ) {
+			if ( referenceSID == null ) {
+				SamsGui.message("Please, first set a signature to be taken as the reference");
+				return;
+			}
+			reference_sig = db.getSignature(referenceSID);
+		}
+		List selectedSpectra = tree.getSelectedNodes(IFile.class, false);
+		if ( selectedSpectra != null )
+			new Compute(this, sigOper, selectedSpectra, reference_sig);
+	}
+	
     protected void treeSelectionChanged(TreeSelectionEvent e){
-		System.out.println("treeSelectionChanged");
+		updateStatus();
 	}
 
 	/** Creates a menu bar for this. */
@@ -394,7 +468,7 @@ public class DbGui extends JPanel {
 	JMenu createComputeMenu() {
 		JMenu computeMenu = new JMenu("Compute");
 		computeMenu.setMnemonic(KeyEvent.VK_O);
-		for ( Iterator it = getComputeActions(null).iterator(); it.hasNext(); ) {
+		for ( Iterator it = Actions.getComputeActions(null).iterator(); it.hasNext(); ) {
 			Action action = (Action) it.next();
 			if ( action == null )
 				computeMenu.addSeparator();
@@ -478,19 +552,7 @@ public class DbGui extends JPanel {
 		return plot_export_actions;
 	}
 
-	public static List getComputeActions(List list) {
-		if ( list == null )
-			list = new ArrayList();
-		/*List on = SignatureOperationManager.getOperationNames();
-		for ( Iterator it = on.iterator(); it.hasNext(); ) {
-			String opername = (String) it.next();
-			// null checked as a separator indicator:
-			list.add(opername == null ? null : new ComputeAction(opername));
-		}*/
-		return list;
-	}
-
-	/** Called by DynamicTree. */
+	/** Called by Tree. */
     public void focusedNodeChanged() {
 		updateStatus();
 	}
@@ -538,5 +600,17 @@ public class DbGui extends JPanel {
 				group_selection,
 			}
 		);
+	}
+
+	/** Sets the focused signature as the reference for reference-based operations. */
+	public void setAsReference() {
+		DefaultMutableTreeNode focusedNode = tree.getFocusedNode();
+		if ( focusedNode == null || !(focusedNode.getUserObject() instanceof IFile) ) {
+			SamsGui.message("Please, first focus the signature to be taken as the reference");
+			return;
+		}
+		IFile s = (IFile) focusedNode.getUserObject(); 
+		referenceSID = s.getPath();
+		updateStatus();
 	}
 }
