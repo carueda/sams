@@ -1,0 +1,70 @@
+// Resample operation
+// $Id$
+
+
+
+// This identifies this operation:
+name = "Resampling";
+
+// A description:
+description = 
+  "<html>"+
+  "A reference-based operation to resample selected signatures.<br>"+
+  "A signature with <b>wavelength,FWHM</b> columns should be set<br>"+
+  "as the reference signature, for example<br>"+
+  "calibration_hymap2_14june04_wav_fwhm_126.txt"
+  ;
+
+
+getIntegerParameter(parname) {
+	int index = ((Integer) __parIndex.get(parname)).intValue();
+	Integer.parseInt(((String) __par_values[index]).trim()); 
+}
+
+
+
+addParameterInfo("max_win_size", "Max window size", "50");
+addParameterInfo("bad_value", "Set bad values to", "0.0");
+
+kte = Math.sqrt(8*Math.log(2));
+
+// This performs the operation:
+operate(sig, ref) {
+	max_win_size = getIntegerParameter("max_win_size");
+	max_win_size2 = max_win_size / 2; 
+	bad_value = getDoubleParameter("bad_value");
+	new_sig = new Signature();
+
+	ref_size = ref.getSize();
+	sig_size = sig.getSize();
+	
+	for ( int i = 0; i < ref_size; i++ ) {
+		rp = ref.getDatapoint(i);
+		w = rp.x;
+		fwhm = rp.y;
+		sigma = fwhm / kte;
+		
+		
+		idx = OpUtil.indexAt(sig, w);
+		
+		sum = 0.0;
+		ker_sum = 0.0;
+		for ( int j = idx - max_win_size2; j <= idx + max_win_size2; j++ ) {
+			if ( j < 0 || j >= sig_size )
+				continue;
+			
+			sp = sig.getDatapoint(j);
+			
+			weight = Math.exp(-(sp.x-w)*(sp.x-w)/(2*sigma*sigma));
+			ker_sum += weight;
+			sum += weight * sp.y;
+		}
+		y = sum / ker_sum;
+		new_sig.addDatapoint(w, y);
+	}
+
+	return new_sig;
+}
+
+
+
