@@ -24,9 +24,13 @@ import java.util.*;
  * @version $Id$ 
  */
 class SamsDb implements ISamsDb {
+	private static final String PROP_PREFIX = "samscore";
 	private static final String G_IMPORTED = "imported";
 	private static final String G_COMPUTED = "computed";
 	
+	private static final String infoFilename = "info.sams";
+	private static final String locationDirName = "location";
+
 	/** Each signature file is given this path suffix. */
 	static final String SIG_SUFFIX = ".sig";
 	
@@ -47,13 +51,11 @@ class SamsDb implements ISamsDb {
 		return new SamsDb(baseDir, true);
 	}
 
-	private static final String infoName = "info.sams";
-	private static final String sigsDirName = "sigs";
-	private static final String computedDirName = G_COMPUTED;
-
 	private File baseDir;
-	private File sigsDir;
+	private File locationDir;
 
+	private Properties infoProps;
+	
 	/** Mapping:s attrName->AttributeDef */
 	private Map attrDefMap;
 	
@@ -68,17 +70,18 @@ class SamsDb implements ISamsDb {
 
 	private SamsDb(File baseDir, boolean create) throws Exception {
 		this.baseDir = baseDir;
-		sigsDir = new File(baseDir, sigsDirName);
+		locationDir = new File(baseDir, locationDirName);
+		infoProps = new Properties();
+		attrDefList = new ArrayList();	// basic metadata definition: 
 		mddef = new MetadataDef();
 		
 		if ( create ) {
-			if ( !sigsDir.mkdirs() )
+			if ( !locationDir.mkdirs() )
 				throw new Exception(baseDir+ ": Cannot create directory structure");
 			
-			new File(sigsDir, G_IMPORTED).mkdirs();
-			new File(sigsDir, G_COMPUTED).mkdirs();
+			new File(locationDir, G_IMPORTED).mkdirs();
+			new File(locationDir, G_COMPUTED).mkdirs();
 			
-			attrDefList = new ArrayList();	// basic metadata definition: 
 			attrDefList.add(new AttributeDef("status", "good"));
 			save();
 		}
@@ -89,6 +92,10 @@ class SamsDb implements ISamsDb {
 		_updateAttrDefMap();
 		clipboard = new Clipboard();
 	}
+	
+	public Properties getInfoProperties() {
+		return infoProps;
+	}
 
 	private void _updateAttrDefMap() {
 		attrDefMap = new HashMap();
@@ -98,58 +105,67 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
-	public void save() throws Exception {
-		File infoFile = new File(baseDir, infoName);
-		ObjectOutputStream stream = null;
-		try {
-			stream = new ObjectOutputStream(new FileOutputStream(infoFile));
-			stream.writeObject(attrDefList);
+	private void _setAttrDefPropsFromList() {
+		int i = 0;
+		for ( ; i < attrDefList.size(); i++ ) {
+			IAttributeDef attr = (IAttributeDef) attrDefList.get(i);
+			String prefix = PROP_PREFIX+ ".attrdef" +i;
+			infoProps.setProperty(prefix+ ".name", attr.getName());
+			infoProps.setProperty(prefix+ ".defvalue", attr.getDefaultValue());
 		}
-		catch ( Exception ex ) {
-			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
-		}
-		finally {
-			if ( stream != null )
-				try{ stream.close(); }catch ( Exception ex ){}
+		// remove possible more definitions:
+		for ( ; ; i++ ) {
+			String name = infoProps.getProperty("samscore.attrdef" +i+ ".name");
+			if ( name == null )
+				break;
+			String prefix = PROP_PREFIX+ ".attrdef" +i;
+			infoProps.remove(PROP_PREFIX+ ".name");
+			infoProps.remove(PROP_PREFIX+ ".defvalue");
 		}
 	}
 
+	private void _getAttrDefPropsToList() {
+		int i = 0;
+		for ( ; ; i++ ) {
+			String prefix = PROP_PREFIX+ ".attrdef" +i;
+			String name = infoProps.getProperty(prefix+ ".name");
+			if ( name == null ) 
+				break;
+			String defvalue = infoProps.getProperty(prefix+ ".defvalue");
+			attrDefList.add(new AttributeDef(name, defvalue));
+		}
+	}
+
+	public void save() throws Exception {
+		_setAttrDefPropsFromList();
+		File infoFile = new File(baseDir, infoFilename);
+		_storeProperties(infoFile, infoProps, "#Database properties. DO NOT EDIT!"); 
+	}
+
 	private void load() throws Exception {
-		File infoFile = new File(baseDir, infoName);
-		ObjectInputStream stream = null;
-		try {
-			stream = new ObjectInputStream(new FileInputStream(infoFile));
-			attrDefList = (List) stream.readObject();
-		}
-		catch ( Exception ex ) {
-			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
-		}
-		finally {
-			if ( stream != null )
-				try{ stream.close(); }catch ( Exception ex ){}
-		}
+		File infoFile = new File(baseDir, infoFilename);
+		_loadProperties(infoFile, infoProps);
+		_getAttrDefPropsToList();
 	}
 
 	public String getInfo() {
 		return baseDir.getPath();
 	}
 	
-	public INode getGroupingUnderLocation(String subpath) throws Exception {
-		INode node = getGroupingLocation().findNode(subpath);
-		if ( node.isDirectory() )
-			return node;
-		else
-			return null;
+	/** gets the grouping by getLocation()". */
+	private INode _getGroupingLocation() throws Exception {
+		return Sfsys.createDir(locationDir.getPath(), SIG_SUFFIX, true).getRoot();
 	}
 	
-	public INode getGroupingLocation() throws Exception {
-		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true).getRoot();
+	public INode getGroupingUnderLocation(String subpath) throws Exception {
+		INode node = _getGroupingLocation().findNode(subpath);
+		return node.isDirectory() ? node : null;
 	}
 	
 	public INode getGroupingBy(String[] attrNames) throws Exception {
 		INode dir = null;
 		if ( attrNames.length == 1 && attrNames[0].equals("location") )
-			dir = getGroupingLocation();
+			dir = _getGroupingLocation();
 		else
 			dir = _makeGroupingBy(attrNames);
 		
@@ -182,7 +198,7 @@ class SamsDb implements ISamsDb {
 	public Iterator getAllPaths() {
 		List paths = new ArrayList();
 		try {
-			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true);
+			ISfsys fs = Sfsys.createDir(locationDir.getPath(), SIG_SUFFIX, true);
 			_populatePaths(paths, fs.getRoot());
 		}
 		catch(Exception ex) {
@@ -249,14 +265,14 @@ class SamsDb implements ISamsDb {
 		String[] exts = { SIG_SUFFIX, MD_SUFFIX };
 		for ( int i = 0; i < exts.length; i++ ) {
 			String ext = exts[i];
-			File file = new File(sigsDir, path + ext);
+			File file = new File(locationDir, path + ext);
 			if ( file.exists() )
 				file.delete();
 		}
 	}
 	
 	public Signature getSignature(String path) throws Exception {
-		File file = new File(sigsDir, normalizePathSignature(path));
+		File file = new File(locationDir, normalizePathSignature(path));
 		if ( !file.exists() )
 			throw new Exception(path+ ": Signature not found");
 
@@ -296,7 +312,7 @@ class SamsDb implements ISamsDb {
 	}
 
 	public void setSignature(String path, Signature sig) throws Exception {
-		File file = new File(sigsDir, normalizePathSignature(path));
+		File file = new File(locationDir, normalizePathSignature(path));
 		File parent = file.getParentFile();
 		if ( !parent.exists() && !parent.mkdirs() )
 			throw new Exception("Cannot make directory for: " +file.getAbsolutePath());
@@ -321,20 +337,13 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
-	private void _storeSpectrumMetadata(String path, Properties attrValues)
+	private static void _storeProperties(File file, Properties props, String header)
 	throws Exception {
-		File file = new File(sigsDir, normalizePathMetadata(path));
 		assert file.getParentFile().exists() ;
-		if ( attrValues.size() == 0 ) {
-			// no values to store.
-			if ( file.exists() )
-				file.delete();
-			return;
-		}
 		OutputStream stream = null;
 		try {
 			stream = new BufferedOutputStream(new FileOutputStream(file));
-			attrValues.store(stream, "#Signature metadata");
+			props.store(stream, header);
 		}
 		catch ( Exception ex ) {
 			throw new Exception(ex.getClass().getName()+ " : " +ex.getMessage());
@@ -345,16 +354,15 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
-	private boolean _loadSpectrumMetadata(String path, Properties attrValues)
+	private static boolean _loadProperties(File file, Properties props)
 	throws Exception {
-		File file = new File(sigsDir, normalizePathMetadata(path));
 		assert file.getParentFile().exists() ;
 		if ( !file.exists() )
-			return false;  // OK
+			return false;  // OK, nothing new to load
 		InputStream stream = null;
 		try {
 			stream = new BufferedInputStream(new FileInputStream(file));
-			attrValues.load(stream);
+			props.load(stream);
 			return true;
 		}
 		catch ( Exception ex ) {
@@ -366,6 +374,24 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
+	private void _storeSpectrumMetadata(String path, Properties attrValues)
+	throws Exception {
+		File file = new File(locationDir, normalizePathMetadata(path));
+		if ( attrValues.size() == 0 ) {
+			// no values to store.
+			if ( file.exists() )
+				file.delete();
+			return;
+		}
+		_storeProperties(file, attrValues, "#Signature metadata");
+	}
+	
+	private boolean _loadSpectrumMetadata(String path, Properties attrValues)
+	throws Exception {
+		File file = new File(locationDir, normalizePathMetadata(path));
+		return _loadProperties(file, attrValues); 
+	}
+	
 	public String renameSpectrum(String oldPath, String newPath) throws Exception {
 		oldPath = _normalizePath(oldPath);
 		newPath = _normalizePath(newPath);
@@ -375,9 +401,9 @@ class SamsDb implements ISamsDb {
 		String[] exts = { SIG_SUFFIX, MD_SUFFIX };
 		for ( int i = 0; i < exts.length; i++ ) {
 			String ext = exts[i];
-			File oldfile = new File(sigsDir, oldPath + ext);
+			File oldfile = new File(locationDir, oldPath + ext);
 			if ( oldfile.exists() ) {
-				File newfile = new File(sigsDir, newPath + ext);
+				File newfile = new File(locationDir, newPath + ext);
 				if ( !oldfile.renameTo(newfile) )
 					throw new Exception("Cannot rename signature: " +oldfile+ " -> " +newfile);
 			}
@@ -497,19 +523,13 @@ class SamsDb implements ISamsDb {
 		}
 	}
 		
-	static class AttributeDef implements IMetadataDef.IAttributeDef, Serializable {
+	static class AttributeDef implements IMetadataDef.IAttributeDef {
 		String name;
 		String defaultValue;
-		boolean editable;
 		
 		AttributeDef(String name, String defaultValue) {
-			this(name, defaultValue, true);
-		}
-		
-		AttributeDef(String name, String defaultValue, boolean editable) {
 			this.name = name;
 			this.defaultValue = defaultValue;
-			this.editable = editable;
 		}
 		
 		public String getName() {
@@ -518,10 +538,6 @@ class SamsDb implements ISamsDb {
 		
 		public String getDefaultValue() {
 			return defaultValue;
-		}
-		
-		public boolean isEditable() {
-			return editable;
 		}
 	}
 
@@ -742,7 +758,7 @@ class SamsDb implements ISamsDb {
 				for ( Iterator iterg = groupPaths.iterator(); iterg.hasNext(); ) {
 					String group_path = (String) iterg.next();
 					if ( !group_path.equals("/") ) {
-						File dir = new File(sigsDir, group_path);
+						File dir = new File(locationDir, group_path);
 						if ( !dir.getName().equals(G_IMPORTED)
 						&&   !dir.getName().equals(G_COMPUTED) ) {
 							if ( dir.exists() )

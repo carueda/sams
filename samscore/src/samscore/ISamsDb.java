@@ -6,6 +6,7 @@ import sfsys.ISfsys.INode;
 
 import java.util.List;
 import java.util.Iterator;
+import java.util.Properties;
 
 /** 
  * A SAMS database.
@@ -65,8 +66,14 @@ public interface ISamsDb {
 	/** gets a grouping structure according to attribute values. */
 	public INode getGroupingBy(String[] attrNames) throws Exception;
 	
-	/** gets the grouping by getLocation()". */
-	public INode getGroupingLocation() throws Exception;
+	/**
+	 * Gets the general properties associated to this database. 
+	 * A client may use this to store its own properties related to
+	 * this database; Internal property names start with "samscore";
+	 * a client should use a different prefix for its names.
+	 * A call to save() always stores the current state of this properties.
+	 */
+	public Properties getInfoProperties();
 	
 	/** Represents an element in this database. */
 	public interface ISpectrum {
@@ -114,15 +121,11 @@ public interface ISamsDb {
 		
 		/** Definition of an attribute. */
 		public interface IAttributeDef {
-			
 			/** Gets the name of this attribute. */
 			public String getName();
 			
 			/** Gets the default value of this attribute. */
 			public String getDefaultValue();
-			
-			/** determines if this attribute is editable. */
-			public boolean isEditable();
 		}
 	}
 
