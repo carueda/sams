@@ -3,23 +3,22 @@
 	$Id$
 	
 	External dependencies:
-		- The Izpack (http://izforge.com/izpack) tool is assumed to
-		  be intalled in /home/carueda/prg/IzPack/
-		  See samsgui/build.xml
+		- The Izpack (http://izforge.com/izpack) tool is used
+		  to create the installer. See samsgui/build.properties.
 		- External required libraries for the final SAMS application
 		  are located in directory lib/.
 	
-	For a complete build including the installer for end users:
+	For a complete build of all modules comprising SAMS:
+		ant
+	To create the installer for end users:
+		cd samsgui
 		ant installer
 -->
 <project name="sams" default="compile" >
-	<!-- Base dir for generated files -->
+	<!-- Base dir for generated files.
+	     only used here for target clean-dist -->
 	<property name="generated" value="../_GENERATED/sams"/>
 
-    <target name="init">
-		<mkdir dir="${generated}"/>
-    </target>
-	
     <target name="clean-dist">
 		<delete dir="${generated}"/>
     </target>
@@ -34,10 +33,6 @@
 		<ant dir="samscore" inheritAll="false"/>
 		<ant dir="samsgui" inheritAll="false"/>
 	</target>
-	
-    <target name="installer" depends="compile">
-		<ant dir="samsgui" target="installer" inheritAll="false"/>
-    </target>
 	
 	<target name="clean">
 		<ant dir="fileutils" target="clean" inheritAll="false"/>
