@@ -39,6 +39,7 @@
 		<javac srcdir="${src.dir}" destdir="${dest.dir}"
 			debug="on"
 			classpath="${sig}:${bsh}"
+			source="1.4"
 		/>
 	</target>
 

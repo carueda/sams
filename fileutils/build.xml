@@ -32,6 +32,7 @@
 	<target name="compile" depends="init">
 		<javac srcdir="${src.dir}" destdir="${dest.dir}"
 			debug="on"
+			source="1.4"
 		/>
 	</target>
 
