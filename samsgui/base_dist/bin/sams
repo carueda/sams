@@ -1,0 +1,5 @@
+# shell file to invoke SAMS
+# $Id$
+SAMSDIR=$INSTALL_PATH
+java "-Dsams.dir=$SAMSDIR" -jar "$SAMSDIR/bin/sams.jar"
+
