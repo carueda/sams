@@ -39,7 +39,7 @@ To create the SAMS installer for end users:
 	ant installer
 
 The created installer gets the name install-sams-${VERSION}.jar
-where version is defined in samsgui/build.xml.
+where version is defined in samsgui/build.properties.
 
 To test launching the SAMS installer (under samsgui/):
 	ant install
