@@ -39,8 +39,7 @@ the spectra.
  * @author Carlos A. Rueda
  * @version $Id$ 
  */
-public class CorrectionOperation implements ISingleSignatureOperation
-{
+public class CorrectionOperation implements ISingleSignatureOperation {
 	static final int BREAKX = 0;
 	static final int ADDITIVE = 1;
 	static final int FORWARD = 2;
@@ -50,37 +49,25 @@ public class CorrectionOperation implements ISingleSignatureOperation
 	static Object[] par_values =       { "975", Boolean.FALSE, Boolean.TRUE, };
 	static boolean additive = false;
 	static boolean forward = true;
-	static ParInfo parInfo = new ParInfo(par_names, par_descriptions, par_values)
-	{
-		public void setValue(int i, Object value)
-		{
+	static ParInfo parInfo = new ParInfo(par_names, par_descriptions, par_values) {
+		public void setValue(int i, Object value) {
 			if ( i == FORWARD )
-			{
-				value = new Boolean((String) value);
 				forward = ((Boolean) value).booleanValue();
-			}
 			else if ( i == ADDITIVE )
-			{
-				value = new Boolean((String) value);
 				additive = ((Boolean) value).booleanValue();
-			}
-			
 			super.setValue(i, value);
 		}
 	};
 	
-	public IOperation.IParameterInfo getParameterInfo()
-	{
+	public IOperation.IParameterInfo getParameterInfo() {
 		return parInfo;
 	}
 	
-	public String getName()
-	{
+	public String getName() {
 		return "Jump correction";
 	}
 
-	public String getDescription()
-	{
+	public String getDescription() {
 		return "Jump correction";
 	}
 
@@ -91,7 +78,7 @@ public class CorrectionOperation implements ISingleSignatureOperation
 	 * @return     The resulting signature.
 	 */
 	public Signature operate(Signature sig)
-	throws OperationException
+	throws OperationException {
 	/*
 		Algorithm description
 
@@ -114,15 +101,11 @@ public class CorrectionOperation implements ISingleSignatureOperation
 		So the correction will be:
 			correction = q.y - qqy;
 	*/
-	{
-		
 		double breakx;
-		try
-		{
+		try {
 			breakx = Double.parseDouble(((String) par_values[BREAKX]).trim());
 		}
-		catch(Exception ex)
-		{
+		catch(Exception ex) {
 			throw new OperationException("Invalid parameters: " +ex.getMessage());
 		}
 
@@ -130,9 +113,7 @@ public class CorrectionOperation implements ISingleSignatureOperation
 		int indexx = OpUtil.indexAt(sig, breakx);
 
 		if ( indexx - 1 < 0 || indexx + 1 >= size )
-		{
 			throw new OperationException("Can't get enough points");
-		}
 		
 		Signature.Datapoint o, p, q, r;
 		
@@ -149,8 +130,7 @@ public class CorrectionOperation implements ISingleSignatureOperation
 		double correction;
 		if ( additive )
 			correction = q.y - qqy;
-		else
-		{
+		else {
 			if ( OpUtil.equalValues(q.y, 0.0) )
 				throw new OperationException("Correction would be infinite. (" +q.y+ ")");
 			
@@ -161,24 +141,20 @@ public class CorrectionOperation implements ISingleSignatureOperation
 
 		int fromindex, toindex;
 		
-		if ( forward )
-		{
+		if ( forward ) {
 			fromindex = indexx + 1;
 			toindex = size - 1;
 		}
-		else
-		{
+		else {
 			fromindex = 0;
 			toindex = indexx;
 			correction = -correction;
 		}
 		
-		for ( int i = 0; i < size; i++ )
-		{
+		for ( int i = 0; i < size; i++ ) {
 			p = sig.getDatapoint(i);
 			double y = p.y;
-			if ( fromindex <= i && i <= toindex )
-			{
+			if ( fromindex <= i && i <= toindex ) {
 				if ( additive )
 					y -= correction;
 				else
