@@ -390,21 +390,20 @@ public class Tree extends JPanel {
 				hasFocus
 			);
 			
-			boolean set_bold_font = hasFocus;
+			boolean set_bold_font = false;
 			if ( n.isGroup() ) {
 				setIcon(openIcon);
 				setBackgroundSelectionColor(bg_group);
-				//setToolTipText("....");
+				set_bold_font = getText().equals("location:");
 			}
 			else if ( n.isSpectrum() )  {
 				setBackgroundSelectionColor(bg_spectrum);
-				//setToolTipText(null); //no tool tip
 			}
 			else {
 				setBackgroundSelectionColor(bg_grouping);
-				setToolTipText("A main grouping");
 				set_bold_font = true;
 			}
+			set_bold_font = set_bold_font || hasFocus;
 	
 			if ( normalFont == null ) {
 				normalFont = getFont();
