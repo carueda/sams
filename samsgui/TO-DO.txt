@@ -14,4 +14,18 @@ Design aspects:
 - who should define special groups? (like imported/ computed/)
   it should move from samscore to samsgui ...
 	
+An "easy" language to script signature operations:
+
+script           In Java                    
+-------------    -------                    
+len = s1.size   len = getSize(s1)             number of points of a signature
+s2 = s1 * 0.75  s2 = getScaled(s1, 0.75)      gets a scaled version of a signature
+s1 *= 0.75      scale(s1, 0.75)               scales a signature in place
+s3 = s1 - s2    s3 = getSubstract(s1, s2)     substraction
+d = s1.x        d = getAbscissas(s1)          gets the abscissas of a signature
+s4 = s2{x}      s4 = getInterpolated(s2, x)   Interpolation at given abscissas
+                                              x: scalar or array
+y = s1[0]       y = valueAtIndex(s1, 0)       subindexing
+                
+		
 

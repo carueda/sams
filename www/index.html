@@ -1,4 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- $Id$ -->
 <html>
   <head>
     <meta name="generator" content="HTML Tidy, see www.w3.org">
@@ -6,197 +7,54 @@
     <title>
       SAMS
     </title>
-<script type="text/javascript" language="javaScript">
-        function isViewletCompliant() {
-          answer=true;
-          version=Math.round(parseFloat(navigator.appVersion) * 1000);
-          if (navigator.appName.substring(0,9) == "Microsoft") {
-            if(version<4000) answer=false;
-          }
-          if (navigator.appName.substring(0,8) == "Netscape") {
-            if ((navigator.appVersion.indexOf("Mac")> 0) && (version<5000))
-              answer=false;
-            else
-            if (version<4060)
-              answer=false;
-          }
-        
-          plugins=navigator.plugins;
-          if (answer==false && plugins!=null){
-            for(i=0;i!=plugins.length;i++)
-            if((plugins[i].name.indexOf("Java Plug-in")>=0) && (plugins[i].name.indexOf("1.0")<0))
-            answer=true;
-          }
-          return answer;
-        }
-        
-        function openViewlet(htmlFile,htmlWidth,htmlHeight) {
-          str = 'resizable=0,toolbar=0,menubar=0,';
-          str = str + 'scrollbars=0,status=0,location=0,directory=0,width=350,height=200';
-        
-          version=Math.round(parseFloat(navigator.appVersion) * 1000);
-        
-          if(navigator.appName.indexOf("Konqueror")!=-1) { // konqueror
-            htmlWidth+=18;
-            htmlHeight+=96;
-          }
-        
-          if(navigator.appName.indexOf("Netscape")!=-1) {
-            if(version>=5000) {
-              if(navigator.appVersion.indexOf("Mac")!=-1) { // Netscape6+ on mac 
-                htmlHeight+=5;
-              }
-            }
-          }
-        
-          if(navigator.appName.indexOf("Microsoft")!=-1) {
-            if(navigator.appVersion.indexOf("Mac")!=-1) { // IE on Mac
-               htmlWidth  -= 11;
-               htmlHeight -= 11;
-            }
-          }
-        
-            if(!isViewletCompliant()) {
-              open("http://www.qarbon.com/warning/index.html",'Leelou',str);
-            }
-            else {
-              window.open(htmlFile,'Leelou','width='+htmlWidth+',height='+htmlHeight+',top=10,left=20');
-            }
-        }
-    
-</script>
   </head>
   <body>
-    <table cellpadding="2" cellspacing="2" border="0" width=
-    "100%">
-      <tbody>
-        <tr>
-          <td valign="top">
-            <h1>
-              <font size="+1">SAMS home page</font>
-            </h1>
-            <b>Spectral Analysis and management System</b><br>
-             
-            <h2>
-              <font size="+1">Current prototype version:&nbsp;
-              2.0r7 (11/13/02)</font>
-            </h2>
-            This document last modified: 05/05/03<br>
-             
-          </td>
-          <td valign="top">
-            <img src="images/splash.gif" alt="sams"> <br>
-             
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <table cellpadding="2" cellspacing="2" border="1" width=
-    "100%">
-      <tbody>
-        <tr>
-          <td valign="top">
-            <b>Contents</b> 
-            <ul>
-              <li>
-                <a href="#running">Installation</a>
-              </li>
-              <li>
-                <a href="#usermanual">User Manual</a><br>
-              </li>
-              <li>
-                <a href="#changes">Recent changes</a>
-              </li>
-              <li>
-                <a href="#viewlets">Viewlets</a>
-              </li>
-              <li>
-                <a href="#bugs">Known bugs and limitations</a>
-              </li>
-              <li>
-                <a href="#to-do">To-do's</a>
-              </li>
-              <li>
-                <a href="#legal">Legal</a>
-              </li>
-              <li>
-                <a href="technical.html">Tech notes</a>
-              </li>
-            </ul>
-          </td>
-          <td valign="top">
-            <b>Feedback</b><br>
-             Any <a href=
-            "mailto:carueda@ucdavis.edu?subject=SAMS">comments or
-            suggestions</a> are welcome.<br>
-             <br>
-             <br>
-             <br>
-             <br>
-             <br>
-             
-            <div align="right">
-              <small><a href="1f/index.html"><br>
-              <br>
-              <br>
-              <br>
-               Original SAMS version 1f (1999)</a></small><br>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <br>
+    <h3>
+      <img src="images/splash.gif" alt="sams">SAMS - <b>Spectral
+      Analysis and Management System</b>
+    </h3>
+    Current system version: 3.0 (08/25/03). This document last
+    modified: 08/25/03<br>
      
-    <h2>
-      <a name="running"></a> Installation
-    </h2>
-    Please read the following <b>before</b> you run SAMS: 
-    <ol>
-      <li>
-        <b>Although this version seems to be quite stable, it's
-        still considered under beta testing.</b> Thank you for
-        helping us with your feedback.
-      </li>
-      <li>
-        A subdirectory <tt>.sams/</tt> will be created in your
-        home directory (Z:\ under Windows in CSTARS
-        network).&nbsp; SAMS will store a number of supporting
-        files there (configuration, preferences, database
-        definitions, etc.). Do not make any manual modification
-        to it. (Of course, you can delete it if you decide to
-        stop using SAMS.)
-      </li>
-      <li>
-        If you have run a prior version of SAMS, you may
-        experience some compatibility problems. If you have
-        worked on some databases, maybe you will need to recreate
-        them.
-      </li>
-      <li>
-        Your original spectral files (i.e. spectra files, Envi
-        files, etc.) are <b>not</b> modified in any way (SAMS
-        will only read your files to import signatures in a
-        proper working space).
-      </li>
-      <li>
-        See below for <a href="#bugs">Known bugs and
-        limitations</a> .<br>
-      </li>
-    </ol>
-    <b>Installation instructions</b> 
     <ul>
       <li>
-        <b>Requirement</b>: A <a href=
-        "http://java.sun.com/j2se/1.4/download.html">Java Runtime
-        Environment (version 1.4 or newer)</a> is required on
-        your system since SAMS is a Java application..<br>
+        <a href="#running">Installation</a>
+      </li>
+      <li>
+        <a href="#usermanual">User Manual</a><br>
+      </li>
+      <li>
+        <a href="#changes">Changes</a>
+      </li>
+      <li>
+        <a href="#old">Old versions</a>
+      </li>
+      <li>
+        <a href="#legal">Legal</a>
+      </li>
+    </ul>
+    <b>Feedback</b><br>
+     Any <a href=
+    "mailto:carueda@ucdavis.edu?subject=SAMS">comments or
+    suggestions</a> are welcome.<br>
+     <small><a href="1f/index.html">Original SAMS version 1f
+    (1999)</a></small><br>
+     <br>
+     
+    <h3>
+      <a name="running"></a> Installation
+    </h3>
+    <ul>
+      <li>
+        <b>Requirement</b>: Since SAMS is a Java application, a
+        <a href="http://java.sun.com/j2se/1.4/download.html">Java
+        Runtime Environment (version 1.4 or newer)</a> is
+        required on your system.<br>
       </li>
       <li>
         Download the SAMS installer: <a href=
-        "install-sams-2.0r7.jar">install-sams-2.0r7.jar</a>
-        (updated 11/13/02, 1:40pm)<br>
-         <b>Note</b>: Use Shift-click or "Save link as..."<br>
+        "http://casil.ucdavis.edu/download.php/17/install-sams-3.0.jar">
+        install-sams-3.0.jar</a> (updated 08/25/03)
       </li>
       <li>
         Run the installer by double-clicking on the installer
@@ -206,223 +64,35 @@
         Follow the instructions.
       </li>
     </ul>
-    CSTARS note: SAMS is ready to run at CSTARS lab on windows
-    machines: From the Start menu, choose: <b><tt>All programs
-    -&gt; SAMS -&gt; sams.jar</tt></b><br>
-     
-    <hr width="100%">
-    <h1>
+    <h3>
       <a name="usermanual"></a> User Manual
-    </h1>
+    </h3>
     <ul>
       <li>
-        <a href="man/samsmanual.pdf">User Manual</a> (PDF
-        format)<br>
+        User Manual (<a href="man/samsmanual.pdf">PDF</a>). Note:
+        Yet to be updated for version 3.0!
       </li>
     </ul>
-    <hr width="100%">
-    <h1>
-      <a name="changes"></a> Recent changes
-    </h1>
-    <b>2.0r7&nbsp;</b>(11/13/02) 
-    <ul>
-      <li>
-        "Rename" action is now working.&nbsp;
-      </li>
-      <li>
-        New "Change wavelength unit" operation that will apply a
-        conversion factor to wavelengths. For example, if
-        wavelength values are measured in nanometers, then a
-        conversion factor of 0.001 will convert them to
-        microns.<br>
-      </li>
-      <li>
-        <b><tt>Selected-&gt;Compute</tt></b> &nbsp;operations can
-        now be applied on the current selection of groups. Only
-        "many-to-one" operations can be applied. The operation is
-        applied on a group-by-group basis. On each group, the
-        operation is performed on its signature members and the
-        resulting name signature is composed from the name of the
-        group and the suffix given in the dialog. The group
-        selection takes precedence over the selected signatures
-        (if any signatures are selected at the same time, they
-        will be simply ignored). To apply the operation only on
-        the selected signatures, make sure no group is
-        selected.<br>
-      </li>
-      <li>
-        New option to "export to ENVI Spectral Library". (under
-        testing) .
-      </li>
-    </ul>
-    <b>2.0r6&nbsp;</b>(10/24/02) 
-    <ul>
-      <li>
-        &nbsp;Added the following Savitzky-Golay filters:
-        "2-25-25", "2-20-20", "2-15-15", "2-10-10", "2-5-5".<br>
-      </li>
-      <li>
-        "Jump correction" operation can now be additive or
-        multiplicative.<br>
-      </li>
-      <li>
-        Now, the user is required to confirm/set the 'base
-        directory' under which SAMS stores databases and general
-        settings. The default value continues to be either the
-        typical home directory according to the underlying
-        operating system (e.g., c:\documents and
-        settings\&lt;user login&gt;\ on a windows system), or
-        "Z:\" if such a root drive exists. The idea is to
-        generalize the case where the user runs SAMS from
-        different machines in a network and wants to access the
-        same data through a "networked" directory (as with Z:\ in
-        the CSTARS configuration). This occurs only once for a
-        given machine/OS.<br>
-      </li>
-    </ul>
-    <b>2.0r5&nbsp;</b>(09/26/02) 
-    <ul>
-      <li>
-        Status info improved. Now it shows: Signature selection,
-        Reference signature, Group selection, and Focused element
-        (in different text fields).
-      </li>
-      <li>
-        New explicit action Alt-Enter to choose the "reference"
-        signature: it takes the current focused signatures as the
-        reference.<br>
-      </li>
-    </ul>
-    <hr width="100%" size="2">
-    <h1>
-      <font color="#006600"><b><a name="viewlets"></a>
-      Viewlets</b></font>
-    </h1>
-    Please, try the following "viewlets" to learn more about
-    SAMS. Please note that some may show a old organization of
-    menus/options or a different look-and-feel.<br>
+    <h3>
+      <a name="changes"></a> Changes
+    </h3>
+    <a href="changes.html">This document</a> describes the main
+    changes from version 2.0r7.<br>
+     <br>
      
-    <ul>
-      <li>
-        <a href=
-        "javascript:openViewlet('v/launch2/launch2_viewlet.html',859,690);">
-        A general overview (I).</a>
-      </li>
-      <li>
-        <a href=
-        "javascript:openViewlet('v/launch3/launch3_viewlet.html',859,690);">
-        Computing the "continuum removal" on a number of
-        signatures</a> .<br>
-      </li>
-      <li>
-        <a href=
-        "javascript:openViewlet('v/launch1/launch1_viewlet.html',859,690);">
-        Launching SAMS from a Windows machine in CSTARS lab.</a>
-      </li>
-      <li>
-        <i>Other viewlets under construction ...</i>
-      </li>
-    </ul>
-    <hr width="100%" size="2">
-    <br>
+    <h3>
+      <a name="old"></a> Old versions
+    </h3>
+    Go to the <a href=
+    "http://casil.ucdavis.edu/project/showfiles.php?group_id=32">download
+    page</a>. <br>
      
-    <h1>
-      <a name="bugs"></a> Known bugs and limitations
-    </h1>
-    <ul>
-      <li>
-        Only some hard-coded Savitzky-Golay filters are
-        available.<br>
-      </li>
-      <li>
-        GER, ASD (ascii and binary), and "only-reflectance"
-        formats are currently recognized but more testing is
-        required here.
-      </li>
-      <li>
-        Binary ASD format is limited to: reflectance data type,
-        and float data format. Also, binary data is assumed to be
-        in *little-endian* format. Just tell me know if you want
-        SAMS to read other variants.<br>
-      </li>
-      <li>
-        Plot legends are not shown properly when the number on
-        plotted signatures is large (because they don't fit in
-        the display area--this is a Ptolemy limitation). Use the
-        "Legends window" option as a workaround.<br>
-      </li>
-      <li>
-        Plot legends are not properly updated when a signature is
-        deselected by control-clicking. &nbsp;Workaround: Press
-        Enter, or use the "plot" option from the popup menu, to
-        properly re-assign legends to selected signatures.
-      </li>
-      <li>
-        Drag-and-Drop has some problems depending on the Java
-        version. But works pretty well under JRE 1.4.0_01.<br>
-      </li>
-      <li>
-        Some user settings for printing (like landscape page
-        orientation) don't work due to a reported Java problem,
-        that hopefully will be fixed soon.<br>
-      </li>
-      <li>
-        Data operations start to slow as the database gets
-        bigger. This is because a simple persistence mechanism is
-        currently used. &nbsp;This will be fixed in a more stable
-        version.<br>
-      </li>
-      <li>
-        The spectra table shows you the metadata info and lets
-        you update it, but it lacks many possible options. Let me
-        know about any ideas!
-      </li>
-      <li>
-        Data entry validation should be improved.
-      </li>
-    </ul>
-    <hr width="100%" size="2">
-    <h2>
-      <a name="to-do"></a> To do
-    </h2>
-    <blockquote>
-      <ul class="noindent">
-        <li>
-          Maybe a <i>scripting</i> scheme for user-defined
-          operations?
-        </li>
-        <li>
-          Improve printing option.
-        </li>
-        <li>
-          Shift key to specify new intervals in multiple
-          selections<br>
-        </li>
-        <li>
-          Make grouping according to multiple attributes.
-        </li>
-        <li>
-          Define query options.
-        </li>
-        <li>
-          Define options on the spectra table.
-        </li>
-        <li>
-          Define more export options.
-        </li>
-      </ul>
-    </blockquote>
-    <br>
-     
-    <hr width="100%" size="2">
-    <br>
-     
-    <h2>
+    <h3>
       <a name="legal"></a> Legal
-    </h2>
+    </h3>
     Below is the copyright agreement for the SAMS system.<br>
      <br>
-     <tt>Copyright (c) 2003 The Regents of the University of
+     <tt>Copyright (c) 2001-2003 The Regents of the University of
     California.<br>
      All rights reserved.<br>
     <br>
@@ -456,11 +126,6 @@
      CALIFORNIA HAS NO OBLIGATION TO PROVIDE MAINTENANCE,
     SUPPORT, UPDATES,<br>
      ENHANCEMENTS, OR MODIFICATIONS.</tt><br>
-     
-    <hr width="100%" size="2">
-    <br>
-     <br>
-     <br>
      <img alt="" src=
     "http://www.cstars.ucdavis.edu/cgi-bin/stats.cgi?cstars-sams"
     width="1" height="1"> <br>

@@ -2,14 +2,13 @@ SAMS Readme
 Carlos A. Rueda
 $Id$
 
-This is a complete refactoring of the SAMS 2.0r7 prototype version code
-under ../sams20/.
+ 08/23/03 - version 3.0
+ 	- new www/ subdirectory with web documentation.
+	- This is a complete refactoring of the SAMS 2.0r7 prototype version code
+	  under ../sams20/.
+	  The new version starts at 3.0 and have a simpler improved design.
+		- better modularization: samscore, samsgui, and other supporting modules.
+		- groupings, sort, and selection based on beanshell expressions.
+		- user-defined operators on signatures
 
-The new version will start at 2.5 and have a simpler improved design.
-
-	- better modularization
-	- command line & graphical interface
-	- user-defined operators on signatures
-	- ...
-	
 
