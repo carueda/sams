@@ -14,6 +14,7 @@
 	<property name="envifile"  value="../../_GENERATED/DIST/envifile.jar"/>
 	<property name="specfile"  value="../../_GENERATED/DIST/specfile.jar"/>
 	<property name="sfsys"     value="../../_GENERATED/DIST/sfsys.jar"/>
+	<property name="bsh"       value="../../_GENERATED/DIST/bsh-1.2b5.jar"/>
 	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
@@ -42,7 +43,7 @@
 		<javac srcdir="${src.dir}" destdir="${dest.dir}"
 			debug="on"
 			source="1.4"
-			classpath="${sig}:${specfile}:${sfsys}:${sigoper}:${fileutils}:${envifile}"
+			classpath="${sig}:${specfile}:${sfsys}:${sigoper}:${fileutils}:${envifile}:${bsh}"
 		/>
 	</target>
 

@@ -251,7 +251,7 @@ class SamsDb implements ISamsDb {
  
  		// second, order:
 		if ( orderBy != null )
-			Collections.sort(result, (Order) orderBy);
+			Collections.sort(result, (Comparator) orderBy);
 
 		return result.iterator();
 	}
@@ -638,38 +638,83 @@ class SamsDb implements ISamsDb {
 		}
 	}
 
+	/** beanshell based implementation of IOrder. */
 	class Order implements IOrder, Comparator {
+		bsh.Interpreter bsh1, bsh2;
 		String text;
-		// the list of expressions:
-		// currently, the only possibility for an expression is an attribute name:
+		// the list of expressions to be evaluated by beanshell:
 		String[] orderByExpressions;
 
 		Order(String text) throws Exception {
-			if ( text == null || text.trim().length() == 0 )
-				text = "location,name";
-			this.text = text;
-			// check attr names in orderBy:
-			orderByExpressions = text.split("(:|,|\\s)+");
-			for ( int i = 0; i < orderByExpressions.length; i++ ) {
-				if ( !isDefinedAttributeName(orderByExpressions[i]) )
-					throw new Exception(orderByExpressions[i]+ ": undefined attribute");
-			}
+			// simple parsing by using String.split:
+			// FIXME: we better use a parser
+			orderByExpressions = text.replaceAll("(:|\\s)+$", "").split(":");
+			bsh1 = new bsh.Interpreter();
+			bsh2 = new bsh.Interpreter();
+			this.text = "";
+			for ( int i = 0; i < orderByExpressions.length; i++ )
+				this.text += orderByExpressions[i].trim()+ " : ";
 		}
 
 		public String toString() {
-			return "order by " +text;
+			return text;
 		}
 
+		private void _bindVars(bsh.Interpreter bsh, ISpectrum s) throws bsh.EvalError {
+			bsh.set("name", s.getName());
+			bsh.set("location", s.getLocation());
+			for ( Iterator iter = attrDefList.iterator(); iter.hasNext(); ) {
+				IAttributeDef def = (IAttributeDef) iter.next();
+				String name = def.getName();
+				bsh.set(name, s.getString(name));
+			}
+		}
+		
 		public int compare(Object o1, Object o2) {
 			ISpectrum s1 = (ISpectrum) o1;
 			ISpectrum s2 = (ISpectrum) o2;
-			for ( int i = 0; i < orderByExpressions.length; i++ ) {
-				int c = s1.getString(orderByExpressions[i]).compareTo(s2.getString(orderByExpressions[i]));
-				if ( c != 0 )
-					return c;
+			try {
+				_bindVars(bsh1, s1);
+				_bindVars(bsh2, s2);
+				for ( int i = 0; i < orderByExpressions.length; i++ ) {
+					String str1 = (String) bsh1.eval(orderByExpressions[i]);
+					String str2 = (String) bsh2.eval(orderByExpressions[i]);
+					int c = str1.compareTo(str2);
+					if ( c != 0 )
+						return c;
+				}
+			}
+			catch(bsh.EvalError ex) {
+				System.err.println("bsh.Error: " +ex.getMessage());
 			}
 			return 0;
 		}
+		
+		public INode getGroupingBy() throws Exception {
+			ISfsys fs = Sfsys.createMem();
+			for ( Iterator it = getAllPaths(); it.hasNext(); ) {
+				String path = (String) it.next();
+				ISpectrum s = getSpectrum(path);
+				_bindVars(bsh1, s);
+				ISfsys.INode base = fs.getRoot();
+				for ( int i = 0; i < orderByExpressions.length; i++ ) {
+					String str = (String) bsh1.eval(orderByExpressions[i]);
+					String attrVal;
+					// assign attrVal depending on type:
+					if ( true )  // true: only string is supported now
+						attrVal = "'" +str+ "'";
+					//else other types... PENDING FEATURE
+					
+					ISfsys.INode val_dir = base.getChild(attrVal);
+					if ( val_dir == null )
+						val_dir = base.createDirectory(attrVal);
+					base = val_dir;
+				}
+				base.createFile(path);
+			}
+			return fs.getRoot();
+		}
+	
 	}
 
 	public IClipboard getClipboard() {

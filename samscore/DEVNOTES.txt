@@ -3,6 +3,10 @@ Carlos A. Rueda
 $Id$
 
  08/18/03 - version 3.0
+ 	- SamsDb.Order: Starting to use beanshell to evaluate expressions for orders
+	  and groupings.
+	  PENDING to apply idea for filter conditions...
+	  
  	- IOrder defined as an abstraction to order specifications.
 	
  08/14/03 - version 3.0

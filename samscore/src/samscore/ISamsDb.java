@@ -33,7 +33,10 @@ public interface ISamsDb {
 	/** Creates a condition specification to be used by selectSpectrums. */
 	public ICondition createCondition(String text) throws Exception;
 
-	/** Creates a ordering specification to be used by selectSpectrums. */
+	/** Creates a ordering specification to be used by selectSpectrums
+	 * @param text A list of expressions separated by ':'.
+	 *		Example: "location ; name.substring(0,5)"
+	 */
 	public IOrder createOrder(String text) throws Exception;
 
 	/** Select elements that satisfy a condition and order.
@@ -142,6 +145,9 @@ public interface ISamsDb {
 	
 	/** Represents an order to select elements. */
 	public interface IOrder {
+		/** gets the grouping structure reflecting this order specification. */
+		public INode getGroupingBy() throws Exception;
+		
 		/** Gets a string representation of this order specification. */
 		public String toString();	
 	}
