@@ -67,6 +67,15 @@ public class DbGui extends JPanel {
 					return null;
 				}
 			}
+			
+			// also (re)creates read-only branch in tree:
+			public void sort(String orderBy) throws Exception {
+				super.sort(orderBy);
+				if ( orderBy != null && orderBy.trim().length() > 0 ) {
+					String[] attrNames = orderBy.split("(,|\\s)+");
+					tree.updateReadOnlyGroupingBy(attrNames);
+				}
+			}
 		};
 
 		JSplitPane splitPane2 = _createJSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -143,7 +152,7 @@ public class DbGui extends JPanel {
 	public void setDatabase(ISamsDb db) throws Exception {
 		this.db = db;
 		table.setDatabase(db);
-		tree.setInfo();
+		tree.resetInfo();
 		table.revalidate();
 		plot.reset();
 		plot.repaint();
@@ -173,7 +182,7 @@ public class DbGui extends JPanel {
 		List selectedSpectra = tree.getSelectedSpectraNodes();
 		for ( Iterator it = selectedSpectra.iterator(); it.hasNext(); ) {
 			Tree.MyNode n = (Tree.MyNode) it.next();
-			sids.add(n.getStringPath());
+			sids.add(n.getLocationPath());
 		}
 		plotSignatures(sids, only);
 		plot.repaint();
@@ -292,7 +301,7 @@ public class DbGui extends JPanel {
 			popup.show(c, me.getX()+5, me.getY());
 			return;
 		}
-		String path = n.getStringPath();
+		String path = n.getLocationPath();
 		Signature sig = null;
 		try {
 			sig = db.getSignature(path);
@@ -357,7 +366,7 @@ public class DbGui extends JPanel {
 	
 	JPopupMenu getPopupMenuGroup() {
 		List selectedGroups = tree.getSelectedGroupPaths();
-		if ( selectedGroups == null ) {
+		if ( selectedGroups.size() == 0 ) {
 			// no selection of group elements: show corresponding popup:
 			if ( popupGroupNoSelection == null ) {
 				popupGroupNoSelection = new JPopupMenu();
@@ -715,7 +724,7 @@ public class DbGui extends JPanel {
 		String focused_element = "None";		
 		Tree.MyNode focusedNode = tree.getFocusedNode();
 		if ( focusedNode != null )
-			focused_element = focusedNode.getStringPath();
+			focused_element = focusedNode.getLocationPath();
 		
 		String reference_signature = "None";
 		if ( referenceSID != null )
@@ -745,7 +754,7 @@ public class DbGui extends JPanel {
 			SamsGui.message("Please, first focus the signature to be taken as the reference");
 			return;
 		}
-		referenceSID = focusedNode.getStringPath();
+		referenceSID = focusedNode.getLocationPath();
 		updateStatus();
 	}
 
@@ -800,12 +809,13 @@ public class DbGui extends JPanel {
 		if (  selectedSpectraNodes.size() != 1 )
 			return;
 		Tree.MyNode mnode = (Tree.MyNode) selectedSpectraNodes.get(0);
-		String path = mnode.getStringPath();
+		String path = mnode.getLocationPath();
 		final ISpectrum s = db.getSpectrum(path);
 		if ( s == null )
 			throw new Error(path+ ": spectrum not found!!");
 
-		String parent_path = ((Tree.MyNode) mnode.getParent()).getStringPath();
+		String sig_path = mnode.getLocationPath();
+		String parent_path = sig_path.substring(0, sig_path.lastIndexOf('/'));
 		final INode dir = db.getGroupingUnderLocation(parent_path);
 		if ( dir == null )
 			throw new Error(parent_path+ ": parent directory not found!!");

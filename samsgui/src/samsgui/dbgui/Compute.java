@@ -1,5 +1,6 @@
 package samsgui.dbgui;
 
+import samsgui.dbgui.Tree.MyNode;
 import samsgui.SamsGui;
 import samsgui.Controller;
 import samsgui.BaseDialog;
@@ -40,7 +41,6 @@ public class Compute {
 	private Map parValues;
 	private List selectedSpectraPaths;
 	private Signature reference_sig;
-	private Tree.MyNode computedNode;
 	
 	
 	public Compute(DbGui dbgui, IOperation sigOper, List selectedSpectraPaths, Signature reference_sig) {
@@ -48,7 +48,6 @@ public class Compute {
 		this.sigOper = sigOper;
 		this.selectedSpectraPaths = selectedSpectraPaths;
 		this.reference_sig = reference_sig;
-		computedNode = dbgui.getTree().getComputedNode();
 		if ( sigOper instanceof IMultiSignatureOperation )
 			new MultiForm((IMultiSignatureOperation) sigOper).go();
 		else
@@ -122,9 +121,15 @@ public class Compute {
 		JProgressBar progressBar = new JProgressBar(0, 1000);
 		JTextArea taskOutput = new JTextArea(5, 30);
 		JTextField f_resultname;
+		JComboBox cb_targetGroup;
 		JLabel status = new JLabel();
 		
 		BaseForm() {
+			List loc_groups = dbgui.getTree().getLocationGroups();
+			cb_targetGroup = new JComboBox(loc_groups.toArray());
+			cb_targetGroup.setSelectedItem("/computed");
+			cb_targetGroup.setBorder(SamsGui.createTitledBorder("Put new signature(s) under location"));
+			
 			status.setFont(status.getFont().deriveFont(Font.ITALIC));
 			progressBar.setValue(0);
 			progressBar.setStringPainted(true);
@@ -172,6 +177,7 @@ public class Compute {
 			
 			List array = new ArrayList();
 			array.add(f_resultname);
+			array.add(cb_targetGroup);
 			addParInfoComponents(array);
 			array.add(status);
 			array.add(progressBar);
@@ -220,6 +226,8 @@ public class Compute {
 						}
 					}
 					final String resultname = f_resultname.getText();
+					final String grp_loc = (String) cb_targetGroup.getSelectedItem();
+					final MyNode grp_node = dbgui.getTree().findLocationNode(grp_loc, false);
 					
 					// do computation:
 					Thread thread = new Thread(new Runnable() {
@@ -245,7 +253,7 @@ public class Compute {
 								task_message.append("\nComputing...");
 								progressBar.setValue(progressBar.getMaximum() -2);
 								Signature sig = sigOper.operate(sigs);
-								String path = "/computed/" +resultname;
+								String path = grp_loc+ "/" +resultname;
 								
 								// b)
 								task_message.append("\nAdding result " +path);
@@ -256,7 +264,7 @@ public class Compute {
 								// update GUI
 								Controller.doUpdate(new Runnable() {
 									public void run() {
-										dbgui.getTree().addChild(computedNode, s.getName(), true, true);
+										dbgui.getTree().addChild(grp_node, s.getName(), true, true);
 										dbgui.refreshTable();
 									}
 								});
@@ -329,17 +337,26 @@ public class Compute {
 			r_inplace.setAlignmentX(0f);
 			r_inplace.setMnemonic(KeyEvent.VK_I);
 			r_inplace.setSelected(true);
-			final JRadioButton r_create = new JRadioButton("Create new resulting signatures with suffix");
+			final JRadioButton r_create = new JRadioButton("Create new signatures");
 			r_create.setName("create");
 			r_create.setAlignmentX(0f);
 			r_create.setMnemonic(KeyEvent.VK_C);
 			r_create.setSelected(false);
-			JPanel panel_create = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			JPanel panel_create = new JPanel();
+			LayoutManager layout;
+			if ( true )
+				layout = new BoxLayout(panel_create, BoxLayout.Y_AXIS);
+			else
+				layout = new FlowLayout(FlowLayout.LEFT);
+			panel_create.setLayout(layout);
 			panel_create.setAlignmentX(0f);
-			panel_create.add(r_create);
 			f_resultname = new JTextField(10);
 			f_resultname.setName("suffix");
+			f_resultname.setBorder(SamsGui.createTitledBorder("Use this suffix for new names"));
+			f_resultname.setEnabled(false);
 			panel_create.add(f_resultname);
+			panel_create.add(cb_targetGroup);
+			panel_create.setBorder(SamsGui.createTitledBorder(""));
 			
 			ButtonGroup group = new ButtonGroup();
 			group.add(r_inplace);
@@ -347,6 +364,7 @@ public class Compute {
 			
 			List array = new ArrayList();
 			array.add(r_inplace);
+			array.add(r_create);
 			array.add(panel_create);
 			addParInfoComponents(array);
 			array.add(status);
@@ -379,6 +397,12 @@ public class Compute {
 					if ( comp_name != null ) { 
 						if ( comp_name.equals("suffix") ) 
 							r_create.setSelected(true);
+						else if ( comp_name.equals("create") ) { 
+							f_resultname.setEnabled(true);
+							f_resultname.requestFocus();
+						}
+						else if ( comp_name.equals("inplace") ) 
+							f_resultname.setEnabled(false);
 						else
 							par_notifyUpdate(comp_name, value);
 					}
@@ -436,12 +460,14 @@ public class Compute {
 									if ( r_create.isSelected() ) {
 										String prefix = path.substring(path.lastIndexOf('/') + 1);
 										String resultname = f_resultname.getText();
-										String path_res = "/computed/" +prefix+resultname;
+										String grp_loc = (String) cb_targetGroup.getSelectedItem();
+										MyNode grp_node = dbgui.getTree().findLocationNode(grp_loc, false);
+										String path_res = grp_loc+ "/" + prefix + resultname;
 										
 										task_message.append("Adding result " +path_res+ "\n");
 										path_res = db.addSpectrum(path_res, sig_res);
 										ISpectrum s = db.getSpectrum(path_res);
-										dbgui.getTree().addChild(computedNode, s.getName(), true, false);
+										dbgui.getTree().addChild(grp_node, s.getName(), true, false);
 									}
 									else {
 										db.setSignature(path, sig_res);

@@ -25,13 +25,17 @@ import java.io.File;
  * @version $Id$ 
  */
 public class Tree extends JPanel {
+	private static final Color bg_grouping = new Color(240,240,240);
 	private static final Color bg_group = new Color(222,222,255);
 	private static final Color bg_spectrum = new Color(210,255,255);
 
-	protected DbGui dbgui;
+	// base structure:
 	protected final MyNode rootNode = new MyNode().reset("^");
+	protected final MyNode locationNode = new MyNode().reset("location:", false, true, true);
 	protected MyNode importedNode;
 	protected MyNode computedNode;
+	
+	protected DbGui dbgui;
     protected DefaultTreeModel treeModel;
     protected JTree jtree;
 
@@ -46,10 +50,13 @@ public class Tree extends JPanel {
 		label.setFont(label.getFont().deriveFont(Font.ITALIC));
 		label.setForeground(Color.gray);
 		add(label, BorderLayout.NORTH);
-		
-        treeModel = new DefaultTreeModel(rootNode);
-        jtree = new JTree(treeModel);
 
+		// setup tree model:		
+        treeModel = new DefaultTreeModel(rootNode);
+		treeModel.insertNodeInto(locationNode, rootNode, rootNode.getChildCount());
+		locationNode.setParent(rootNode);
+        jtree = new JTree(treeModel);
+		
 		// To avoid keyboard navigation when "Alt" is pressed. 
 		jtree.setUI(new javax.swing.plaf.basic.BasicTreeUI() {
 			protected KeyListener createKeyListener() {
@@ -86,24 +93,78 @@ public class Tree extends JPanel {
 		return tcr.getOpenIcon();
 	}
 	
-	public void setInfo() {
-		rootNode.removeAllChildren();
+	public void resetInfo() {
+		locationNode.removeAllChildren();
 		ISamsDb db = dbgui.getDatabase();
 		if ( db != null ) {
 			try {
-				createGroupNode(rootNode, db.getGroupingUnderLocation("/"));
+				createGroupNode(locationNode, db.getGroupingUnderLocation("/"));
 			}
 			catch(Exception ex) {
+				ex.printStackTrace();  // shouldn't happen
 			}
 		}
 		treeModel.reload();
 	}		
 		
-	private MyNode findNode(String path, boolean isSpectrum) {
-		if ( path.length() == 0 )
-			return isSpectrum ? null : rootNode;
+	public void updateReadOnlyGroupingBy(String[] attrNames) {
+		StringBuffer sb = new StringBuffer("");
+		for ( int i = 0; i < attrNames.length; i++ )
+			sb.append(attrNames[i].toLowerCase()+ ":");
+		String gby_name = sb.toString();
+		if ( gby_name.equals("location:") || gby_name.equals("location:name:") ) {
+			// maybe do something here later.
+			return;
+		}
+		// find if node already exists:
+		MyNode gby_node = null;
+		for ( int i = 0; i < rootNode.getChildCount(); i++ ) {
+			MyNode node = (MyNode) rootNode.getChildAt(i);
+			if ( node.getName().equals(gby_name) ) {
+				gby_node = node;
+				break;
+			}
+		}
+		if ( gby_node == null ) {   // not found; create:
+			gby_node = new MyNode().reset(gby_name);
+			treeModel.insertNodeInto(gby_node, rootNode, rootNode.getChildCount());
+			gby_node.setParent(rootNode);
+		}
+		else {
+			gby_node.removeAllChildren();
+			treeModel.reload();
+		}
 		
-		MyNode parent = rootNode;
+		ISamsDb db = dbgui.getDatabase();
+		if ( db != null ) {
+			try {
+				createGroupNode(gby_node, db.getGroupingBy(attrNames));
+			}
+			catch(Exception ex) {
+				ex.printStackTrace();  // shouldn't happen
+			}
+		}
+		if ( gby_node.getChildCount() > 0 ) {
+			// scroll to first child:
+			MyNode childNode = (MyNode) gby_node.getChildAt(0);
+			jtree.scrollPathToVisible(new TreePath(childNode.getPath()));
+		}
+	}		
+		
+	public List getLocationGroups() {
+		List loc_groups = new ArrayList();
+		loc_groups.add("/");
+		loc_groups.add("/computed");
+		loc_groups.add("/imported");
+		loc_groups.add("/OTHER");
+		return loc_groups;
+	}
+	
+	public MyNode findLocationNode(String path, boolean isSpectrum) {
+		if ( path.length() == 0 || path.equals("/") )
+			return isSpectrum ? null : locationNode;
+		
+		MyNode parent = locationNode;
 		String[] parts = path.split("/");
 		for ( int i = 0; i < parts.length; i++ ) {
 			String part = parts[i];
@@ -139,7 +200,7 @@ public class Tree extends JPanel {
 			return null;
 
 		String parent_path = path.substring(0, path.lastIndexOf('/'));
-		MyNode parent = findNode(parent_path, false);
+		MyNode parent = findLocationNode(parent_path, false);
 		if ( parent == null )
 			return null;
 
@@ -148,20 +209,21 @@ public class Tree extends JPanel {
 		return parent_path;
 	}
 		
-	/** Returns path to affected parent */
-	public String removeNode(String path, boolean isSpectrum) {
-		MyNode node = findNode(path, isSpectrum);
-		if ( node == null ) {
-			return null;
+	/** Removes a removable node. */
+	public void removeNode(String path, boolean isSpectrum) {
+		MyNode node = findLocationNode(path, isSpectrum);
+		if ( node == null )
+			return;
+		if ( node == locationNode ) {
+			jtree.scrollPathToVisible(new TreePath(locationNode.getPath()));
+			return;
 		}
 		MyNode parent = (MyNode) node.getParent();
-		if ( parent == null ) {
-			return null;
-		}
+		if ( parent == null )
+			return;
 		treeModel.removeNodeFromParent(node);
 		//treeModel.reload();
 		jtree.scrollPathToVisible(new TreePath(parent.getPath()));
-		return parent.getStringPath();
 	}
 	
 	public MyNode getImportedNode() {
@@ -221,20 +283,32 @@ public class Tree extends JPanel {
 			for ( int i = 0; i < paths.length; i++ ) {
 				TreePath tree_path = paths[i];
 				MyNode n = (MyNode) tree_path.getLastPathComponent();
-				if ( spectra && n.isSpectrum()  ||  !spectra && n.isGroup() ) {
+				if ( (spectra && n.isSpectrum())  ||  (!spectra && n.isGroup()) ) {
 					if ( nodes )
 						list.add(n);
 					else {
-						if ( n.getStringPath().trim().length() == 0 ) {
-							System.out.println(n._toString());
-							assert false;
-						}
-						list.add(n.getStringPath());
+						String loc_path = n.getLocationPath();
+						if ( loc_path.trim().length() > 0 )
+							list.add(loc_path);
 					}
 				}
 			}
 		}
 		return list;
+	}
+	
+	/** @return true iff current selection is only under "location:" branch. */
+	public boolean selectionOnlyUnderLocation() {
+		TreePath[] paths = jtree.getSelectionPaths(); 
+		if ( paths != null ) {
+			for ( int i = 0; i < paths.length; i++ ) {
+				TreePath tree_path = paths[i];
+				Object[] node_path = tree_path.getPath();
+				if ( node_path.length >= 2 && !((MyNode)node_path[1]).getName().equals("location:") )
+					return false;
+			}
+		}
+		return true;
 	}
 	
     public MyNode getFocusedNode() {
@@ -256,11 +330,11 @@ public class Tree extends JPanel {
 		boolean shouldBeVisible
 	) {
         if ( parent == null ) 
-            parent = rootNode;
+            parent = locationNode;
         MyNode childNode = findChildNode(parent, child_name, isSpectrum);
 		if ( childNode == null ) {
 			childNode = new MyNode().reset(child_name, isSpectrum);
-	        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+	        treeModel.insertNodeInto(childNode, parent, isSpectrum ? parent.getChildCount() : 0);
 			childNode.setParent(parent);
 		}
         if ( shouldBeVisible ) 
@@ -316,6 +390,7 @@ public class Tree extends JPanel {
 				hasFocus
 			);
 			
+			boolean set_bold_font = hasFocus;
 			if ( n.isGroup() ) {
 				setIcon(openIcon);
 				setBackgroundSelectionColor(bg_group);
@@ -325,6 +400,11 @@ public class Tree extends JPanel {
 				setBackgroundSelectionColor(bg_spectrum);
 				//setToolTipText(null); //no tool tip
 			}
+			else {
+				setBackgroundSelectionColor(bg_grouping);
+				setToolTipText("A main grouping");
+				set_bold_font = true;
+			}
 	
 			if ( normalFont == null ) {
 				normalFont = getFont();
@@ -333,14 +413,19 @@ public class Tree extends JPanel {
 			}
 			
 			if ( normalFont != null && boldFont != null )
-				setFont(hasFocus ? boldFont : normalFont);
+				setFont(set_bold_font ? boldFont : normalFont);
 
 			return this;
 		}
 	}
 
 	public static class MyNode extends DefaultMutableTreeNode {
-		String name; // always the simple name -- no slashes at all
+		// Starts with "/" when this node refers to a read-only subgrouping leaf; so
+		// this is exactly the value returned by getLocationPath.
+		// otherwise, this name is just the last part of a path that starts from
+		// the "location:" subgrouping.
+		String name; 
+		
 		boolean isSpectrum;
 		boolean isGroup;
 		
@@ -365,16 +450,29 @@ public class Tree extends JPanel {
 			return this;
 		}
 		
-		public String getStringPath() {
-			TreeNode[] t = getPath();
-			assert this == t[t.length - 1];
-			StringBuffer sb = new StringBuffer();
-			// from 1 to omit root node:
-			for ( int i = 1; i < t.length; i++ ) {
-				MyNode mynode = (MyNode) t[i];
-				sb.append("/" +mynode.getName());
+		/** gets the real path under "location:" of the group or signature referenced by this node. */
+		public String getLocationPath() {
+			if ( name.startsWith("/") ) {
+				// this is tha case when the name is precisely the path
+				return name;
 			}
-			return sb.toString();
+			else {
+				if ( name.equals("location:") ) {
+					// the location root:
+					return "/";
+				}
+				StringBuffer sb = new StringBuffer();
+				TreeNode[] t = getPath();
+				if ( t.length >= 2 && ((MyNode) t[1]).getName().equals("location:") ) {
+					// from 2 to omit root and "location:" nodes:
+					for ( int i = 2; i < t.length; i++ ) {
+						MyNode mynode = (MyNode) t[i];
+						sb.append("/" +mynode.getName());
+					}
+				}
+				
+				return sb.toString();
+			}
 		}
 		
 		public String getName() {

@@ -248,8 +248,8 @@ public class Controller {
 		if ( db == null )
 			return;
 		List paths = dbgui.getTree().getSelectedGroupPaths();
-		if ( paths == null || paths.size() != 1 ) {
-			SamsGui.message("One group must be selected to paste signatures to");
+		if ( paths.size() != 1 ) {
+			SamsGui.message("One group under the location grouping must be selected to paste signatures onto it");
 			return;
 		}
 		final String target_path = (String) paths.get(0);
@@ -288,6 +288,12 @@ public class Controller {
 			SamsGui.message("No selected spectra to cut");
 			return;
 		}
+
+		if ( !dbgui.getTree().selectionOnlyUnderLocation() ) {
+			SamsGui.message("Please use the location grouping to select the elements to be cut.");
+			return;
+		}
+		
 		try {
 			ClipboardObserver obs = new ClipboardObserver(dbgui, "Cutting...", true, false, true);
 			db.getClipboard().setObserver(obs);
@@ -331,6 +337,7 @@ public class Controller {
 				SamsGui.message("No selected spectra to delete");
 				return;
 			}
+			// Spectra selection.
 			collect_isSpectra = true;
 			collect_paths = selectedSpectraPaths;
 			confirm_msg = "Delete " +
@@ -341,12 +348,19 @@ public class Controller {
 				SamsGui.message("Both groups and spectra are selected.");
 				return;
 			}
+			// Group selection.
 			collect_isSpectra = false;
 			collect_paths = selectedGroupPaths;
 			confirm_msg = "Delete " +
 				(collect_paths.size()==1 ? (String)collect_paths.get(0) : collect_paths.size()+" selected groups")+ "?\n"+
 				"All members and subgroups will also be deleted.";
 		}
+		
+		if ( !dbgui.getTree().selectionOnlyUnderLocation() ) {
+			SamsGui.message("Please use the location grouping to select the elements to be deleted.");
+			return;
+		}
+		
 		if ( !SamsGui.confirm(confirm_msg) )
 			return;
 		
@@ -398,6 +412,11 @@ public class Controller {
 		catch(Throwable ex) {
 			handleThrowable(ex);
 		}
+	}
+	
+	/** Shows the "About" message. */
+	public static void about() {
+		SamsGui.showAboutMessage();
 	}
 	
 	/** Creates a subgroup under current selected group. */

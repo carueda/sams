@@ -201,7 +201,12 @@ public final class Actions {
 			}
 		);
 
-		actions.put("about", new BaseAction("About SAMS..."));
+		actions.put("about", new BaseAction("About SAMS...")  {
+				public void run() {
+					Controller.about();
+				}
+			}
+		);
 		
 		actions.put("copy", new BaseAction("Copy",
 			"Copies selected elements to an internal clipboard", "control INSERT") {

@@ -715,7 +715,7 @@ class SamsDb implements ISamsDb {
 				boolean include = false;
 				for ( Iterator iterg = groupPaths.iterator(); iterg.hasNext(); ) {
 					String group_path = (String) iterg.next();
-					if ( path.startsWith(group_path+ "/") ) {
+					if ( group_path.equals("/") || path.startsWith(group_path+ "/") ) {
 						include = true;
 						break;
 					}
@@ -738,17 +738,19 @@ class SamsDb implements ISamsDb {
 				}
 			}
 			if ( !canceled ) {
-				// now delete directories:
+				// now delete directories except those that we want to keep:
 				for ( Iterator iterg = groupPaths.iterator(); iterg.hasNext(); ) {
 					String group_path = (String) iterg.next();
-					File dir = new File(sigsDir, group_path);
-					if ( !dir.getName().equals(G_IMPORTED)
-					&&   !dir.getName().equals(G_COMPUTED) ) {
-						if ( dir.exists() )
-							dir.delete();  // should be empty
-						processed++;
-						if ( obs.elementFinished(i+1, group_path, false) )
-							break;
+					if ( !group_path.equals("/") ) {
+						File dir = new File(sigsDir, group_path);
+						if ( !dir.getName().equals(G_IMPORTED)
+						&&   !dir.getName().equals(G_COMPUTED) ) {
+							if ( dir.exists() )
+								dir.delete();  // should be empty
+							processed++;
+							if ( obs.elementFinished(i+1, group_path, false) )
+								break;
+						}
 					}
 					i++;
 				}

@@ -394,6 +394,55 @@ public class SamsGui {
 		toolkit.addAWTEventListener(listener, AWTEvent.KEY_EVENT_MASK);
 	}		
 
+	public static Icon getIcon(String filename) {
+		Icon icon = null;
+		ClassLoader cl = ClassLoader.getSystemClassLoader();
+		java.net.URL url = cl.getResource(filename);
+		if ( url != null )
+			icon = new ImageIcon(url);
+		return icon;
+	}
+
+	public static String getVersion() {
+		return Sams.getVersion();
+	}
+	
+	public static String getBuild() {
+		return "pending";
+	}
+	
+	public static String getLicense() {
+		return "pending-license";
+	}
+	
+	public static String getAboutMessage() {
+		return
+			" \n"+
+			"SAMS - Spectral Analysis and Management System\n"+
+			"Version " +getVersion()+ " (Build " +getBuild()+ ")\n"+
+			" \n"+
+			"Home page: http://www.cstars.ucdavis.edu/software/sams/\n"+
+			" \n"+
+			"Center for Spatial Technologies and Remote Sensing\n"+
+			"University of California, Davis\n"+
+			" \n"
+		;
+	}
+	
+	/** Shows the "About" message. */
+	public static void showAboutMessage() {
+		String about = getAboutMessage();
+		String license = getLicense();
+		String msg = about+ "\n" +license;
+		JOptionPane.showMessageDialog(
+			getFocusedFrame(),
+			msg,
+			"About SAMS...",
+			JOptionPane.INFORMATION_MESSAGE,
+			getIcon("img/splash.gif")
+		);
+	}
+
 	public static boolean confirm(String msg) {
 		return confirm(getFocusedFrame(), msg);
 	}

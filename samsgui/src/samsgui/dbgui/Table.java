@@ -141,8 +141,8 @@ public abstract class Table extends JPanel {
 		}
 	
 		public String getColumnName(int col) {
-			return col == 0 ? "Location" : 
-			       col == 1 ? "Name"     : attributes[col - 2].getName()
+			return col == 0 ? "location" : 
+			       col == 1 ? "name"     : attributes[col - 2].getName()
 			;
 		}
 	
@@ -231,9 +231,9 @@ public abstract class Table extends JPanel {
 		ControlPanel() {
 			super(new FlowLayout(FlowLayout.LEFT));
 			add(new JLabel("Sort field"));
-			add(sort_tf = new JTextField(8));
+			add(sort_tf = new JTextField(16));
 			add(new JLabel("Filter condition"));
-			add(filter_tf = new JTextField(8));
+			add(filter_tf = new JTextField(16));
 			
 			sort_tf.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
