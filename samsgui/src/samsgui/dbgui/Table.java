@@ -224,21 +224,28 @@ public abstract class Table extends JPanel {
 	}
 
 	private class ControlPanel extends JPanel {
+		final String[] empty_string_array = new String[0];
 		JPanel controls;
-		JTextField sort_tf;
-		JTextField filter_tf;
+		JComboBox sort_tf;
+		JComboBox filter_tf;
 		
 		ControlPanel() {
 			super(new FlowLayout(FlowLayout.LEFT));
 			add(new JLabel("Sort field"));
-			add(sort_tf = new JTextField(16));
+			add(sort_tf = new JComboBox(empty_string_array));
 			add(new JLabel("Filter condition"));
-			add(filter_tf = new JTextField(16));
+			add(filter_tf = new JComboBox(empty_string_array));
+			sort_tf.setEditable(true);
+			filter_tf.setEditable(true);
 			
 			sort_tf.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						sort(sort_tf.getText());
+						String str = ((String) sort_tf.getSelectedItem()).trim();
+						sort(str);
+						sort_tf.removeItem(str);
+						sort_tf.insertItemAt(str, 0);
+						sort_tf.setSelectedItem(str);
 					}
 					catch(Exception ex) {
 						SamsGui.message(ex.getMessage());
@@ -248,7 +255,11 @@ public abstract class Table extends JPanel {
 			filter_tf.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						filter(filter_tf.getText());
+						String str = ((String) filter_tf.getSelectedItem()).trim();
+						filter(str);
+						filter_tf.removeItem(str);
+						filter_tf.insertItemAt(str, 0);
+						filter_tf.setSelectedItem(str);
 					}
 					catch(Exception ex) {
 						SamsGui.message(ex.getMessage());

@@ -18,6 +18,9 @@ $Id$
  	- who should define special groups? (like imported/ computed/)
 	  it should move from samscore to samsgui ...
 	
+ 08/21/03 - version 3.0
+ 	- comboboxes for table control panel.
+	
  08/18/03 - version 3.0
  	- Tree.updateReadOnlyGroupingBy(String[]) eliminated.
  	- Table changed to use IOrder
