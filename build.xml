@@ -3,7 +3,6 @@
 	$Id$
 -->
 <project name="sams" default="compile" >
-
 	<target name="compile">
 		<ant dir="fileutils" inheritAll="false"/>
 		<ant dir="sig" inheritAll="false"/>
