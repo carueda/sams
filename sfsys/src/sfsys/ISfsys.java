@@ -34,7 +34,7 @@ public interface ISfsys {
 
 		public INode getNode(String name);
 		
-		/** Finds the node given a path relative to this directory. */
+		/** Finds a node given its path. */
 		public INode findNode(String path);
 		
 		public java.util.List getChildren();

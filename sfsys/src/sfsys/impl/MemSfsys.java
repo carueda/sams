@@ -116,6 +116,7 @@ public class MemSfsys implements ISfsys {
 		}
 		
 		public ILink createLink(String name, String path) {
+			path = normalizePath(path);
 			return (ILink) add(new NLink(name, path));
 		}
 	
@@ -141,6 +142,7 @@ public class MemSfsys implements ISfsys {
 		}
 		
 		public INode findNode(String path) {
+			path = normalizePath(path);
 			IDirectory from = this;
 			if ( path.startsWith("/") )
 				from = getRoot();
@@ -318,6 +320,14 @@ public class MemSfsys implements ISfsys {
 				super(m);
 			}
 		}
+	}
+	
+	/** Normalizes a path, that is, replaces "\\" and ":" for "/". */
+	static String normalizePath(String path) {
+		path = path.replace('\\', '/');
+		path = path.replace(':', '/');
+		path = path.replaceAll("/+", "/");
+		return path;
 	}
 }
 

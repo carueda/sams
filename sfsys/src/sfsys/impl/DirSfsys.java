@@ -47,7 +47,7 @@ public class DirSfsys implements ISfsys {
 		Map files = new HashMap();
 		
 		IDirectory getDirectory(String path) {
-			path = path.replaceAll("/+", "/");
+			path = normalizePath(path);
 			NDirectory dir = (NDirectory) dirs.get(path);
 			if ( dir == null ) {
 				dir = new NDirectory(path);
@@ -57,7 +57,7 @@ public class DirSfsys implements ISfsys {
 		}
 
 		IFile getFile(String path) {
-			path = path.replaceAll("/+", "/");
+			path = normalizePath(path);
 			NFile file = (NFile) files.get(path);
 			if ( file == null ) {
 				file = new NFile(path);
@@ -167,6 +167,7 @@ public class DirSfsys implements ISfsys {
 			}
 	
 			public INode findNode(String path) {
+				path = normalizePath(path);
 				IDirectory from = this;
 				if ( path.startsWith("/") )
 					from = getRoot();
@@ -221,6 +222,14 @@ public class DirSfsys implements ISfsys {
 				return v.visit(this, obj);
 			}
 		}
+	}
+	
+	/** Normalizes a path, that is, replaces "\\" and ":" for "/". */
+	static String normalizePath(String path) {
+		path = path.replace('\\', '/');
+		path = path.replace(':', '/');
+		path = path.replaceAll("/+", "/");
+		return path;
 	}
 }
 
