@@ -11,15 +11,12 @@ import java.io.*;
  * @author Carlos A. Rueda
  * @version $Id$
  */
-public class DirSfsys implements ISfsys
-{
+public class DirSfsys implements ISfsys {
 	File basedir;
 	IDirectory root;
 	NodeMan nodeMan;
 	
-	private DirSfsys(String dirname)
-	throws Exception
-	{
+	private DirSfsys(String dirname) throws Exception {
 		basedir = new File(dirname).getCanonicalFile();
 		if ( !basedir.isDirectory() )
 			throw new Exception("Not a directory");
@@ -28,80 +25,65 @@ public class DirSfsys implements ISfsys
 		root = nodeMan.getDirectory("/");
 	}
 
-	public String getInfo()
-	{
+	public String getInfo() {
 		return "DirSfsys: Base directory: " +basedir.getPath();
 	}
 	
-	public IDirectory getRoot()
-	{
+	public IDirectory getRoot() {
 		return root;
 	}
 
-    public static ISfsys createSfsys(String dirname)
-    throws Exception
-    {
+    public static ISfsys createSfsys(String dirname) throws Exception {
 		return new DirSfsys(dirname);
     }
 
-    public void save(String filename) throws java.io.IOException
-    {
+    public void save(String filename) throws java.io.IOException {
 		throw new UnsupportedOperationException();
 	}
 	
 	/** Main node manager. */
-	class NodeMan
-	{
+	class NodeMan {
 		Map dirs = new HashMap();
 		Map files = new HashMap();
 		
-		IDirectory getDirectory(String path)
-		{
+		IDirectory getDirectory(String path) {
 			path = path.replaceAll("/+", "/");
 			NDirectory dir = (NDirectory) dirs.get(path);
-			if ( dir == null )
-			{
+			if ( dir == null ) {
 				dir = new NDirectory(path);
 				dirs.put(path, dir);
 			}
 			return dir;
 		}
 
-		IFile getFile(String path)
-		{
+		IFile getFile(String path) {
 			path = path.replaceAll("/+", "/");
 			NFile file = (NFile) files.get(path);
-			if ( file == null )
-			{
+			if ( file == null ) {
 				file = new NFile(path);
 				files.put(path, file);
 			}
 			return file;
 		}
 
-		abstract class Node implements INode
-		{
+		abstract class Node implements INode {
 			private String path;
 			
-			Node(String path)
-			{
+			Node(String path) {
 				if ( path == null || !path.startsWith("/") )
 					throw new IllegalArgumentException();
 				this.path = path;
 			}
 			
-			public String getName()
-			{
+			public String getName() {
 				return path.substring(path.lastIndexOf('/') + 1);
 			}
 		
-			public String toString()
-			{
+			public String toString() {
 				return getName();
 			}
 		
-			public IDirectory getParent()
-			{
+			public IDirectory getParent() {
 				String parent_path = path.substring(0, path.lastIndexOf('/'));
 				if ( parent_path.length() == 0 )
 					return null;
@@ -109,26 +91,21 @@ public class DirSfsys implements ISfsys
 				return getDirectory(parent_path);
 			}
 			
-			public String getPath()
-			{
+			public String getPath() {
 				return path;
 			}
 			
-			File getAbsoluteFile()
-			{
+			File getAbsoluteFile() {
 				return new File(basedir, getPath());
 			}
 		}	
 		
-		class NDirectory extends Node implements IDirectory
-		{
-			NDirectory(String path)
-			{
+		class NDirectory extends Node implements IDirectory {
+			NDirectory(String path) {
 				super(path);
 			}
 		
-			public IDirectory createDirectory(String dirname)	
-			{
+			public IDirectory createDirectory(String dirname) {
 				String path = getPath()+ "/" +dirname;
 				File subdir = new File(basedir, path);
 				if ( subdir.mkdir() )
@@ -136,47 +113,38 @@ public class DirSfsys implements ISfsys
 				return null;
 			}
 			
-			public IFile createFile(String filename)	
-			{
+			public IFile createFile(String filename) {
 				String path = getPath()+ "/" +filename;
 				File subfile = new File(basedir, path);
-				try
-				{
+				try {
 					if ( !subfile.exists() )
 						new FileOutputStream(subfile).close();
 					return getFile(path);
 				}
-				catch(Exception ex)
-				{
+				catch(Exception ex) {
 					return null;
 				}
 			}
 			
-			public ILink createLink(String name, String path)
-			{
+			public ILink createLink(String name, String path) {
 				throw new UnsupportedOperationException();
 			}
 		
-			public List getChildren()
-			{
+			public List getChildren() {
 				File absfile = getAbsoluteFile();
 				List children = new ArrayList();
 				File[] a = absfile.listFiles();
-				if ( a == null )
-				{
+				if ( a == null ) {
 					System.err.println("unable to get list for " +absfile);
 					return children;
 				}
-				for ( int i = 0; i < a.length; i++ )
-				{
+				for ( int i = 0; i < a.length; i++ ) {
 					String subpath = getPath()+ "/" +a[i].getName();
-					if ( a[i].isDirectory() )
-					{
+					if ( a[i].isDirectory() ) {
 						IDirectory dir = getDirectory(subpath);
 						children.add(dir);
 					}
-					else if ( a[i].isFile() )
-					{
+					else if ( a[i].isFile() ) {
 						IFile file = getFile(subpath);
 						children.add(file);
 					}
@@ -184,16 +152,13 @@ public class DirSfsys implements ISfsys
 				return children;
 			}
 	
-			public String toString()
-			{
+			public String toString() {
 				return getName() + "/";
 			}
 			
 			
-			public INode getNode(String name)
-			{
-				for ( Iterator iter = getChildren().iterator(); iter.hasNext(); )
-				{
+			public INode getNode(String name) {
+				for ( Iterator iter = getChildren().iterator(); iter.hasNext(); ) {
 					INode node = (INode) iter.next();
 					if ( name.equals(node.getName()) )
 						return node;
@@ -201,8 +166,7 @@ public class DirSfsys implements ISfsys
 				return null;
 			}
 	
-			public INode findNode(String path)
-			{
+			public INode findNode(String path) {
 				IDirectory from = this;
 				if ( path.startsWith("/") )
 					from = getRoot();
@@ -214,14 +178,12 @@ public class DirSfsys implements ISfsys
 				if ( !file.exists() )
 					return null;
 				
-				try
-				{
+				try {
 					file = file.getCanonicalFile();
 					if ( file.getPath().length() < basedir.getPath().length() )
 						return null;
 				}
-				catch(IOException ex)
-				{
+				catch(IOException ex) {
 					return null;   // shouldn't happen
 				}
 				
@@ -235,37 +197,30 @@ public class DirSfsys implements ISfsys
 					return null;
 			}
 				
-			public Object accept(IVisitor v, Object obj)
-			{
+			public Object accept(IVisitor v, Object obj) {
 				return v.visit(this, obj);
 			}
 		}	
 		
-		class NFile extends Node implements IFile
-		{
+		class NFile extends Node implements IFile {
 			Object obj;
 			
-			NFile(String path)
-			{
+			NFile(String path) {
 				super(path);
 			}
 			
-			public void setObject(Object obj)
-			{
+			public void setObject(Object obj) {
 				this.obj = obj;
 			}
 		
-			public Object getObject()
-			{
+			public Object getObject() {
 				return obj;
 			}
 			
-			public Object accept(IVisitor v, Object obj)
-			{
+			public Object accept(IVisitor v, Object obj) {
 				return v.visit(this, obj);
 			}
 		}
-	
 	}
 }
 

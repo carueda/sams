@@ -10,16 +10,14 @@ import java.io.*;
  * @author Carlos A. Rueda
  * @version $Id$
  */
-public class Shell
-{
+public class Shell {
 	ISfsys fs;
 	IDirectory curr;
 	BufferedReader br;
 	PrintWriter pw;
 	Run run;
 	
-	public Shell(ISfsys fs, Reader r, Writer w)
-	{
+	public Shell(ISfsys fs, Reader r, Writer w) {
 		setSfsys(fs);
 		if ( r instanceof BufferedReader )
 			br = (BufferedReader) r;
@@ -33,95 +31,76 @@ public class Shell
 		run = null;
 	}
 
-	public void setSfsys(ISfsys fs)
-	{
+	public void setSfsys(ISfsys fs) {
 		this.fs = fs;
 		curr = fs.getRoot();
 	}
 	
-	public Runnable getRunnable()
-	{
+	public Runnable getRunnable() {
 		if ( run == null )
 			run = new Run();
 		
 		return run;
 	}
 	
-	
-	public void info() 
-	{ 
+	public void info()  { 
 		pw.println(fs.getInfo()); 
 	}
 	
-	public void pwd() 
-	{ 
+	public void pwd() { 
 		pw.println(curr.getPath()); 
 	}
 	
-	public void mkdir(String name) 
-	{
+	public void mkdir(String name) {
 		curr.createDirectory(name);
 		pw.println(name);
 	}
 	
-	public void mkfile(String name) 
-	{
+	public void mkfile(String name) {
 		curr.createFile(name);
 		pw.println(name);
 	}
 	
-	public void mklink(String name, String path) 
-	{
+	public void mklink(String name, String path) {
 		INode refnode = curr.findNode(path);
 		if ( refnode == null )
 			pw.println(path+ ": No such file or directory");
-		else
-		{
-			try
-			{
+		else {
+			try {
 				curr.createLink(name, path);
 				pw.println(name);
 			}
-			catch(UnsupportedOperationException ex)
-			{
+			catch(UnsupportedOperationException ex) {
 				pw.println("unsupported operation on this filesystem");
 			}
 		}
 	}
 	
-	public void save(String filename) throws java.io.IOException
-	{
-		try
-		{
+	public void save(String filename) throws java.io.IOException {
+		try {
 			fs.save(filename);
 			pw.println("saved");
 		}
-		catch(UnsupportedOperationException ex)
-		{
+		catch(UnsupportedOperationException ex) {
 			pw.println("unsupported operation on this filesystem");
 		}
 	}
 
-	public void tree()
-	{
-		curr.accept
-		(	new IVisitor()
-			{
+	public void tree() {
+		curr.accept(
+			new IVisitor() {
 				int indent = 0;
-				public Object visit(IFile n, Object obj)
-				{
+				public Object visit(IFile n, Object obj) {
 					pw.println(indent() + n.getName());
 					return obj;
 				}
 				
-				public Object visit(ILink n, Object obj)
-				{
+				public Object visit(ILink n, Object obj) {
 					pw.println(indent() + n.getName() + " -> " +n.getRefPath());
 					return obj;
 				}
 				
-				public Object visit(IDirectory n, Object obj)
-				{
+				public Object visit(IDirectory n, Object obj) {
 					pw.println(indent() + n.getName()+ "/");
 					indent++;
 					for ( Iterator iter = n.getChildren().iterator(); iter.hasNext(); )
@@ -130,8 +109,7 @@ public class Shell
 					return obj;
 				}
 				
-				StringBuffer indent()
-				{
+				StringBuffer indent() {
 					StringBuffer sb = new StringBuffer();
 					for ( int i = 0; i < indent; i++ )
 						sb.append("    ");
@@ -142,21 +120,18 @@ public class Shell
 		);
 	}
 	
-	private void ls(IDirectory dir, boolean header)
-	{
+	private void ls(IDirectory dir, boolean header) {
 		if ( header )
 			pw.println(dir.getPath()+ "/");
 		for (Iterator iter = dir.getChildren().iterator(); iter.hasNext(); )
 			pw.println("    " +iter.next());
 	}
 	
-	public void ls(String[] toks)
-	{
+	public void ls(String[] toks) {
 		if ( toks.length == 1 )
 			ls(curr, false);
 		else
-			for ( int i = 1; i < toks.length; i++ )
-			{
+			for ( int i = 1; i < toks.length; i++ ) {
 				String path = toks[i];
 				INode node = curr.findNode(path);
 				if ( node instanceof IDirectory )
@@ -168,11 +143,9 @@ public class Shell
 			}
 	}
 	
-	public void cd(String path)
-	{
+	public void cd(String path) {
 		INode node = curr.findNode(path);
-		while ( node instanceof ILink )
-		{
+		while ( node instanceof ILink ) {
 		    ILink link = (ILink) node;
 		    String ref = link.getRefPath();
 		    node = curr.findNode(ref);
@@ -184,14 +157,11 @@ public class Shell
 			pw.println(path+ ": Not a directory");
 	}
 
-	protected void handleException(Exception ex)
-	{
+	protected void handleException(Exception ex) {
 		pw.println("Exception: " +ex.getMessage());
 	}
 
-	public boolean process(String[] toks)
-	throws Exception
-	{
+	public boolean process(String[] toks) throws Exception {
 		if ( toks[0].equals("cd") )
 			cd(toks[1]);
 		else if ( toks[0].equals("ls") )
@@ -216,17 +186,13 @@ public class Shell
 		return true;
 	}
 
-	private class Run implements Runnable
-	{
-		public void run()
-		{
+	private class Run implements Runnable {
+		public void run() {
 			String line;
-			while ( true )
-			{
+			while ( true ) {
 				pw.print("[" +curr.getPath()+ "] $ ");
 				pw.flush();
-				try
-				{
+				try {
 					if ( (line = br.readLine()) == null )
 						break;
 					if ( line.trim().length() == 0 )
@@ -235,11 +201,11 @@ public class Shell
 					if  ( !process(toks) )
 						pw.println(toks[0]+ ": unrecognized command");
 				}
-				catch (Exception ex)
-				{
+				catch (Exception ex) {
 					handleException(ex);
 				}
 			}
 		}
 	}
 }
+

@@ -5,8 +5,7 @@ package sfsys;
  * @author Carlos A. Rueda
  * @version $Id$
  */
-public class Sfsys
-{
+public class Sfsys {
 	/**
 	 * Creates an ISfsys.
 	 * @param filename  
@@ -16,9 +15,7 @@ public class Sfsys
 	 *	If filename is a directory, a directory-based fs is created
 	 *      with root in that directory.
 	 */
-	public static ISfsys create(String filename)
-	throws Exception
-	{
+	public static ISfsys create(String filename) throws Exception {
 		if ( filename == null )
 			return sfsys.impl.MemSfsys.createSfsys();
 		

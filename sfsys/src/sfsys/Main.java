@@ -14,7 +14,17 @@ public class Main
 	}
 	
 	public static void main(String[] args) throws Exception {
-		ISfsys fs = args.length == 0 ? mount(null) : mount(args[0]);
+		ISfsys fs;
+		
+		if ( args.length > 0 && args[0].equals("demo") ) {
+			fs = mount(null);
+			fs.getRoot().createDirectory("dir1");
+			fs.getRoot().createFile("aFile");
+			fs.getRoot().createDirectory("dir2");
+		}
+		else {
+			fs = args.length == 0 ? mount(null) : mount(args[0]);
+		}
 		
 		new Shell(fs, new InputStreamReader(System.in), new PrintWriter(System.out)) {
 			public boolean process(String[] toks) throws Exception {
