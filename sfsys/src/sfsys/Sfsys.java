@@ -12,8 +12,8 @@ public class Sfsys {
 	}
 
 	/** Creates a directory-based fs with root in that directory. */
-	public static ISfsys createDir(String dirname, String file_ext) throws Exception {
-		return sfsys.impl.DirSfsys.createSfsys(dirname, file_ext);
+	public static ISfsys createDir(String dirname, String fileExt, boolean hideFileExt) throws Exception {
+		return sfsys.impl.DirSfsys.createSfsys(dirname, fileExt, hideFileExt);
 	}
 
 	/** Creates an empty memory-based ISfsys. */

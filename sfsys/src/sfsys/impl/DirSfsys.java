@@ -13,16 +13,18 @@ import java.io.*;
  */
 public class DirSfsys implements ISfsys {
 	File basedir;
-	String file_ext;
+	String fileExt;
+	boolean hideFileExt;
 	IDirectory root;
 	NodeMan nodeMan;
 	
-	private DirSfsys(String dirname, String file_ext) throws Exception {
+	private DirSfsys(String dirname, String fileExt, boolean hideFileExt) throws Exception {
 		basedir = new File(dirname).getCanonicalFile();
 		if ( !basedir.isDirectory() )
 			throw new Exception("Not a directory");
 		
-		this.file_ext = file_ext;
+		this.fileExt = fileExt;
+		this.hideFileExt = hideFileExt;
 		nodeMan = new NodeMan();
 		root = nodeMan.getDirectory("/");
 	}
@@ -40,11 +42,11 @@ public class DirSfsys implements ISfsys {
 	}
 	
     public static ISfsys createSfsys(String dirname) throws Exception {
-		return new DirSfsys(dirname, null);
+		return new DirSfsys(dirname, null, false);
     }
 
-    public static ISfsys createSfsys(String dirname, String file_ext) throws Exception {
-		return new DirSfsys(dirname, file_ext);
+    public static ISfsys createSfsys(String dirname, String fileExt, boolean hideFileExt) throws Exception {
+		return new DirSfsys(dirname, fileExt, hideFileExt);
     }
 
     public void save(String filename) throws java.io.IOException {
@@ -149,18 +151,31 @@ public class DirSfsys implements ISfsys {
 					return children;
 				}
 				for ( int i = 0; i < a.length; i++ ) {
-					String subpath = getPath()+ "/" +a[i].getName();
-					if ( a[i].isDirectory() ) {
+					File f = a[i];
+					String subpath = getPath()+ "/" +f.getName();
+					if ( f.isDirectory() ) {
 						IDirectory dir = getDirectory(subpath);
 						children.add(dir);
 					}
-					else if ( a[i].isFile() ) {
-						if ( file_ext == null || a[i].getName().endsWith(file_ext) ) { 
+					else if ( f.isFile() ) {
+						if ( fileExt == null || f.getName().endsWith(fileExt) ) {
+							if ( hideFileExt )
+								subpath = subpath.substring(0, subpath.length() - fileExt.length());
 							IFile file = getFile(subpath);
 							children.add(file);
 						}
 					}
 				}
+				Collections.sort(children, new Comparator() {
+					public int compare(Object o1, Object o2){
+						INode n1 = (INode) o1;
+						INode n2 = (INode) o2;
+						if ( n1 instanceof IFile ^ n2 instanceof IFile )
+							return n1 instanceof IFile ? 1 : -1;
+						else
+							return n1.getName().compareTo(n2.getName());
+					}
+				});
 				return children;
 			}
 	
