@@ -6,6 +6,7 @@ import sig.Signature;
 import sfsys.ISfsys;
 import sfsys.ISfsys.*;
 import sfsys.Sfsys;
+import fileutils.Files;
 
 import java.io.*;
 import java.util.*;
@@ -23,10 +24,13 @@ import java.util.*;
  * @version $Id$ 
  */
 class SamsDb implements ISamsDb {
-	/** Every signature file is given this suffix. */
+	private static final String G_IMPORTED = "imported";
+	private static final String G_COMPUTED = "computed";
+	
+	/** Each signature file is given this path suffix. */
 	static final String SIG_SUFFIX = ".sig";
 	
-	/** Every metadata spectrum file is given this suffix. */
+	/** Each metadata spectrum file is given this path suffix. */
 	static final String MD_SUFFIX = ".md";
 	
 	static ISamsDb open(String dirname) throws Exception {
@@ -45,7 +49,7 @@ class SamsDb implements ISamsDb {
 
 	private static final String infoName = "info.sams";
 	private static final String sigsDirName = "sigs";
-	private static final String computedDirName = "computed";
+	private static final String computedDirName = G_COMPUTED;
 
 	private File baseDir;
 	private File sigsDir;
@@ -71,8 +75,8 @@ class SamsDb implements ISamsDb {
 			if ( !sigsDir.mkdirs() )
 				throw new Exception(baseDir+ ": Cannot create directory structure");
 			
-			new File(sigsDir, "imported").mkdirs();
-			new File(sigsDir, "computed").mkdirs();
+			new File(sigsDir, G_IMPORTED).mkdirs();
+			new File(sigsDir, G_COMPUTED).mkdirs();
 			
 			attrDefList = new ArrayList();	// basic metadata definition: 
 			attrDefList.add(new AttributeDef("status", "good"));
@@ -139,7 +143,7 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public ISfsys getGroupingLocation() throws Exception {
-		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX);
+		return Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true);
 	}
 	
 	public ISfsys getGroupingBy(String[] attrNames) throws Exception {
@@ -180,7 +184,7 @@ class SamsDb implements ISamsDb {
 	public Iterator getAllPaths() {
 		List paths = new ArrayList();
 		try {
-			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX);
+			ISfsys fs = Sfsys.createDir(sigsDir.getPath(), SIG_SUFFIX, true);
 			_populatePaths(paths, fs.getRoot());
 		}
 		catch(Exception ex) {
@@ -239,23 +243,22 @@ class SamsDb implements ISamsDb {
 	
 	public String addSpectrum(String path, Signature sig) throws Exception {
 		setSignature(path, sig);
-		return normalizePath(path);
+		return _normalizePath(path);
 	}
 	
 	public void deleteSpectrum(String path) throws Exception {
-		File file;
-		// remove signature:
-		file = new File(sigsDir, normalizePath(path));
-		if ( file.exists() )
-			file.delete();
-		// remove metadata:
-		file = new File(sigsDir, normalizePath(path)+ MD_SUFFIX);
-		if ( file.exists() )
-			file.delete();
+		path = _normalizePath(path);
+		String[] exts = { SIG_SUFFIX, MD_SUFFIX };
+		for ( int i = 0; i < exts.length; i++ ) {
+			String ext = exts[i];
+			File file = new File(sigsDir, path + ext);
+			if ( file.exists() )
+				file.delete();
+		}
 	}
 	
 	public Signature getSignature(String path) throws Exception {
-		File file = new File(sigsDir, normalizePath(path));
+		File file = new File(sigsDir, normalizePathSignature(path));
 		if ( !file.exists() )
 			throw new Exception(path+ ": Signature not found");
 
@@ -295,7 +298,7 @@ class SamsDb implements ISamsDb {
 	}
 
 	public void setSignature(String path, Signature sig) throws Exception {
-		File file = new File(sigsDir, normalizePath(path));
+		File file = new File(sigsDir, normalizePathSignature(path));
 		File parent = file.getParentFile();
 		if ( !parent.exists() && !parent.mkdirs() )
 			throw new Exception("Cannot make directory for: " +file.getAbsolutePath());
@@ -322,7 +325,7 @@ class SamsDb implements ISamsDb {
 	
 	private void _storeSpectrumMetadata(String path, Properties attrValues)
 	throws Exception {
-		File file = new File(sigsDir, normalizePath(path) + MD_SUFFIX);
+		File file = new File(sigsDir, normalizePathMetadata(path));
 		assert file.getParentFile().exists() ;
 		if ( attrValues.size() == 0 ) {
 			// no values to store.
@@ -346,7 +349,7 @@ class SamsDb implements ISamsDb {
 	
 	private boolean _loadSpectrumMetadata(String path, Properties attrValues)
 	throws Exception {
-		File file = new File(sigsDir, normalizePath(path) + MD_SUFFIX);
+		File file = new File(sigsDir, normalizePathMetadata(path));
 		assert file.getParentFile().exists() ;
 		if ( !file.exists() )
 			return false;  // OK
@@ -366,20 +369,19 @@ class SamsDb implements ISamsDb {
 	}
 	
 	public String renameSpectrum(String oldPath, String newPath) throws Exception {
-		oldPath = normalizePath(oldPath);
-		newPath = normalizePath(newPath);
+		oldPath = _normalizePath(oldPath);
+		newPath = _normalizePath(newPath);
 		if ( oldPath.equals(newPath) )
 			return null;   // no renaming neccesary.
 		
-		// rename files:
-		String[] exts = { "", MD_SUFFIX };
+		String[] exts = { SIG_SUFFIX, MD_SUFFIX };
 		for ( int i = 0; i < exts.length; i++ ) {
 			String ext = exts[i];
 			File oldfile = new File(sigsDir, oldPath + ext);
 			if ( oldfile.exists() ) {
 				File newfile = new File(sigsDir, newPath + ext);
 				if ( !oldfile.renameTo(newfile) )
-					throw new Exception("Cannot rename signature: " +oldPath+ " -> " +newPath);
+					throw new Exception("Cannot rename signature: " +oldfile+ " -> " +newfile);
 			}
 		}
 		return newPath;
@@ -526,27 +528,41 @@ class SamsDb implements ISamsDb {
 	}
 
 	/** Normalizes the path to a signature file. */
-	private static String normalizePath(String path) {
+	private static String normalizePathSignature(String path) {
+		return _normalizePath(path) + SIG_SUFFIX;
+	}
+	/** Normalizes the path to a spectrum metadata file. */
+	private static String normalizePathMetadata(String path) {
+		return _normalizePath(path) +  MD_SUFFIX;
+	}
+	/** Normalizes a path such that not to end with special suffixes. */
+	private static String _normalizePath(String path) {
 		assert path.trim().length() > 0;
 		path = path.replace('\\', '/');
 		path = path.replace(':', '/');
 		assert !path.endsWith("/");
 		path = path.replaceAll("//+", "/");
 		path = path.replaceAll("\\.+$", "");
-		if ( !path.toLowerCase().endsWith(SIG_SUFFIX) )
-			path += SIG_SUFFIX;
+		String[] ignores = { SIG_SUFFIX, MD_SUFFIX };
+		for ( int i = 0; i < ignores.length; i++ ) {
+			String ignore = ignores[i];
+			if ( path.toLowerCase().endsWith(ignore) ) {
+				path = path.substring(0, path.length() - ignore.length());
+				break;
+			}
+		}
 		if ( !path.startsWith("/") )
 			path = "/" +path;
-		path = path.substring(0, path.length() - SIG_SUFFIX.length()) + SIG_SUFFIX;
 		return path;
 	}
 	private static void test_normalizePath() {
 		System.out.println("test_normalizePath()");
-		assert normalizePath("abc").equals("/abc.sig") ;
-		assert normalizePath("//abc//def").equals("/abc/def.sig") ;
-		assert normalizePath("abc\\def").equals("/abc/def.sig") ;
-		assert normalizePath("abc:def").equals("/abc/def.sig") ;
-		assert normalizePath("abc/def.SIG").equals("/abc/def.sig") ;
+		assert normalizePathSignature("abc").equals("/abc.ss") ;
+		assert normalizePathSignature("//abc//def").equals("/abc/def.ss") ;
+		assert normalizePathSignature("abc\\def").equals("/abc/def.ss") ;
+		assert normalizePathMetadata("abc:def").equals("/abc/def.md") ;
+		assert normalizePathSignature("abc/def.SS").equals("/abc/def.ss") ;
+		assert normalizePathMetadata("abc/def.ss").equals("/abc/def.md") ;
 	}
 	public static void main(String[]_) {
 		test_normalizePath();
@@ -663,7 +679,7 @@ class SamsDb implements ISamsDb {
 			for ( int i = 0; i < elements.size(); i++ ) {
 				ClipboardElement e = (ClipboardElement) elements.get(i);
 				String name = e.spectrum.getName();
-				String new_path = normalizePath(target_location+ "/" +name);
+				String new_path = _normalizePath(target_location+ "/" +name);
 				
 				setSignature(new_path, e.signature);
 				_storeSpectrumMetadata(new_path, e.spectrum.attrValues);
@@ -690,6 +706,54 @@ class SamsDb implements ISamsDb {
 				processed++;
 				if ( obs.elementFinished(i+1, path) )
 					break;  // but go to endTask
+			}
+			obs.endTask(processed);
+		}
+		
+		public void deleteGroups(List groupPaths) throws Exception {
+			List paths = new ArrayList();
+			for ( Iterator iter = getAllPaths(); iter.hasNext(); ) {
+				String path = (String) iter.next();
+				boolean include = false;
+				for ( Iterator iterg = groupPaths.iterator(); iterg.hasNext(); ) {
+					String group_path = (String) iterg.next();
+					if ( path.startsWith(group_path+ "/") ) {
+						include = true;
+						break;
+					}
+				}
+				if ( include && !paths.contains(path) )
+					paths.add(path);
+			}
+			obs.startTask(paths.size() + groupPaths.size());
+			int processed = 0;
+			int i = 0;
+			boolean canceled = false;
+			// delete spectra paths first:
+			for ( ; i < paths.size(); i++ ) {
+				String path = (String) paths.get(i);
+				deleteSpectrum(path);
+				processed++;
+				if ( obs.elementFinished(i+1, path) ) {
+					canceled = true;
+					break;
+				}
+			}
+			if ( !canceled ) {
+				// now delete directories:
+				for ( Iterator iterg = groupPaths.iterator(); iterg.hasNext(); ) {
+					String group_path = (String) iterg.next();
+					File dir = new File(sigsDir, group_path);
+					if ( !dir.getName().equals(G_IMPORTED)
+					&&   !dir.getName().equals(G_COMPUTED) ) {
+						if ( dir.exists() )
+							dir.delete();  // should be empty
+						processed++;
+						if ( obs.elementFinished(i+1, group_path) )
+							break;
+					}
+					i++;
+				}
 			}
 			obs.endTask(processed);
 		}

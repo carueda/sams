@@ -37,9 +37,6 @@ public class DbGui extends JPanel {
 	private Plot plot;
 	private Table table;
 
-	private JSplitPane splitPane1;
-	private JSplitPane splitPane2;
-	
 	private JLabel loc_label;
 	
 	private StatusBar statusBar;
@@ -58,8 +55,6 @@ public class DbGui extends JPanel {
 		super(new BorderLayout());
 		this.db = db;
 		this.parentFrame = parentFrame;
-		splitPane1 = getJSplitPane1();
-		splitPane2 = getJSplitPane2();
 
 		tree = new Tree(this);
 		table = new Table() {
@@ -74,8 +69,11 @@ public class DbGui extends JPanel {
 			}
 		};
 
+		JSplitPane splitPane2 = _createJSplitPane(JSplitPane.VERTICAL_SPLIT);
 		splitPane2.add(table);
 		splitPane2.add(createPlotPanel());
+
+		JSplitPane splitPane1 = _createJSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane1.add(tree);
 		splitPane1.add(splitPane2);
 		add(splitPane1, BorderLayout.CENTER);
@@ -173,11 +171,9 @@ public class DbGui extends JPanel {
 			return;
 		Collection sids = new ArrayList();
 		List selectedSpectra = tree.getSelectedSpectraNodes();
-		if ( selectedSpectra != null ) {
-			for ( Iterator it = selectedSpectra.iterator(); it.hasNext(); ) {
-				Tree.MyNode n = (Tree.MyNode) it.next();
-				sids.add(n.getStringPath());
-			}
+		for ( Iterator it = selectedSpectra.iterator(); it.hasNext(); ) {
+			Tree.MyNode n = (Tree.MyNode) it.next();
+			sids.add(n.getStringPath());
 		}
 		plotSignatures(sids, only);
 		plot.repaint();
@@ -233,8 +229,8 @@ public class DbGui extends JPanel {
 		}
 	}
 	
-	private JSplitPane getJSplitPane1() {
-		JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+	private static JSplitPane _createJSplitPane(int orientation) {
+		JSplitPane sp = new JSplitPane(orientation);
 		sp.setDividerSize(8);
 		sp.setAutoscrolls(false);
 		sp.setContinuousLayout(false);
@@ -243,36 +239,24 @@ public class DbGui extends JPanel {
 		return sp;
 	}
 	
-	public JSplitPane getJSplitPane2() {
-		JSplitPane sp = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		sp.setDividerSize(8);
-		sp.setAutoscrolls(false);
-		sp.setContinuousLayout(false);
-		sp.setDividerLocation(.5);
-		sp.setOneTouchExpandable(true);
-		return sp;
-	}
-
 	JPanel createPlotPanel() {
 		JPanel p = new JPanel(new BorderLayout());
 		plot = new Plot(this);
-		p.add(plot, "Center");
+		p.add(plot, BorderLayout.CENTER);
+		
 		JToolBar tb = new JToolBar();
-		p.add(tb, "North");
+		p.add(tb, BorderLayout.NORTH);
 		tb.setBorderPainted(true);
 		tb.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
 		JLabel label = new JLabel("Plot");
 		label.setForeground(Color.gray);
 		tb.add(label);
-		
 		JButton[] buttons = plot.getButtons();
 		for ( int i = 0; i < buttons.length; i++ )
 			tb.add(buttons[i]);
-		
 		//tb.add(Actions.getAction("range-plot"));
 		//tb.add(Actions.getAction("export-plot"));
 		//tb.add(Actions.getAction("print-plot"));   FOR INTERNAL TESTING
-
 		tb.addSeparator();
 		loc_label = new JLabel("x: y:");
 		loc_label.setForeground(Color.gray);
@@ -336,7 +320,7 @@ public class DbGui extends JPanel {
 
 	JPopupMenu getPopupMenuSpectrum() {
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if ( selectedSpectra == null ) {
+		if ( selectedSpectra.size() == 0 ) {
 			// no selection of spectra elements: show corresponding popup:
 			if ( popupSpectrumNoSelection == null ) {
 				popupSpectrumNoSelection = new JPopupMenu();
@@ -420,7 +404,7 @@ public class DbGui extends JPanel {
 			reference_sig = db.getSignature(referenceSID);
 		}
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if ( selectedSpectra != null )
+		if ( selectedSpectra.size() > 0 )
 			new Compute(this, sigOper, selectedSpectra, reference_sig);
 	}
 
@@ -429,12 +413,12 @@ public class DbGui extends JPanel {
 			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
 		List selectedGroups = tree.getSelectedGroupPaths();
-		if ( selectedSpectra == null && selectedGroups == null ) {
+		if ( selectedSpectra.size() == 0 && selectedGroups.size() == 0 ) {
 			SamsGui.message("Please select the signatures to be exported.");
 			return;
 		}
 		StringBuffer info = null;
-		if ( selectedSpectra != null && selectedGroups != null ) {
+		if ( selectedSpectra.size() > 0 && selectedGroups.size() > 0 ) {
 			info = new StringBuffer("<html>");
 			info.append("<b>Note:</b> " +
 				"The current selection includes both groups and specific spectra.<br>\n" +
@@ -445,15 +429,15 @@ public class DbGui extends JPanel {
 		// list of all paths to be exported:
 		List paths = new ArrayList();
 		
-		if ( selectedSpectra != null ) {
+		if ( selectedSpectra.size() > 0 ) {
 			// only selected spectra
 			for ( Iterator iter = selectedSpectra.iterator(); iter.hasNext(); )
 				paths.add(iter.next());
 		}
-		else { // selectedGroups != null
+		else { // selectedGroups.size() > 0
 			// include members from subgroups?
 			if ( SamsGui.confirm(
-				selectedGroups.size()+ " group(s) selected.\n" +
+				"Export: " +selectedGroups.size()+ " group(s) selected.\n" +
 				"Direct spectra members will be included.\n" +
 				"Do you want to include all members from subgroups as well?"
 				)
@@ -463,7 +447,6 @@ public class DbGui extends JPanel {
 				// the selected groups or its subgroups:
 				for ( Iterator iter = db.getAllPaths(); iter.hasNext(); ) {
 					String path = (String) iter.next();
-					ISpectrum s = db.getSpectrum(path);
 					boolean include = false;
 					for ( Iterator iterg = selectedGroups.iterator(); iterg.hasNext(); ) {
 						String group_path = (String) iterg.next();
@@ -713,7 +696,7 @@ public class DbGui extends JPanel {
 	public void updateStatus() {
 		String signature_selection; 
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if ( selectedSpectra == null )
+		if ( selectedSpectra.size() == 0 )
 			signature_selection = "None";
 		else if ( selectedSpectra.size() == 1 )
 			signature_selection = (String) selectedSpectra.get(0);
@@ -722,7 +705,7 @@ public class DbGui extends JPanel {
 		
 		String group_selection; 
 		List selectedGroups = tree.getSelectedGroupPaths();
-		if ( selectedGroups == null )
+		if ( selectedGroups.size() == 0 )
 			group_selection = "None";
 		else if (  selectedGroups.size() == 1 )
 			group_selection = (String) selectedGroups.get(0);
@@ -770,7 +753,7 @@ public class DbGui extends JPanel {
 		if ( db == null )
 			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if (  selectedSpectra == null || selectedSpectra.size() != 1 )
+		if (  selectedSpectra.size() != 1 )
 			return;
 		final String path = (String) selectedSpectra.get(0);
 		SignatureTable sigTable;
@@ -814,25 +797,29 @@ public class DbGui extends JPanel {
 		if ( db == null )
 			return;
 		List selectedSpectra = tree.getSelectedSpectraPaths();
-		if (  selectedSpectra == null || selectedSpectra.size() != 1 )
+		if (  selectedSpectra.size() != 1 )
 			return;
 		String path = (String) selectedSpectra.get(0);
 		final ISpectrum s = db.getSpectrum(path);
 		if ( s == null )
 			throw new Error(path+ ": spectrum not found!!");
 		
+		JTextField f_loc = new JTextField(s.getLocation());
+		f_loc.setEditable(false);
 		JTextField f_oldname = new JTextField(s.getName());
 		f_oldname.setEditable(false);
 		final JTextField f_newname = new JTextField(12);
 		final JLabel status = new JLabel();
 		status.setFont(status.getFont().deriveFont(Font.ITALIC));
 		
+		f_loc.setBorder(SamsGui.createTitledBorder("Location"));
 		f_oldname.setBorder(SamsGui.createTitledBorder("Current name"));
 		f_newname.setBorder(SamsGui.createTitledBorder("New name"));
 		
 		Object[] array = {
-			f_oldname,
 			f_newname,
+			f_oldname,
+			f_loc,
 			status
 		};
 		
@@ -863,6 +850,73 @@ public class DbGui extends JPanel {
 			try {
 				if ( _doRenaming(s, newname) != null )
 					table.updateData();
+			}
+			catch(Exception ex) {
+				SamsGui.message("Error: " +ex.getMessage());
+				return;
+			}
+		}
+	}
+
+	public void createGroup() throws Exception {
+		if ( db == null )
+			return;
+		List selectedGroups = tree.getSelectedGroupPaths();
+		if (  selectedGroups.size() != 1 )
+			return;
+		String path = (String) selectedGroups.get(0);
+		final IDirectory dir = db.getGroupingUnderLocation(path);
+		if ( dir == null )
+			throw new Error(path+ ": directory not found!!");
+		
+		JTextField f_parent = new JTextField(dir.getPath());
+		f_parent.setEditable(false);
+		final JTextField f_newname = new JTextField(12);
+		final JLabel status = new JLabel();
+		status.setFont(status.getFont().deriveFont(Font.ITALIC));
+		
+		f_parent.setBorder(SamsGui.createTitledBorder("Parent group"));
+		f_newname.setBorder(SamsGui.createTitledBorder("Subgroup name"));
+		
+		Object[] array = {
+			f_newname,
+			f_parent,
+			status
+		};
+		
+		String diag_title = "Create subgroup";
+		final BaseDialog form = new BaseDialog(getFrame(), diag_title, array) {
+			public boolean dataOk() {
+				String msg = null;
+				String newname = f_newname.getText().trim();
+				if ( newname.length() == 0 )
+					msg = "Specify a name";
+				else if ( dir.getNode(newname) != null )
+					msg = "Name already exists";
+				if ( msg == null ) {
+					status.setForeground(Color.gray);
+					status.setText("OK");
+				}
+				else {
+					status.setForeground(Color.red);
+					status.setText(msg);
+				}
+				return msg == null;
+			}
+		};
+		form.activate();
+		form.pack();
+		form.setLocationRelativeTo(getFrame());
+		form.setVisible(true);
+		if ( form.accepted() ) {
+			String newname = f_newname.getText().trim();
+			try {
+				IDirectory subdir = dir.createDirectory(newname);
+				if ( subdir == null ) {
+					SamsGui.message(newname+ ": the group could not be created");
+					return;
+				}
+				tree.insertNode(subdir.getPath(), false);
 			}
 			catch(Exception ex) {
 				SamsGui.message("Error: " +ex.getMessage());

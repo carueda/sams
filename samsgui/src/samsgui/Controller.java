@@ -112,7 +112,6 @@ public class Controller {
 	}
 	
 	public static void quit() {
-		java.awt.Toolkit.getDefaultToolkit().beep();
 		if ( SamsGui.confirm("Really quit SAMS?") )
 			SamsGui.quit();
 	}
@@ -215,12 +214,12 @@ public class Controller {
 		if ( db == null )
 			return;
 		final List paths = dbgui.getTree().getSelectedSpectraPaths();
-		if ( paths == null ) {
+		if ( paths.size() == 0 ) {
 			SamsGui.message("No selected spectra to copy");
 			return;
 		}
 		try {
-			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Copying...", false, false, false);
+			ClipboardObserver obs = new ClipboardObserver(dbgui, "Copying...", false, false, false);
 			db.getClipboard().setObserver(obs);
 			Thread thread = new Thread(new Runnable() {
 				public void run() {
@@ -287,12 +286,12 @@ public class Controller {
 		if ( db == null )
 			return;
 		final List paths = dbgui.getTree().getSelectedSpectraPaths();
-		if ( paths == null ) {
+		if ( paths.size() == 0 ) {
 			SamsGui.message("No selected spectra to cut");
 			return;
 		}
 		try {
-			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Cutting...", true, false, true);
+			ClipboardObserver obs = new ClipboardObserver(dbgui, "Cutting...", true, false, true);
 			db.getClipboard().setObserver(obs);
 			Thread thread = new Thread(new Runnable() {
 				public void run() {
@@ -322,21 +321,51 @@ public class Controller {
 		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		final List paths = dbgui.getTree().getSelectedSpectraPaths();
-		if ( paths == null || paths.size() == 0 ) {
-			SamsGui.message("No selected spectra to delete");
-			return;
+		
+		boolean collect_isSpectra;
+		List collect_paths;
+		String confirm_msg;
+		
+		List selectedSpectraPaths = dbgui.getTree().getSelectedSpectraPaths();
+		List selectedGroupPaths = dbgui.getTree().getSelectedGroupPaths();
+		if ( selectedGroupPaths.size() == 0 ) {
+			if ( selectedSpectraPaths.size() == 0 ) {
+				SamsGui.message("No selected spectra to delete");
+				return;
+			}
+			collect_isSpectra = true;
+			collect_paths = selectedSpectraPaths;
+			confirm_msg = "Delete " +
+				(collect_paths.size()==1 ? (String)collect_paths.get(0) : collect_paths.size()+" selected elements")+ "?"; 
 		}
-		if ( !SamsGui.confirm("Delete " +(paths.size()==1 ? (String)paths.get(0) : paths.size()+" selected elements")+ "?") )
+		else { // selectedGroupPaths.size() > 0
+			if ( selectedSpectraPaths.size() > 0 ) {
+				SamsGui.message("Both groups and spectra are selected.");
+				return;
+			}
+			collect_isSpectra = false;
+			collect_paths = selectedGroupPaths;
+			confirm_msg = "Delete " +
+				(collect_paths.size()==1 ? (String)collect_paths.get(0) : collect_paths.size()+" selected groups")+ "?\n"+
+				"All members and subgroups will also be deleted.";
+		}
+		if ( !SamsGui.confirm(confirm_msg) )
 			return;
+		
+		final boolean isSpectra = collect_isSpectra;
+		final List paths = collect_paths;
+
 		try {
-			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Deleting...", true, false, true);
+			ClipboardObserver obs = new ClipboardObserver(dbgui, "Deleting...", true, false, true);
 			db.getClipboard().setObserver(obs);
 			Thread thread = new Thread(new Runnable() {
 				public void run() {
 					_setEnabledClipboardActions(false);
 					try {
-						db.getClipboard().delete(paths);
+						if ( isSpectra )
+							db.getClipboard().delete(paths);
+						else
+							db.getClipboard().deleteGroups(paths);
 					}
 					catch(Throwable ex) {
 						handleThrowable(ex);
@@ -367,6 +396,16 @@ public class Controller {
 	public static void rename() {
 		try {
 			SamsGui.rename();
+		}
+		catch(Throwable ex) {
+			handleThrowable(ex);
+		}
+	}
+	
+	/** Creates a subgroup under current selected group. */
+	public static void createGroup() {
+		try {
+			SamsGui.createGroup();
 		}
 		catch(Throwable ex) {
 			handleThrowable(ex);

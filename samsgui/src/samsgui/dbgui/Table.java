@@ -40,31 +40,6 @@ public abstract class Table extends JPanel {
 
 	/** called to rename a row. */
 	protected abstract ISpectrum doRenaming(ISpectrum s, String new_name_value);
-	
-	/*  ********** NOT USED -- COMMENTED OUT
-	 * Programatically lets the user change the name of a spectrum. 
-	 * Assumes that table is visible.
-	 */  /*
-	public void startEditName(String path) {
-		final int name_column = 1;   // MAGIC: try to fix this later.
-		// find row:
-		int row = -1;
-		for ( int i = 0; i < spectrums.size(); i++ ) {
-			ISpectrum s = (ISpectrum) spectrums.get(i);
-			if ( s.getPath().equals(path) ) {
-				row = i;
-				break;
-			}
-		}
-		if ( row < 0 )  // not found!
-			SamsGui.message(path+ ": path not found in the table!!");
-		else {
-			jtable.setRowSelectionInterval(row, row);
-			jtable.scrollRectToVisible(jtable.getCellRect(row, name_column, true));
-			jtable.editCellAt(row, name_column);
-			jtable.requestFocus();
-		}
-	}*/
 
 	/** Update the meta data. */
 	public void updateMetadata() {

@@ -394,7 +394,6 @@ public class SamsGui {
 		return confirm(getFocusedFrame(), msg);
 	}
 	public static boolean confirm(Component comp, String msg) {
-		Toolkit.getDefaultToolkit().beep();
 		int sel = JOptionPane.showConfirmDialog(
 			comp,
 			msg,
@@ -409,7 +408,6 @@ public class SamsGui {
 		message(getFocusedFrame(), msg);
 	}
 	public static void message(Component comp, String msg) {
-		Toolkit.getDefaultToolkit().beep();
 		JOptionPane.showMessageDialog(
 			comp,
 			msg,
@@ -482,13 +480,18 @@ public class SamsGui {
 			focusedDbGui.export(format);
 	}
 
-	public  static void viewData() {
+	public static void viewData() {
 		if ( focusedDbGui != null )
 			focusedDbGui.viewData();
 	}
 	
-	public  static void rename() throws Exception {
+	public static void rename() throws Exception {
 		if ( focusedDbGui != null )
 			focusedDbGui.rename();
+	}
+
+	public static void createGroup() throws Exception {
+		if ( focusedDbGui != null )
+			focusedDbGui.createGroup();
 	}
 }

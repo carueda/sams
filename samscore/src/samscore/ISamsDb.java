@@ -147,8 +147,12 @@ public interface ISamsDb {
 		public void cut(List paths) throws Exception;
 		
 		/** Deletes the list of given spectra. 
-		 * This is the only operation that doesn't change the current contents. */
+		 * This operation that doesn't change the current contents. */
 		public void delete(List paths) throws Exception;
+		
+		/** Deletes the list of given groups (recursively). 
+		 * This operation that doesn't change the current contents. */
+		public void deleteGroups(List paths) throws Exception;
 		
 		/** Gets the number of elements in this clipboard. */
 		public int size();

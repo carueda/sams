@@ -41,7 +41,6 @@ public final class Actions {
 	 */
 	public static List getSelectedSpectraActions(List selectedSpectra) {
 		List list = new ArrayList();
-
 		if ( selectedSpectra != null && selectedSpectra.size() == 1 ) {
 			list.add(getAction("view-data"));
 			list.add(getAction("rename"));
@@ -60,7 +59,6 @@ public final class Actions {
 		list.add(getAction("export-envi"));
 		list.add(getAction("export-envi-sl"));
 		list.add(getAction("export-ascii"));
-		
 		return list;
 	}
 
@@ -73,22 +71,17 @@ public final class Actions {
 	 */
 	public static List getGroupActions(List selectedGroups) {
 		List list = new ArrayList();
-
 		if ( selectedGroups != null && selectedGroups.size() == 1 ) {
 			String group_path = (String) selectedGroups.get(0);
-			// PENDING where to allow for creation of subgroups ....
-			if ( group_path.startsWith("My groups") ) {
-				list.add(getAction("new-group"));
-			}
+			list.add(getAction("new-group"));
 			list.add(getAction("paste"));
 			list.add(null);
 		}
-		list.add(getAction("delete-grouping"));
+		list.add(getAction("delete"));
 		list.add(null);
 		list.add(getAction("export-envi"));
 		list.add(getAction("export-envi-sl"));
 		list.add(getAction("export-ascii"));
-		
 		return list;
 	}
 
@@ -199,39 +192,40 @@ public final class Actions {
 		actions.put("new-grouping-filename", new BaseAction("Filename",
 			"Creates a grouping according to file names", KeyEvent.VK_F)
 		);
-		actions.put("delete-grouping", new BaseAction("Delete group",
-			"Deletes this group")
-		);
 		
 		actions.put("new-group", new BaseAction("New subgroup",
-			"Lets you create a subgroup")
+			"Create a subgroup") {
+				public void run() {
+					Controller.createGroup();
+				}
+			}
 		);
 
 		actions.put("about", new BaseAction("About SAMS..."));
 		
 		actions.put("copy", new BaseAction("Copy",
-			"Copies the selected signatures to an internal clipboard", KeyEvent.VK_C, "control INSERT") {
+			"Copies selected elements to an internal clipboard", "control INSERT") {
 				public void run() {
 					Controller.copy();
 				}
 			}
 		);
 		actions.put("cut", new BaseAction("Cut",
-			"Cuts the selected signatures to an internal clipboard", KeyEvent.VK_U, "shift DELETE") {
+			"Cuts selected elements to an internal clipboard", "shift DELETE") {
 				public void run() {
 					Controller.cut();
 				}
 			}
 		);
 		actions.put("paste", new BaseAction("Paste",
-			"Pastes signatures from the internal clipboard into the selected group", KeyEvent.VK_R, "shift INSERT") {
+			"Pastes elements from the internal clipboard into the selected group", "shift INSERT") {
 				public void run() {
 					Controller.paste();
 				}
 			}
 		);
 		actions.put("delete", new BaseAction("Delete",
-			"Deletes the list of signatures", KeyEvent.VK_D, "DELETE") {
+			"Deletes the selected elements", "DELETE") {
 				public void run() {
 					Controller.delete();
 				}
@@ -321,6 +315,10 @@ public final class Actions {
 		}
 		BaseAction(String name, String short_descr, int mnemonic, String keyStroke) {
 			this(name, short_descr, mnemonic);
+			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(keyStroke));
+		}
+		BaseAction(String name, String short_descr, String keyStroke) {
+			this(name, short_descr);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(keyStroke));
 		}
 		
