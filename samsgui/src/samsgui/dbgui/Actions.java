@@ -57,6 +57,8 @@ public final class Actions {
 		list.add(getAction("export-envi"));
 		list.add(getAction("export-envi-sl"));
 		list.add(getAction("export-ascii"));
+		list.add(null);
+		list.add(getAction("reload-opers"));
 		return list;
 	}
 
@@ -303,6 +305,13 @@ public final class Actions {
 			}
 		);
 		
+		actions.put("reload-opers", new BaseAction("Reload operations",
+			"Reloads operations") {
+				public void run() {
+					Controller.reloadOperations();
+				}
+			}
+		);
 	}
 
 	/** Base class for action objects */

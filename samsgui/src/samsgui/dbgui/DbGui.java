@@ -56,6 +56,8 @@ public class DbGui extends JPanel {
 	private JPopupMenu popupSpectrumNoSelection;
 	private JPopupMenu popupGroupNoSelection;
 
+	private JMenu computeMenu_main;
+	private JMenu computeMenu_popup;
 		
 	public DbGui(JFrame parentFrame, ISamsDb db) throws Exception {
 		super(new BorderLayout());
@@ -497,7 +499,7 @@ public class DbGui extends JPanel {
 		label.setForeground(Color.gray);
 		popupSpectrum.add(label);
 		popupSpectrum.addSeparator();
-		popupSpectrum.add(createComputeMenu());
+		popupSpectrum.add(computeMenu_popup = createComputeMenu(null));
 		popupSpectrum.addSeparator();
 		List list = Actions.getSelectedSpectraActions(selectedSpectra);
 		for ( Iterator it = list.iterator(); it.hasNext(); ) {
@@ -652,7 +654,7 @@ public class DbGui extends JPanel {
 		m = new JMenu("Selected");
 		mb.add(m);
 		m.setMnemonic(KeyEvent.VK_S);
-		m.add(createComputeMenu());
+		m.add(computeMenu_main = createComputeMenu(null));
 		m.addSeparator();
 		for ( Iterator it = Actions.getSelectedSpectraActions(null).iterator(); it.hasNext(); ) {
 			Action action = (Action) it.next();
@@ -718,17 +720,22 @@ public class DbGui extends JPanel {
 	}
 
 	/** Gets the menu for "compute" options.*/
-	JMenu createComputeMenu() {
-		JMenu computeMenu = new JMenu("Compute");
-		computeMenu.setMnemonic(KeyEvent.VK_O);
+	private JMenu createComputeMenu(JMenu menu) {
+		if ( menu == null ) {
+			menu = new JMenu("Compute");
+		}
+		else {
+			menu.removeAll();
+		}
+		menu.setMnemonic(KeyEvent.VK_O);
 		for ( Iterator it = Actions.getComputeActions(null).iterator(); it.hasNext(); ) {
 			Action action = (Action) it.next();
 			if ( action == null )
-				computeMenu.addSeparator();
+				menu.addSeparator();
 			else
-				computeMenu.add(action);
+				menu.add(action);
 		}
-		return computeMenu;
+		return menu;
 	}
 
 	/** @return A list (Action) containing the actions. */
@@ -864,6 +871,14 @@ public class DbGui extends JPanel {
 		}
 		referenceSID = focusedNode.getLocationPath();
 		updateStatus();
+	}
+	
+	/** Reloads operations and updates the Compute menus */
+	public void reloadOperations() {
+		SignatureOperationManager.reloadScriptedOperations();
+		createComputeMenu(computeMenu_main);
+		createComputeMenu(computeMenu_popup);
+		SamsGui.message("Operations reloaded.");
 	}
 
 	public void viewData() {

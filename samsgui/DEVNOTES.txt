@@ -2,6 +2,16 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 03/22/05 - version 3.2
+ 	- SignatureTable: wavelength and reflectance column headers
+	  renamed to "x" and "y" (more general terms). I also added
+	  a new column to put the index. So the columns now are:
+	     index, x, y, and info.
+		 
+	- New "reload-opers" action to reload scripted operations.
+	  A new method was added to SignatureOperationManager
+	  (sigopers module) to support this.
+	  
  03/21/05 - version 3.2
  	- ImportSignaturesFromAsciiFile: fixed the final message
 	  telling about the number of signatures imported.

@@ -141,6 +141,10 @@ public class Controller {
 		SamsGui.setAsReference();
 	}
 	
+	public static void reloadOperations() {
+		SamsGui.reloadOperations();
+	}
+	
 	public static void compute(String opername) {
 		try {
 			SamsGui.compute(opername);

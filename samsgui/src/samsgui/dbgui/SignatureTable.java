@@ -66,7 +66,7 @@ public abstract class SignatureTable extends JPanel {
 	}
 	
 	private class TableModel extends AbstractTableModel {
-		String[] colnames = { "Wavelength", "Reflectance", "Info" };
+		String[] colnames = { "", "x", "y", "Info" };
 	
 		public int getColumnCount() {
 			return colnames.length;
@@ -84,10 +84,12 @@ public abstract class SignatureTable extends JPanel {
 			Signature.Datapoint dp = sig.getDatapoint(row);
 			String val = "??";
 			if ( col == 0 )
-				val = String.valueOf(dp.x);
+				val = String.valueOf(row+1);
 			else if ( col == 1 )
+				val = String.valueOf(dp.x);
+			else if ( col == 2 )
 				val = String.valueOf(dp.y);
-			else if ( col == 2 ) {
+			else if ( col == 3 ) {
 				val = dp.obj == null ? "" : ((String) dp.obj);
 			}
 			return val;
@@ -99,19 +101,19 @@ public abstract class SignatureTable extends JPanel {
 	
 		public void setValueAt(Object val, int row, int col) {
 			Signature.Datapoint dp = sig.getDatapoint(row);
-			if ( 0 <= col && col <= 1 ) {
+			if ( 1 <= col && col <= 2 ) {
 				try {
 					double d = Double.parseDouble((String) val);
-					if ( col == 0 )
+					if ( col == 1 )
 						dp.x = d;
-					else if ( col == 1 )
+					else if ( col == 2 )
 						dp.y = d;
 				}
 				catch(NumberFormatException ex) {
 					return; // ignore
 				}
 			}
-			else if ( col == 2 ) {
+			else if ( col == 3 ) {
 				String info = ((String) val).trim();
 				if ( info.length() == 0 )
 					info = null;

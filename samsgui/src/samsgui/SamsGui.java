@@ -542,6 +542,11 @@ public class SamsGui {
 			focusedDbGui.setAsReference();
 	}
 
+	public static void reloadOperations() {
+		if ( focusedDbGui != null )
+			focusedDbGui.reloadOperations();
+	}
+
 	public static void compute(String opername) throws Exception {
 		if ( focusedDbGui != null )
 			focusedDbGui.compute(opername);
