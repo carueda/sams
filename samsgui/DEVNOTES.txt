@@ -2,6 +2,12 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/24/03
+	- clipboard operations: 
+		- progress-bar now working very nicely.
+		- all copy-cut-paste-delete operations already implemented
+		- table updated.
+		- PENDING: Sychronize ISfsys vs. TreeModel !!
 07/23/03
 	- Now on copy-cut-paste-delete actions ...
 	  pending: update table, a progress-bar for lengthy actions...

@@ -32,16 +32,6 @@ public class Importer {
 		return filetypes;
 	}
 	
-    static void doUpdate(Runnable r) {
-        try {
-            SwingUtilities.invokeAndWait(r);
-        }
-        catch (Exception e) {
-            System.err.println(e);
-        }
-    }
-
-	
 	/** Interacts with the user to import files from a given directory. */
 	public static void importFilesFromDirectory(DbGui dbgui) {
 		new ImportFilesFromDirectory().go(dbgui);
@@ -164,7 +154,7 @@ public class Importer {
 					// do importation:
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
-							doUpdate(new Runnable() {
+							Controller.doUpdate(new Runnable() {
 								public void run() {
 									b_choose.setEnabled(false);
 									f_file.setEditable(false);
@@ -425,7 +415,7 @@ public class Importer {
 					// do importation:
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
-							doUpdate(new Runnable() {
+							Controller.doUpdate(new Runnable() {
 								public void run() {
 									b_choose.setEnabled(false);
 									f_file.setEditable(false);

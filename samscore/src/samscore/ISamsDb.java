@@ -40,6 +40,9 @@ public interface ISamsDb {
 	/** Adds an element */
 	public ISpectrum addSpectrum(String path, Signature sig) throws Exception;
 
+	/** Removes an element including its signature file. */
+	public void deleteSpectrum(String path) throws Exception;
+
 	/** Gets a signature */
 	public Signature getSignature(String path) throws Exception;
 	
@@ -109,20 +112,40 @@ public interface ISamsDb {
 	}
 	
 	/** Returns the associated clipboard. */
-	public IClipboard getClipboard() throws Exception;
+	public IClipboard getClipboard();
 	
-	/** Provides clipboard-like actions on this database. */
+	/** Provides clipboard-like tasks on this database. */
 	public interface IClipboard {
 		/** Copies a list of spectra into this clipboard. */
 		public void copy(List paths) throws Exception;
 		
+		/** Pastes the spectra in this clipboard into the given location. */
+		public void paste(String target_location) throws Exception ;
+		
 		/** Cuts a list of spectra into this clipboard. */
 		public void cut(List paths) throws Exception;
 		
-		/** Pastes the spectra in this clipboard into the given location. */
-		public void paste(String target_location) throws Exception;
-		
-		/** Deletes the list of given spectra. */
+		/** Deletes the list of given spectra. 
+		 * This is the only operation that doesn't change the current contents. */
 		public void delete(List paths) throws Exception;
+		
+		/** Gets the number of elements in this clipboard. */
+		public int size();
+		
+		/** Sets the task observer. */
+		public void setObserver(IObserver obs);
+		
+		/** Interface for clipboard task observers. */
+		public interface IObserver {
+			/** called with the number of elements to be processed in a task. */
+			public void startTask(int total);
+			
+			/** called when an element has just been processed. Note: index in [1..total]. 
+			 * @return true to stop the task. */
+			public boolean elementFinished(int index, String path);
+
+			/** called with the number of elements successfully processed in a task. */
+			public void endTask(int processed);
+		}
 	}
 }

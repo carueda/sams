@@ -109,6 +109,7 @@ public class Tree extends JPanel {
 	private void _setInfo(DefaultMutableTreeNode node, IDirectory group) {
 		ISamsDb db = dbgui.getDatabase();
 		assert db != null;
+		assert group != null;
 		node.setUserObject(group);
 		createGroupNode(node, group);
 	}
@@ -136,26 +137,74 @@ public class Tree extends JPanel {
 			if ( !(obj instanceof INode) )
 				return null;
 			String n_part = ((INode) obj).getPath();
-			n_part = n_part.substring(n_part.indexOf('/') + 1);
+			n_part = n_part.substring(n_part.lastIndexOf('/') + 1);
 			if ( n_part.equals(part) )
 				return n;
 		}
 		return null;
 	}
 	
+	/** Returns path to affected parent */
+	public String insertNode(String path) {
+		String parent_path = path.substring(0, path.lastIndexOf('/'));
+		DefaultMutableTreeNode parent = findNode(parent_path);
+		if ( parent == null ) {
+			return null;
+		}
+		ISamsDb db = dbgui.getDatabase();
+		if ( db == null ) {
+			return null;
+		}
+		try {
+			IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(path);
+			if ( f == null )
+				System.out.println(path+ ": path not found!!");
+			else {
+				addObject(parent, f, true);
+				return parent_path;
+			}
+		}
+		catch(Exception ex) {
+		}
+		return null;
+	}
+		
+	/** Returns path to affected parent */
+	public String removeNode(String path) {
+		DefaultMutableTreeNode node = findNode(path);
+		if ( node == null ) {
+			return null;
+		}
+		DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+		if ( parent == null ) {
+			return null;
+		}
+		treeModel.removeNodeFromParent(node);
+		Object obj = parent.getUserObject();
+		if ( obj instanceof IDirectory )
+			return ((IDirectory) obj).getPath();
+		else
+			return null;
+	}
 	
-	public void update(IDirectory dir) {
-		DefaultMutableTreeNode node = findNode(dir.getPath());
+	public void reloadModel() {
+		treeModel.reload();
+	}
+	
+	public void updateDirectory(String path, boolean scrollToLastChild) {
+		DefaultMutableTreeNode node = findNode(path);
 		if ( node == null )
 			return;
 		node.removeAllChildren();
 		ISamsDb db = dbgui.getDatabase();
 		if ( db != null ) {
-			_setInfo(node, dir);
-			DefaultMutableTreeNode lastChild = (DefaultMutableTreeNode) node.getLastChild();
-			if ( lastChild != null ) {
-				treeModel.reload();
+			createGroupNode(node, (IDirectory) node.getUserObject());
+			if ( scrollToLastChild && node.getChildCount() > 0 ) {
+				DefaultMutableTreeNode lastChild = (DefaultMutableTreeNode) node.getLastChild();
 				tree.scrollPathToVisible(new TreePath(lastChild.getPath()));
+			}
+			else {
+				tree.scrollPathToVisible(new TreePath(node.getPath()));
 			}
 		}
 	}
@@ -193,10 +242,13 @@ public class Tree extends JPanel {
 	}
 	
 	public List getSelectedNodes(Class clazz) {
-		return getSelectedNodes(clazz, true);
+		return getSelectedNodes(clazz, 0);
 	}
 	
-	public List getSelectedNodes(Class clazz, boolean nodes) {
+	/**
+	 * @param what 0: nodes containing clazz instances, 1: clazz instances, 2: paths of INodes instances
+	 */
+	public List getSelectedNodes(Class clazz, int what) {
 		List list = null;
 		TreePath[] paths = tree.getSelectionPaths(); 
 		if ( paths != null ) {
@@ -206,10 +258,12 @@ public class Tree extends JPanel {
 				if ( clazz.isInstance(obj) ) {
 					if ( list == null )
 						list = new ArrayList();
-					if ( nodes )
+					if ( what == 0 )  // nodes
 						list.add(n);
-					else
+					else if ( what == 1 )  // instances
 						list.add(obj);
+					else if ( what == 2 && obj instanceof INode )   // paths
+						list.add( ((INode)obj).getPath() );
 				}
 			}
 		}

@@ -15,6 +15,7 @@ import java.awt.event.*;
 import java.net.URL;
 import java.io.*;
 import java.util.List;
+import java.util.*;
 
 /** 
  * Main SAMS GUI controller.
@@ -147,55 +148,231 @@ public class Controller {
 		}
 	}
 	
+	private static void _setEnabledClipboardActions(boolean b) {
+		for ( Iterator iter = Actions.getClipboardActions().iterator(); iter.hasNext(); ) {
+			((Action) iter.next()).setEnabled(b);
+		}
+	}
+	
+	static class ClipboardObserver implements IClipboard.IObserver {
+		DbGui dbgui;
+		Object message;
+		boolean refreshTable;
+		boolean insertIntoTree;
+		boolean removeFromTree;
+		Set dirs_to_update = new HashSet();
+		int total;
+		int index;
+		Component parent;
+		ProgressMonitor pm;
+		
+		ClipboardObserver(DbGui dbgui, Object message, boolean refreshTable, boolean insertIntoTree, boolean removeFromTree) {
+			this.dbgui = dbgui;
+			this.message = message;
+			this.refreshTable = refreshTable;
+			this.insertIntoTree = insertIntoTree;
+			this.removeFromTree = removeFromTree;
+		}
+		
+		public void startTask(int total) {
+			this.total = total;
+			pm = new ProgressMonitor(dbgui.getTree(), message, null, 1, total);
+			pm.setMillisToDecideToPopup(0);
+			pm.setMillisToPopup(0);
+		}
+		
+		public boolean elementFinished(int index, String path) {
+			this.index = index;
+			pm.setProgress(index);
+			if ( insertIntoTree ) {
+				String parent_path = dbgui.getTree().insertNode(path);
+			}
+			if ( removeFromTree ) {
+				String parent_path = dbgui.getTree().removeNode(path);
+				if ( parent_path != null )
+					dirs_to_update.add(parent_path);
+			}
+			return pm.isCanceled();
+		}
+		
+		public void endTask(int processed) { 
+			pm.close();
+			// update affected directories:
+			for ( Iterator iter = dirs_to_update.iterator(); iter.hasNext(); ) {
+				String parent_path = (String) iter.next();
+				dbgui.getTree().updateDirectory(parent_path, false);
+			}
+			dirs_to_update.clear();
+			// update table:
+			if ( refreshTable )
+				dbgui.refreshTable();
+		}
+	};
+	
 	public static void copy() {
 		DbGui dbgui = SamsGui.getFocusedDbGui();
 		if ( dbgui == null )
 			return;
-		ISamsDb db = dbgui.getDatabase();
+		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		List paths = dbgui.getSelectedSpectraPaths();
+		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
 		if ( paths == null ) {
 			SamsGui.message("No selected spectra to copy");
 			return;
 		}
 		try {
-			IClipboard clipboard = db.getClipboard(); 
-			clipboard.copy(paths);
+			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Copying...", false, false, false);
+			db.getClipboard().setObserver(obs);
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					_setEnabledClipboardActions(false);
+					try {
+						db.getClipboard().copy(paths);
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+						SamsGui.message("Error: " +ex.getMessage());
+					}
+					finally {
+						_setEnabledClipboardActions(true);
+					}
+				}
+			});
+			thread.start();
 		}
 		catch(Exception ex) {
+			ex.printStackTrace();
 			SamsGui.message("Error: " +ex.getMessage());
 		}
 	}
 	
 	public static void paste() {
-		DbGui dbgui = SamsGui.getFocusedDbGui();
+		final DbGui dbgui = SamsGui.getFocusedDbGui();
 		if ( dbgui == null )
 			return;
-		ISamsDb db = dbgui.getDatabase();
+		final ISamsDb db = dbgui.getDatabase();
 		if ( db == null )
 			return;
-		List dirs = dbgui.getSelectedDirectories();
-		if ( dirs == null || dirs.size() != 1 ) {
+		List paths = dbgui.getTree().getSelectedNodes(IDirectory.class, 2);
+		if ( paths == null || paths.size() != 1 ) {
 			SamsGui.message("One group must be selected to paste signatures to");
 			return;
 		}
-		IDirectory dir = (IDirectory) dirs.get(0);
+		final String target_path = (String) paths.get(0);
 		try {
-			IClipboard clipboard = db.getClipboard(); 
-			clipboard.paste(dir.getPath());
-			dbgui.getTree().update(dir);
+			db.getClipboard().setObserver(new ClipboardObserver(dbgui, "Pasting to " +target_path+ "...", true, true, false));
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					_setEnabledClipboardActions(false);
+					try {
+						db.getClipboard().paste(target_path);
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+						SamsGui.message("Error: " +ex.getMessage());
+					}
+					finally {
+						_setEnabledClipboardActions(true);
+					}
+					//dbgui.getTree().updateDirectory(target_path, true);
+					//dbgui.getTree().reloadModel();
+				}
+			});
+			thread.start();
 		}
 		catch(Exception ex) {
+			ex.printStackTrace();
 			SamsGui.message("Error: " +ex.getMessage());
 		}
 	}
 
 	public static void cut() {
+		DbGui dbgui = SamsGui.getFocusedDbGui();
+		if ( dbgui == null )
+			return;
+		final ISamsDb db = dbgui.getDatabase();
+		if ( db == null )
+			return;
+		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
+		if ( paths == null ) {
+			SamsGui.message("No selected spectra to cut");
+			return;
+		}
+		try {
+			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Cutting...", true, false, true);
+			db.getClipboard().setObserver(obs);
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					_setEnabledClipboardActions(false);
+					try {
+						db.getClipboard().cut(paths);
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+						SamsGui.message("Error: " +ex.getMessage());
+					}
+					finally {
+						_setEnabledClipboardActions(true);
+					}
+				}
+			});
+			thread.start();
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+			SamsGui.message("Error: " +ex.getMessage());
+		}
 	}
 
 	public static void delete() {
+		DbGui dbgui = SamsGui.getFocusedDbGui();
+		if ( dbgui == null )
+			return;
+		final ISamsDb db = dbgui.getDatabase();
+		if ( db == null )
+			return;
+		final List paths = dbgui.getTree().getSelectedNodes(IFile.class, 2);
+		if ( paths == null || paths.size() == 0 ) {
+			SamsGui.message("No selected spectra to cut");
+			return;
+		}
+		if ( !SamsGui.confirm("Delete " +(paths.size()==1 ? (String)paths.get(0) : paths.size()+" selected elements")+ "?") )
+			return;
+		try {
+			final ClipboardObserver obs = new ClipboardObserver(dbgui, "Deleting...", true, false, true);
+			db.getClipboard().setObserver(obs);
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					_setEnabledClipboardActions(false);
+					try {
+						db.getClipboard().delete(paths);
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+						SamsGui.message("Error: " +ex.getMessage());
+					}
+					finally {
+						_setEnabledClipboardActions(true);
+					}
+				}
+			});
+			thread.start();
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+			SamsGui.message("Error: " +ex.getMessage());
+		}
 	}
+	
+    public static void doUpdate(Runnable r) {
+        try {
+            SwingUtilities.invokeAndWait(r);
+        }
+        catch (Exception e) {
+            System.err.println(e);
+        }
+    }
 	
 	/** Dialog utilities. */
 	public static class Dialogs {

@@ -14,6 +14,7 @@ import java.awt.event.*;
  * @version $Id$ 
  */
 public final class Actions {
+	private static List clipboardActions = null;
 	
 	/**
 	 * Gets an specific action.
@@ -65,6 +66,18 @@ public final class Actions {
 	}
 
 
+	/** Gets the list of clipboard actions. */
+	public static List getClipboardActions() {
+		if ( clipboardActions == null ) {
+			clipboardActions = new ArrayList();
+			clipboardActions.add(getAction("copy"));
+			clipboardActions.add(getAction("cut"));
+			clipboardActions.add(getAction("paste"));
+			clipboardActions.add(getAction("delete"));
+		}
+		return clipboardActions;
+	}
+	
 	// mapping String->Action	
 	private static Map actions;
 	

@@ -1,6 +1,7 @@
 package samsgui.dbgui;
 
 import samsgui.SamsGui;
+import samsgui.Controller;
 import samsgui.BaseDialog;
 
 import samscore.ISamsDb;
@@ -55,15 +56,6 @@ public class Compute {
 		else
 			new SingleForm(sigOper).go();
 	}
-
-    static void doUpdate(Runnable r) {
-        try {
-            SwingUtilities.invokeAndWait(r);
-        }
-        catch (Exception e) {
-            System.err.println(e);
-        }
-    }
 
 	void addParInfoComponents(List array) {
 		if ( parInfo == null )
@@ -234,7 +226,7 @@ public class Compute {
 					// do computation:
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
-							doUpdate(new Runnable() {
+							Controller.doUpdate(new Runnable() {
 								public void run() {
 									f_resultname.setEditable(false);
 									btnAccept.setEnabled(false);
@@ -264,7 +256,7 @@ public class Compute {
 								final IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
 
 								// update GUI
-								doUpdate(new Runnable() {
+								Controller.doUpdate(new Runnable() {
 									public void run() {
 										dbgui.getTree().addObject(computedNode, f, true);
 										dbgui.refreshTable();
@@ -418,7 +410,7 @@ public class Compute {
 					// do computation:
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
-							doUpdate(new Runnable() {
+							Controller.doUpdate(new Runnable() {
 								public void run() {
 									f_resultname.setEditable(false);
 									btnAccept.setEnabled(false);
@@ -463,7 +455,7 @@ public class Compute {
 								}
 
 								// update GUI
-								doUpdate(new Runnable() {
+								Controller.doUpdate(new Runnable() {
 									public void run() {
 										if ( r_inplace.isSelected() )
 											dbgui.plotSelectedSignatures(true);

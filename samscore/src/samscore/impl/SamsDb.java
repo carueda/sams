@@ -240,11 +240,21 @@ class SamsDb implements ISamsDb {
 		setSignature(path, sig);
 		return spectrum;
 	}
-
+	
+	public void deleteSpectrum(String path) throws Exception {
+		path = normalizePath(path);
+		// remove entry:
+		ISpectrum spectrum = (ISpectrum) spectrums.get(path);
+		if ( spectrum != null )
+			spectrums.remove(path);
+		// remove signature:
+		File file = new File(sigsDir, path);
+		if ( file.exists() )
+			file.delete();
+	}
+	
 	public Signature getSignature(String path) throws Exception {
 		path = normalizePath(path);
-		if ( !path.endsWith(".txt") )
-			path += ".txt";
 		File file = new File(sigsDir, path);
 		if ( !file.exists() )
 			return null;
@@ -521,7 +531,7 @@ class SamsDb implements ISamsDb {
 		}
 	}
 
-	public IClipboard getClipboard() throws Exception {
+	public IClipboard getClipboard() {
 		return clipboard;
 	}
 	
@@ -537,63 +547,105 @@ class SamsDb implements ISamsDb {
 	
 	/** the clipboard */
 	class Clipboard implements IClipboard {
-		// current contents is from a "copy" action?
-		boolean copied;
 		// the elements in the clipboard
-		List elements = null;
+		List elements = new ArrayList();
+		
+		// a default observer
+		final IObserver null_obs = new IObserver() {
+			public void startTask(int total) {}
+			public boolean elementFinished(int index, String path) { return false; } 
+			public void endTask(int processed) { }
+		};
+		IObserver obs = null_obs;
+		
+		public int size() {
+			return elements.size();
+		}
+		
+		public void setObserver(IObserver obs) {
+			this.obs = obs == null ? null_obs : obs;
+		}
 		
 		public void copy(List paths) throws Exception {
 			if ( paths == null || paths.size() == 0 )
 				return;
+			obs.startTask(paths.size());
+			int processed = 0;
 			List new_elements = new ArrayList();
-			for ( Iterator iter = paths.iterator(); iter.hasNext(); ) {
-				String path = (String) iter.next();
-				try {
-					Spectrum spec = (Spectrum) getSpectrum(path);
-					Signature sig = getSignature(path);
-					new_elements.add(new ClipboardElement(spec, sig));
-				}
-				catch (Exception ex) {
-					// ignore
+			for ( int i = 0; i < paths.size(); i++ ) {
+				String path = (String) paths.get(i);
+				Spectrum spec = (Spectrum) getSpectrum(path);
+				Signature sig = getSignature(path);
+				new_elements.add(new ClipboardElement(spec, sig));
+				processed++;
+				if ( obs.elementFinished(i+1, path) ) {
+					obs.endTask(0);  // no element was actually copied.
+					return;
 				}
 			}
-			if ( new_elements.size() > 0 ) {
-				if ( elements == null )
-					elements = new ArrayList();
+			if ( new_elements.size() > 0 )
 				elements = new_elements;
-				copied = true;
-			}
+			obs.endTask(processed);
 		}
 		
 		public void paste(String target_location) throws Exception {
-			if ( elements == null || elements.size() == 0 )
+			if ( elements.size() == 0 )
 				return;
-			for ( Iterator iter = elements.iterator(); iter.hasNext(); ) {
-				ClipboardElement e = (ClipboardElement) iter.next();
+			obs.startTask(elements.size());
+			int processed = 0;
+			for ( int i = 0; i < elements.size(); i++ ) {
+				ClipboardElement e = (ClipboardElement) elements.get(i);
 				String name = e.spectrum.getString("name");
 				String new_path = normalizePath(target_location+ "/" +name);
 				int index = new_path.lastIndexOf("/") + 1;
 				target_location = new_path.substring(0, index); // from normalized new_path
 				
-				if ( copied ) {
-					String path = e.spectrum.getPath();
-					if ( new_path.equals(path) )
-						continue;
-					
+				String path = e.spectrum.getPath();
+				if ( !new_path.equals(path) ) {
 					Spectrum modified = e.spectrum.clone(new_path);
 					spectrums.put(new_path, modified);
 					setSignature(new_path, e.signature);
 				}
-				else { // cut
-					// ...
-				}
+				processed++;
+				if ( obs.elementFinished(i+1, new_path) )
+					break;  // but go to endTask
 			}
+			obs.endTask(processed);
 		}
 		
 		public void cut(List paths) throws Exception {
+			if ( paths == null || paths.size() == 0 )
+				return;
+			obs.startTask(paths.size());
+			int processed = 0;
+			elements.clear();
+			for ( int i = 0; i < paths.size(); i++ ) {
+				String path = (String) paths.get(i);
+				Spectrum spec = (Spectrum) getSpectrum(path);
+				Signature sig = getSignature(path);
+				elements.add(new ClipboardElement(spec, sig));
+				deleteSpectrum(path);
+				processed++;
+				if ( obs.elementFinished(i+1, path) )
+					break;  // but go to endTask
+			}
+			obs.endTask(processed);
 		}
 		
 		public void delete(List paths) throws Exception {
+			if ( paths == null || paths.size() == 0 )
+				return;
+			obs.startTask(paths.size());
+			int processed = 0;
+			for ( int i = 0; i < paths.size(); i++ ) {
+				String path = (String) paths.get(i);
+				Spectrum spec = (Spectrum) getSpectrum(path);
+				deleteSpectrum(path);
+				processed++;
+				if ( obs.elementFinished(i+1, path) )
+					break;  // but go to endTask
+			}
+			obs.endTask(processed);
 		}
 	}
 }

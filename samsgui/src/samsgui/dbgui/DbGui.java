@@ -352,7 +352,7 @@ public class DbGui extends JPanel {
 			}
 			reference_sig = db.getSignature(referenceSID);
 		}
-		List selectedSpectra = tree.getSelectedNodes(IFile.class, false);
+		List selectedSpectra = tree.getSelectedNodes(IFile.class, 1);
 		if ( selectedSpectra != null )
 			new Compute(this, sigOper, selectedSpectra, reference_sig);
 	}
@@ -619,34 +619,9 @@ public class DbGui extends JPanel {
 		updateStatus();
 	}
 
-	/** gets the list of selected spectra paths. */
-	public List getSelectedSpectraPaths() {
-		List paths = null;
-		if ( db != null ) {
-			List files = tree.getSelectedNodes(IFile.class, false);
-			if ( files != null ) {
-				for ( Iterator iter = files.iterator(); iter.hasNext(); ) {
-					IFile file = (IFile) iter.next();
-					if ( paths == null )
-						paths = new ArrayList();
-					paths.add(file.getPath());
-				}
-			}
-		}
-		return paths;
-	}
-	
 	/** removes the list of selected IFile's. */
 	public void removeSpectraFiles(List files) {
 		System.out.println("removeSpectraFiles pending");
 		// PENDING
-	}
-
-	/** gets the list of selected IDirectory's. */
-	public List getSelectedDirectories() {
-		List dirs = null;
-		if ( db != null )
-			dirs = tree.getSelectedNodes(IDirectory.class, false);
-		return dirs;
 	}
 }
