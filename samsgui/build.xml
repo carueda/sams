@@ -19,6 +19,9 @@
 	<property name="kunststoff"      value="../../_GENERATED/DIST/kunststoff.jar"/>
 	<property name="bsh"             value="../../_GENERATED/DIST/bsh-1.3b2.jar"/>
 	
+	<!-- pending to make this dynamic -->
+	<property name="izdir" value="C:/Program Files/IzPack"/>
+	
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="../../_GENERATED/BUILD"/>
 
@@ -74,15 +77,10 @@
             <fileset dir="${src.dir}/img"/>
         </copy>
     </target>
-
-    <target name="installer"  depends="sams.jar, prepare-inst, nanoproperties"
+	
+    <target name="installer"  depends="sams.jar, prepare-inst"
      description="Makes an executable installer for SAMS">
-	   <java jar="${nic}" fork="true">
-            <arg value="${dist}/tmp.properties"/>
-			<arg value="${dist}/base_dist"/>
-			<arg value="${dist}/install-sams-${VERSION}.jar"/>
-       </java>
-	   <delete file="${dist}/tmp.properties"/>
+        <ant antfile="izbuild.xml"/>
     </target>
 
     <target name="prepare-inst"  depends="sams.jar">
@@ -101,16 +99,10 @@
 		<copy file="${sfsys}" todir="${dist}/base_dist/lib"/>
 		<copy file="${kunststoff}" todir="${dist}/base_dist/lib"/>
 		<copy file="${bsh}" todir="${dist}/base_dist/lib"/>
+		<copy file="${src.dir}/img/splash.png" todir="${dist}/base_dist/img"/>
+		<copy file="copyright.txt" todir="${dist}/base_dist/doc"/>
+		<copy file="izshortcut.xml" todir="${dist}/base_dist/lib"/>
     </target>
-
-  <target name="nanoproperties" depends="init">
-        <copy file="ni.properties" tofile="${dist}/tmp.properties"/>
-		<replace file="${dist}/tmp.properties">
-			<replacefilter token="@VERSION@" value="${VERSION}"/>
-			<replacefilter token="@BUILD@"   value="${DSTAMP}"/>
-		</replace>
-  </target>
-
 
 	<target name="install" depends="installer">
 		<java jar="${dist}/install-sams-${VERSION}.jar" fork="true"/>

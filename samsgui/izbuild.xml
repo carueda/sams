@@ -4,9 +4,6 @@
 	$Id$
 -->
 <project name="iz" default="iz" >
-	<property name="VERSION" value="3.0"/>
-	<property name="dist" value="../../_GENERATED/DIST"/>
-	<property name="izdir" value="C:/Program Files/IzPack"/>
 	<taskdef name="izpack" classpath="${izdir}/lib/compiler.jar"
 		classname="com.izforge.izpack.ant.IzPackTask"/>
 		

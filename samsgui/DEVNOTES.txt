@@ -2,6 +2,10 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 08/29/03 - version 3.0
+ 	- izpack now used to build installer, which allows for
+	  shortcuts (among many other things).
+	
  08/23/03 - version 3.0
  	- TO-DO.txt, BUGS.txt added.
 	
