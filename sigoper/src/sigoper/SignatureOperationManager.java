@@ -204,6 +204,11 @@ public final class SignatureOperationManager {
 				"getDoubleParameter(parname) {\n"+
 				"	int index = ((Integer) __parIndex.get(parname)).intValue();\n"+
 				"	Double.parseDouble(((String) __par_values[index]).trim());\n"+ 
+				"}\n"+
+				"\n"+
+				"getIntegerParameter(parname) {\n"+
+				"	int index = ((Integer) __parIndex.get(parname)).intValue();\n"+
+				"	Integer.parseInt(((String) __par_values[index]).trim());\n"+ 
 				"}\n"
 			);
 			
