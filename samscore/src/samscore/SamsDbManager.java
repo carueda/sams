@@ -65,6 +65,15 @@ public class SamsDbManager {
 	}
 	
 	public void importDirectory(final String dirname, boolean recurse) throws Exception {
+		importDirectory(dirname, recurse, new ImportDirectoryListener() {
+			public void importing(String relative_filename, String filetype) {
+				println(relative_filename+ ": '" +filetype+ "' file. ");
+			}
+		});
+	}
+	
+	public void importDirectory(final String dirname, boolean recurse, final ImportDirectoryListener lis)
+	throws Exception {
 		File dirfile = new File(dirname);
 		Files.traverse(
 			dirfile,
@@ -78,11 +87,10 @@ public class SamsDbManager {
 					String filename = dirname+ "/" +relative_filename;
 					try {
 						ISpectrumFile sf = Sams.readSignatureFile(filename);
+						lis.importing(relative_filename, sf.getFormatName());
 						sig.Signature sig = sf.getSignature();
-						print(filename+ ": recognized as a '" +sf.getFormatName()+ "' file. ");
 						String path = relative_filename;
 						ISamsDb.ISpectrum s = db.addSpectrum(path, sig);
-						println(" => '" +s.getPath()+ "'");
 					}
 					catch(Exception ex) {
 						println("Exception: " +ex.getMessage());
@@ -179,5 +187,9 @@ public class SamsDbManager {
 		;
 		BinaryExporter.exportToEnviSpectralLibrary(sig_names, sigs, filename, header_description, printWriter);
 		println("Exported " +sigs.length+ " element(s)");
+	}
+	
+	public interface ImportDirectoryListener {
+		public void importing(String relative_filename, String filetype);
 	}
 }

@@ -119,16 +119,32 @@ public final class Actions {
 			}
 		);
 		actions.put("import-files-database", new BaseAction("Directory",
-			"Import signatures from a directory", KeyEvent.VK_D)
+			"Import signatures from a directory", KeyEvent.VK_D) {
+				public void run() {
+					Controller.importFiles();
+				}
+			}
 		);
 		actions.put("import-envi-signatures", new BaseAction("Envi Standard file",
-			"Import from an Envi file", KeyEvent.VK_E)
+			"Import from an Envi file", KeyEvent.VK_E) {
+				public void run() {
+					Controller.importEnvi();
+				}
+			}
 		);
 		actions.put("import-signatures-from-ascii", new BaseAction("ASCII file",
-			"Import from an ASCII file", KeyEvent.VK_A)
+			"Import from an ASCII file", KeyEvent.VK_A) {
+				public void run() {
+					Controller.importAscii();
+				}
+			}
 		);
 		actions.put("import-system-clipboard", new BaseAction("System clipboard",
-			"Import from the system clipboard", KeyEvent.VK_S)
+			"Import from the system clipboard", KeyEvent.VK_S) {
+				public void run() {
+					Controller.importSystemClipboard();
+				}
+			}
 		);
 
 		actions.put("new-grouping-by-attribute", new BaseAction("Attribute value",

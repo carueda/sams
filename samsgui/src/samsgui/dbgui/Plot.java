@@ -1,5 +1,6 @@
 package samsgui.dbgui;
 
+import samsgui.Controller.Dialogs;
 import sig.Signature;
 import fileutils.Files;
 
@@ -327,14 +328,9 @@ public class Plot extends ptolemy.plot.Plot {
 	}
 
 	public void exportToEPS() {
-		int mode = JFileChooser.FILES_ONLY;
-		Files.FileFilter ff = null;
-		String filename = Files.selectSaveFile(
-			guidb.parentFrame,
+		String filename = Dialogs.selectExportFile(
 			"Please give a file name to export the plot",
-			mode, 
-			ff,
-			System.getProperty("user.directory", "")  // pending
+			null
 		);
 		if ( filename == null )
 			return;

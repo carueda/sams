@@ -75,6 +75,11 @@ public class DbGui extends JPanel {
 		setDatabase(db);
 	}
 	
+	/** notifies */
+	public void metadataUpdated() {
+		table.updateMetadata();
+	}
+
 	public ISamsDb getDatabase() {
 		return db;
 	}

@@ -1,5 +1,6 @@
 package samsgui;
 
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JDialog;
 import javax.swing.JTextField;
@@ -22,9 +23,12 @@ public class BaseDialog extends JDialog {
 	public static Border normalBorder = BorderFactory.createLineBorder(Color.black);
 	public static Border redBorder = BorderFactory.createLineBorder(Color.red);
 	
+	private Object[] components;
+	private boolean componentsEnabled;
     private JOptionPane optionPane;
     private boolean accepted;
-    private JButton btnAccept = new JButton("Aceptar");
+    protected JButton btnAccept = new JButton("OK");
+    protected JButton btnCancel = new JButton("Cancel");
 	
 	DocumentListener dl = new DocumentListener() {
 		public void insertUpdate(DocumentEvent e) {
@@ -63,9 +67,31 @@ public class BaseDialog extends JDialog {
 			((JComboBox) comp).addActionListener(update_al);
 	}
 
+	private void _setComponentsEnabled(Object comp, boolean enabled) {
+		if ( comp instanceof Container ) {
+			Container container = (Container) comp;
+			Component[] components = container.getComponents();
+			for ( int i = 0; i < components.length; i++ )
+				_setComponentsEnabled(components[i], enabled);
+		}
+		if ( comp instanceof JComponent )
+			((JComponent) comp).setEnabled(enabled);
+	}
+
+    public BaseDialog(Dialog aFrame, String title, Object[] components) {
+		super(aFrame, title, true);
+		init(components);
+	}
+	
     public BaseDialog(Frame aFrame, String title, Object[] components) {
-        super(aFrame, title, true);
-        Object[] options = {btnAccept, "Cancel"};
+		super(aFrame, title, true);
+		init(components);
+	}
+	
+    private void init(Object[] components) {
+		this.components = components;
+		componentsEnabled = true;
+        Object[] options = {btnAccept, btnCancel};
 		accepted = false;
 		btnAccept.addActionListener(accept_al);
 		for ( int i = 0; i < components.length; i++ )
@@ -106,23 +132,40 @@ public class BaseDialog extends JDialog {
                     optionPane.setValue(JOptionPane.UNINITIALIZED_VALUE);
 					//System.out.println(value.getClass().getName()+ " : " +value);
                     if (value.equals(btnAccept.getText())) {
-						if ( dataOk() ) {
+						if ( preAccept() ) {
 							accepted = true;
-							setVisible(false);
+							close();
 						}
                     } 
-					else {
-                        setVisible(false);
-                    }
+					else
+                        close();
                 }
             }
         });
     }
 	
+	public void setButtonAcceptEnabled(boolean enabled) {
+		btnAccept.setEnabled(enabled);
+	}
+
 	public void setAcceptText(String text) {
 		btnAccept.setText(text);
 	}
 
+	public String getAcceptText() {
+		return btnAccept.getText();
+	}
+
+	public boolean areComponentsEnabled() {
+		return componentsEnabled;
+	}
+	
+	public void setComponentsEnabled(boolean enabled) {
+		componentsEnabled = enabled;
+		for ( int i = 0; i < components.length; i++ )
+			_setComponentsEnabled(components[i], enabled);
+	}
+	
 	public void activate() {
 		btnAccept.setEnabled(dataOk());
 	}
@@ -135,7 +178,15 @@ public class BaseDialog extends JDialog {
 		return true;
 	}
 	
+	public boolean preAccept() {
+		return dataOk();
+	}
+	
     public boolean accepted() {
         return accepted;
+    }
+	
+    public void close() {
+        setVisible(false);
     }
 }

@@ -20,23 +20,20 @@ import java.io.*;
  * @author Carlos A. Rueda
  * @version $Id$ 
  */ 
-class EditMetadataDefinition {
-	JDialog frame;
-	ISamsDb db;
-	TableModel tableModel;
-	JTable table;
-	int selectedRow;
+abstract class EditMetadataDefinition {
+	protected JDialog frame;
+	protected ISamsDb db;
+	protected TableModel tableModel;
+	protected JTable table;
+	protected int selectedRow;
 	
-	EditMetadataDefinition(JFrame parentFrame, ISamsDb db) {
+	EditMetadataDefinition(JFrame parentFrame, ISamsDb db) throws Exception {
 		this.db = db;
-		frame = new JDialog(parentFrame, "Spectrum metadata structure", true);
-		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame = new JDialog(parentFrame, "Metadata structure", true);
 		JPanel cp = new JPanel(new BorderLayout());
-		cp.setBorder(BorderFactory.createTitledBorder("Attribute definitions"));
+		cp.setBorder(SamsGui.createTitledBorder("Attribute definitions"));
 		frame.setContentPane(cp);
-	}
-	
-	void edit() throws Exception {
+
 		tableModel = new TableModel();
 		table = new JTable(tableModel);
 		table.setPreferredScrollableViewportSize(new Dimension(300, 100));
@@ -58,12 +55,12 @@ class EditMetadataDefinition {
 		frame.getContentPane().add(buttons, "South");
 		JButton b;
 		ActionListener lis = new BListener();
-		b = new JButton("Add attribute");
+		b = new JButton("Add new attribute");
 		b.setMnemonic(KeyEvent.VK_A);
 		b.setActionCommand("add-attribute");
 		b.addActionListener(lis);
 		buttons.add(b);
-		b = new JButton("Delete attribute");
+		b = new JButton("Delete selected attribute");
 		b.setMnemonic(KeyEvent.VK_D);
 		b.setActionCommand("delete-attribute");
 		b.addActionListener(lis);
@@ -73,21 +70,29 @@ class EditMetadataDefinition {
 		b.setActionCommand("close");
 		b.addActionListener(lis);
 		buttons.add(b);
-
+		
 		frame.pack();
-		frame.setLocation(300, 300);
+		frame.setLocationRelativeTo(parentFrame);
 		frame.setVisible(true);
 	}
-		
-		
+
+	protected abstract String dataOk4new(String attr_name, String attr_defval);
+	protected abstract boolean addNew(String attr_name, String attr_defval);
+	protected abstract boolean delete(String attr_name);
+	
+	
 	class BListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				String cmd = e.getActionCommand();
-				if ( cmd.equals("add-attribute") )
+				if ( cmd.equals("add-attribute") ) {
 					add_attribute();
-				else if ( cmd.equals("delete-attribute") )
+					table.requestFocus();
+				}
+				else if ( cmd.equals("delete-attribute") ) {
 					tableModel.delete_attribute();
+					table.requestFocus();
+				}
 				else // "close"
 					EditMetadataDefinition.this.frame.dispose();
 			}
@@ -96,70 +101,55 @@ class EditMetadataDefinition {
 			}
 		}
 
-		JDialog frame;
-		//Form form;
-
-		private void accept_attribute() {
-			frame.dispose();
-			/*String name = form.stringValue("atr-name");
-			String type = form.stringValue("atr-type");
-			String defaultValue = form.stringValue("atr-defaultValue");
-			if ( DBUtil.addSpectrumAttribute(db, name, type, defaultValue) ) {
-				int lastRow = table.getRowCount() -1;
-				tableModel.fireTableRowsInserted(lastRow, lastRow);
-			}*/
-		}
-		private void cancel_attribute() {
-			frame.dispose();
-		}
-		
 		private void add_attribute() {
-			/*form = createNewAttributeForm();
-			form.addKeyListener(new KeyAdapter() {
-				public void keyTyped(KeyEvent ev) {
-					if ( ev.getKeyChar() == KeyEvent.VK_ENTER )
-						accept_attribute();
-					else if ( ev.getKeyChar() == KeyEvent.VK_ESCAPE )
-						cancel_attribute();
+			final JTextField f_name = new JTextField(12);
+			final JTextField f_defval = new JTextField(12);
+			final JLabel status = new JLabel();
+			status.setFont(status.getFont().deriveFont(Font.ITALIC));
+			
+			f_name.setBorder(SamsGui.createTitledBorder("Attribute name"));
+			f_defval.setBorder(SamsGui.createTitledBorder("Default value"));
+			
+			Object[] array = {
+				f_name,
+				f_defval,
+				status
+			};
+			
+			String diag_title = "Add new attribute";
+			final BaseDialog form = new BaseDialog(frame, diag_title, array) {
+				public boolean dataOk() {
+					String attr_name = f_name.getText();
+					String attr_defval = f_defval.getText();
+					String msg = EditMetadataDefinition.this.dataOk4new(attr_name, attr_defval);
+					if ( msg == null ) {
+						status.setForeground(Color.gray);
+						status.setText("OK");
+					}
+					else {
+						status.setForeground(Color.red);
+						status.setText(msg);
+					}
+					return msg == null;
 				}
-			});			
-			frame = new JDialog(EditSpectrumStructureAction.this.frame, "Spectrum structure", true);
-			frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
-			frame.getContentPane().add(form);
-
-			JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-			frame.getContentPane().add(buttons, "South");
-			JButton b;
-			ActionListener lis = new BListener();
-			b = new JButton("Add");
-			b.setMnemonic(KeyEvent.VK_ENTER);
-			b.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					accept_attribute();
+			};
+			form.activate();
+			form.pack();
+			form.setLocationRelativeTo(frame);
+			form.setVisible(true);
+			if ( form.accepted() ) {
+				String attr_name = f_name.getText().trim();
+				String attr_defval = f_defval.getText().trim();
+				if ( EditMetadataDefinition.this.addNew(attr_name, attr_defval) ) {
+					int lastRow = table.getRowCount() -1;
+					tableModel.fireTableRowsInserted(lastRow, lastRow);
 				}
-			});
-			buttons.add(b);
-			b = new JButton("Cancel");
-			b.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					cancel_attribute();
-				}
-			});
-			buttons.add(b);
-			frame.pack();
-			frame.setLocation(300, 300);
-			frame.setVisible(true);*/
+			}
 		}
 	}
 	
 	class TableModel extends AbstractTableModel {
-		final String[] colnames = { "Name", "Default" };
-		IMetadataDef metadata;
-
-		TableModel() throws Exception {
-			metadata = db.getMetadata();
-		}
+		final String[] colnames = { "Name", "Default value" };
 
 		public int getColumnCount() {
 			return colnames.length;
@@ -170,12 +160,12 @@ class EditMetadataDefinition {
 		}
 
 		public int getRowCount() {
-			return metadata.getNumDefinitions();
+			return db.getMetadata().getNumDefinitions();
 		}
 
 		public Object getValueAt(int row, int col) {
 			try {
-				IAttributeDef attribute = (IAttributeDef) metadata.getDefinitions().get(row);
+				IAttributeDef attribute = (IAttributeDef) db.getMetadata().getDefinitions().get(row);
 				switch ( col ) {
 					case 0:
 						return attribute.getName();
@@ -190,55 +180,13 @@ class EditMetadataDefinition {
 		}
 
 		private void delete_attribute() throws Exception {
-			/*if ( selectedRow < 0 )
+			if ( selectedRow < 0 )
 				return;
-
 			java.awt.Toolkit.getDefaultToolkit().beep();
-
-			IAttribute[] attributes = metadata.getSpectrumAttributes();
-			IAttribute attribute = attributes[selectedRow];
-			String name = attribute.getName();
-			if ( name.equals("SID") ) {
-				JOptionPane.showMessageDialog(
-					gui.getMainFrame(),
-					name+ ": This attribute cannot be deleted",
-					"Information",
-					JOptionPane.INFORMATION_MESSAGE
-				);
-				return;
-			}
-
-			int sel = JOptionPane.showConfirmDialog(
-				gui.getMainFrame(),
-				name+ ": Are you sure you want to delete this attribute?",
-				"Warning",
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE
-			);
-			if ( sel != 0 )
-			{
-				return;
-			}
-
-			if ( DBUtil.deleteSpectrumAttribute(db, name) )
-			{
-				tableModel.fireTableRowsDeleted(selectedRow, selectedRow);
-			}*/
+			IAttributeDef attrdef = (IAttributeDef) db.getMetadata().getDefinitions().get(selectedRow);
+			String attr_name = attrdef.getName();
+			if ( EditMetadataDefinition.this.delete(attr_name) )
+				fireTableRowsDeleted(selectedRow, selectedRow);
 		}
 	}
-
-	/*private static Form createNewAttributeForm() {
-		Form form = new Form();
-		form.setBorder(BorderFactory.createTitledBorder("New attribute"));
-		
-		form.addLine("atr-name", "Name", "");
-		form.addChoice("atr-type", "Type", 
-			AttributeTypes.TYPES,
-			AttributeTypes.TYPES[0] 
-		);
-		form.setTextWidth(3);
-		form.addLine("atr-defaultValue", "Default value", "");
-
-		return form;
-	}*/
 }	

@@ -20,6 +20,9 @@ public class Prefs {
 	/** Last directory used to import. */
 	public static final String IMPORT_DIR = "sams.pref.import.dir";
 
+	/** Last directory used to export. */
+	public static final String EXPORT_DIR = "sams.pref.export.dir";
+
 	/** Rectangle for the main window. */
 	public static final String MAIN_RECT = "sams.pref.main.rect";
 	

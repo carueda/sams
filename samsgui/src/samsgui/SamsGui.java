@@ -4,6 +4,7 @@ import samsgui.dbgui.*;
 
 import samscore.Sams;
 import samscore.ISamsDb;
+import samscore.ISamsDb.*;
 import fileutils.Files;
 
 import javax.swing.*;
@@ -14,6 +15,8 @@ import java.awt.event.*;
 import java.net.URL;
 import java.util.*;
 import java.io.*;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 
 /** 
  * Main Sams GUI component.
@@ -77,7 +80,6 @@ public class SamsGui {
 		openDbGuis.put(filename, focusedDbGui);
 	}
 
-	// PENDING
 	public static void create(String filename) throws Exception {
 		filename = _getCanonicalPath(filename);
 		if ( openDbGuis.get(filename) != null ) { // already open
@@ -188,13 +190,29 @@ public class SamsGui {
 		String filename = ((DbFrame) frame).filename;
 		if ( NO_DB_NAME.equals(filename) )
 			return;
-		if ( !confirm(filename+ "\n" + "Are you sure you want to delete this database?") ) 
+
+		java.awt.Toolkit.getDefaultToolkit().beep();
+		Object[] options = { "Yes, I am", "Cancel" };
+		int sel = javax.swing.JOptionPane.showOptionDialog(
+			frame,
+			"\n"
+			+filename+ "\n"
+			+"You are about to delete this database.\n"
+			+"\n"
+			+"Are you sure you want to proceed?\n"
+			+"\n",
+			"*** WARNING ***",
+			javax.swing.JOptionPane.DEFAULT_OPTION,
+			javax.swing.JOptionPane.WARNING_MESSAGE,
+			null,
+			options, options[1]
+		);
+		if ( sel != 0 )
 			return;
+
 		Files.deleteDirectory(filename); // PENDING to generalize to dir or file
-		if ( !new File(filename).exists() )
-			message(filename+ "\nDatabase DELETED.");
-		else
-			message(filename+ "\nThis directory could not be deleted.\nPlease, delete it manually.");
+		if ( new File(filename).exists() )
+			message(filename+ "\nSAMS could not delete this directory.\nPlease, delete it manually.");
 		openDbGuis.remove(filename);
 		if ( numOpen() > 0 ) {
 			frame.dispose();
@@ -234,10 +252,47 @@ public class SamsGui {
 		if ( NO_DB_NAME.equals(filename) )
 			return;
 		
-		ISamsDb db = focusedDbGui.getDatabase();
-		new EditMetadataDefinition(dbframe, db).edit();
+		new EditMetadataDefinition(dbframe, focusedDbGui.getDatabase()) {
+			protected String dataOk4new(String attr_name, String attr_defval) {
+				if ( attr_name.trim().length() == 0 )
+					return "Missing name";
+				ISamsDb db = focusedDbGui.getDatabase();
+				if ( db.getMetadata().get(attr_name) != null )
+					return "Duplicate name";
+				return null;
+			}
+			protected boolean addNew(String attr_name, String attr_defval) {
+				ISamsDb db = focusedDbGui.getDatabase();
+				db.getMetadata().add(attr_name, attr_defval);
+				focusedDbGui.metadataUpdated();
+				return true;
+			}
+			protected boolean delete(String attr_name) {
+				if ( attr_name.equals("location") || attr_name.equals("name") ) {
+					SamsGui.message(frame, attr_name+ ": This attribute cannot be deleted");
+					return false;
+				}
+				if ( SamsGui.confirm(frame, attr_name+ ": Are you sure you want to delete this attribute?") ) {
+					ISamsDb db = focusedDbGui.getDatabase();
+					db.getMetadata().delete(attr_name);
+					focusedDbGui.metadataUpdated();
+					return true;
+				}
+				return false;
+			}
+		};
 	}
 	
+	public static void importFiles() {
+		if ( focusedDbGui == null )
+			return;
+		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
+		String filename = dbframe.filename;
+		if ( NO_DB_NAME.equals(filename) )
+			return;
+		
+		Importer.importFilesFromDirectory(focusedDbGui);
+	}
 	
 	private static class DbFrame extends JFrame {
 		String filename;
@@ -305,19 +360,25 @@ public class SamsGui {
 	}		
 
 	public static boolean confirm(String msg) {
+		return confirm(getFocusedFrame(), msg);
+	}
+	public static boolean confirm(Component comp, String msg) {
 		int sel = JOptionPane.showConfirmDialog(
-			getFocusedFrame(),
+			comp,
 			msg,
 			"Confirm",
 			JOptionPane.YES_NO_OPTION,
-			JOptionPane.WARNING_MESSAGE
+			JOptionPane.QUESTION_MESSAGE
 		);
 		return sel == 0;
 	}
 	
 	public static void message(String msg) {
+		message(getFocusedFrame(), msg);
+	}
+	public static void message(Component comp, String msg) {
 		JOptionPane.showMessageDialog(
-			getFocusedFrame(),
+			comp,
 			msg,
 			"Message",
 			JOptionPane.INFORMATION_MESSAGE
@@ -346,5 +407,9 @@ public class SamsGui {
 		else
 			rect = Prefs.getRectangle(Prefs.MAIN_RECT);
 		return rect;
+	}
+
+	public static Border createTitledBorder(String title) {
+		return BorderFactory.createTitledBorder(title);
 	}
 }
