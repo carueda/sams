@@ -304,7 +304,7 @@ class SamsDb implements ISamsDb {
 					// ignore
 				}
 			}
-			sig.sort();
+			
 			return sig;
 		}
 		catch ( Exception ex ) {
