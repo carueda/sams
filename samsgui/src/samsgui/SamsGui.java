@@ -328,7 +328,7 @@ public class SamsGui {
 		if ( focusedDbGui == null )
 			return;
 		DbFrame dbframe = (DbFrame) focusedDbGui.getFrame();
-		if ( NO_DB_NAME.equals(dbframe.filename) )
+		if ( !NO_DB_NAME.equals(dbframe.filename) )
 			Importer.importFilesFromDirectory(focusedDbGui);
 	}
 	
