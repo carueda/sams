@@ -223,11 +223,29 @@ class SamsDb implements ISamsDb {
 		}
 	}
 	
+	/** Checks attrName corresponds to a defined attribute, including the 
+	 * special implicit attributes "location" and "name". */
+	private boolean isDefinedAttributeName(String attrName) {
+		return attrName.equals("location") || attrName.equals("name")
+		    || mddef.get(attrName) != null
+		;
+	}
+		
 	public ICondition createCondition(String text) throws Exception {
 		return new Condition(text);
 	}
 
 	public Iterator selectSpectrums(ICondition condition, String orderBy) throws Exception {
+		if ( orderBy == null || orderBy.trim().length() == 0 )
+			orderBy = "location,name";
+		
+		// check attr names in orderBy:
+		final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
+		for ( int i = 0; i < orderByAttrNames.length; i++ ) {
+			if ( !isDefinedAttributeName(orderByAttrNames[i]) )
+				throw new Exception(orderByAttrNames[i]+ ": undefined attribute");
+		}
+		
 		List result = new ArrayList();
 		for ( Iterator it = getAllPaths(); it.hasNext(); ) {
 			String path = (String) it.next();
@@ -235,10 +253,7 @@ class SamsDb implements ISamsDb {
 			if ( condition == null || ((Condition) condition).accepts(s) )
 				result.add(s);
 		}
-		if ( orderBy == null || orderBy.trim().length() == 0 )
-			orderBy = "location,name";
  
-		final String[] orderByAttrNames = orderBy.split("(,|\\s)+");
 		Comparator comparator = new Comparator() {
 			public int compare(Object o1, Object o2){
 				ISpectrum s1 = (ISpectrum) o1;
@@ -602,17 +617,28 @@ class SamsDb implements ISamsDb {
 					attrName = st.nextToken();
 					String eq = st.nextToken();
 					if ( !eq.equals("=") )
-						throw new Exception("Syntax error");
-					attrValue = st.nextToken();
+						throw new Exception("Syntax error: `=' expected");
+					attrValue = "";
+					try {
+						attrValue = st.nextToken();
+					}
+					catch ( NoSuchElementException ex ) {
+						// OK: attrValue is blank
+					}
 				}
 				catch ( NoSuchElementException ex ) {
-					throw new Exception("Syntax error");
+					throw new Exception("Syntax error:\n"+
+						"A condition must have one of these forms:\n"+
+						"  1) <attribute-name> = <attribute-value>\n"+
+						"  2) <attribute-name> = \n"+
+						"  3) (empty text)\n"+
+						" \n"+
+						"(This syntax may change in a future version.)\n"
+					);
 				}
 	
-				// check attrName is valid:
-				IAttributeDef atr = mddef.get(attrName);
-				if ( atr == null )
-					throw new Exception(attrName+ ": Not a valid attribute");
+				if ( !isDefinedAttributeName(attrName) )
+					throw new Exception(attrName+ ": undefined attribute");
 			}
 		}
 
