@@ -340,7 +340,10 @@ public class DbGui extends JPanel {
 		IOperation sigOper = SignatureOperationManager.getSignatureOperation(opername);
 		if ( sigOper instanceof IBinarySignatureOperation ) {
 			if ( referenceSID == null ) {
-				SamsGui.message("Please, first set a signature to be taken as the reference");
+				SamsGui.message(
+					"This is a reference-based operation.\n" +
+					"Please, set a reference signature first."
+				);
 				return;
 			}
 			reference_sig = db.getSignature(referenceSID);

@@ -139,9 +139,9 @@ public class Importer {
 					return msg == null;
 				}
 				
-				public void notifyUpdate() {
+				public void notifyUpdate(String comp_name, Object value) {
 					if ( !timer.isRunning() )
-						super.notifyUpdate();
+						super.notifyUpdate(comp_name, value);
 				}
 				
 				int successful;
@@ -406,9 +406,9 @@ public class Importer {
 					return msg == null;
 				}
 				
-				public void notifyUpdate() {
+				public void notifyUpdate(String comp_name, Object value) {
 					if ( !timer.isRunning() )
-						super.notifyUpdate();
+						super.notifyUpdate(comp_name, value);
 				}
 				
 				int successful;

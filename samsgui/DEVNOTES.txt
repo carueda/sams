@@ -2,6 +2,8 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+07/22/03
+	- Compute: checking required paramters...
 07/21/03
 	- Now on single- and binary- operations ...
 	  See Compute.SingleForm.go()

@@ -5,6 +5,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JDialog;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
+import javax.swing.JRadioButton;
+import javax.swing.JCheckBox;
 import javax.swing.JButton;
 import javax.swing.event.*;
 import javax.swing.text.JTextComponent;
@@ -30,41 +32,57 @@ public class BaseDialog extends JDialog {
     protected JButton btnAccept = new JButton("OK");
     protected JButton btnCancel = new JButton("Cancel");
 	
-	DocumentListener dl = new DocumentListener() {
-		public void insertUpdate(DocumentEvent e) {
-			notifyUpdate();
-		}
-		public void removeUpdate(DocumentEvent e) {
-			notifyUpdate();
-		}
-		public void changedUpdate(DocumentEvent e) {
-			notifyUpdate();
-		}
-	};
-	ActionListener update_al = new ActionListener()  {
-		public void actionPerformed(ActionEvent e) {
-			notifyUpdate();
-		}
-	};
 	ActionListener accept_al = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			optionPane.setValue(btnAccept.getText());
 		}
 	};
 
-	private void _setListeners(Object comp) {
+	private void _setListeners(final Object comp) {
 		if ( comp instanceof Container ) {
 			Container container = (Container) comp;
 			Component[] components = container.getComponents();
 			for ( int i = 0; i < components.length; i++ )
 				_setListeners(components[i]);
 		}
-		if ( comp instanceof JTextComponent )
-			((JTextComponent) comp).getDocument().addDocumentListener(dl);
-		if ( comp instanceof JTextField )
+		if ( comp instanceof JTextComponent ) {
+			((JTextComponent) comp).getDocument().addDocumentListener(new DocumentListener() {
+				void common() {
+					JTextComponent c = (JTextComponent) comp; 
+					notifyUpdate(c.getName(), c.getText()); 
+				}
+				public void insertUpdate(DocumentEvent e) { common(); }
+				public void removeUpdate(DocumentEvent e) { common(); }
+				public void changedUpdate(DocumentEvent e) { common(); }
+			});
+		}
+		if ( comp instanceof JTextField ) // WHY?  PENDING
 			((JTextField) comp).addActionListener(accept_al);
-		if ( comp instanceof JComboBox )
-			((JComboBox) comp).addActionListener(update_al);
+		
+		if ( comp instanceof JComboBox ) {
+			((JComboBox) comp).addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
+					JComboBox c = (JComboBox) comp;
+					notifyUpdate(c.getName(), c.getSelectedItem());
+				}
+			});
+		}
+		if ( comp instanceof JCheckBox ) {
+			((JCheckBox) comp).addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JCheckBox c = (JCheckBox) comp;
+					notifyUpdate(c.getName(), Boolean.valueOf(c.isSelected()));
+				}
+			});
+		}
+		if ( comp instanceof JRadioButton ) {
+			((JRadioButton) comp).addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JRadioButton c = (JRadioButton) comp;
+					notifyUpdate(c.getName(), Boolean.valueOf(c.isSelected()));
+				}
+			});
+		}
 	}
 
 	private void _setComponentsEnabled(Object comp, boolean enabled) {
@@ -136,6 +154,8 @@ public class BaseDialog extends JDialog {
 							accepted = true;
 							close();
 						}
+						else
+							btnAccept.setEnabled(false);
                     } 
 					else
                         close();
@@ -157,7 +177,8 @@ public class BaseDialog extends JDialog {
 		btnAccept.setEnabled(dataOk());
 	}
 
-    public void notifyUpdate() {
+	/** Any field modification is notified to subclasses via this method. */
+    public void notifyUpdate(String comp_name, Object value) {
         btnAccept.setEnabled(dataOk());
     }
 

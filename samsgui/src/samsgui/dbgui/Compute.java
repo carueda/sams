@@ -73,54 +73,73 @@ public class Compute {
 			if ( pval instanceof String ) {
 				String str = (String) pval;
 				parValues.put(pname, str);
-				final JTextField cmp = new JTextField(str);
+				JTextField cmp = new JTextField(str);
+				cmp.setName("::" +pname);
 				cmp.setBorder(SamsGui.createTitledBorder(pdesc));
 				array.add(cmp);
-				cmp.getDocument().addDocumentListener(new DocumentListener() {
-					void common() { parValues.put(pname, cmp.getText()); }
-					public void insertUpdate(DocumentEvent e) { common(); }
-					public void changedUpdate(DocumentEvent e) { common(); }
-					public void removeUpdate(DocumentEvent e) { common(); }
-				});
-				//form.addLine(pname, pdesc, str);
 			}
 			else if ( pval instanceof String[] ) {
 				String[] values = (String[]) pval;
 				parValues.put(pname, values[0]);
-				final JComboBox cmp = new JComboBox(values);
+				JComboBox cmp = new JComboBox(values);
+				cmp.setName("::" +pname);
 				cmp.setSelectedItem(values[0]);
 				cmp.setBorder(SamsGui.createTitledBorder(pdesc));
 				array.add(cmp);
-				cmp.addItemListener(new ItemListener() {
-					public void itemStateChanged(ItemEvent e) {
-						parValues.put(pname, cmp.getSelectedItem());
-					};
-				});
-				//form.addChoice(pname, pdesc, values, values[0]);
 			}
 			else if ( pval instanceof Boolean ) {
 				parValues.put(pname, pval);
 				boolean defaultValue = ((Boolean) pval).booleanValue();
-				final JCheckBox cmp = new JCheckBox(pdesc);
+				JCheckBox cmp = new JCheckBox(pdesc);
+				cmp.setName("::" +pname);
 				array.add(cmp);
-				cmp.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						parValues.put(pname, Boolean.valueOf(cmp.isSelected()));
-					};
-				});
-				//form.addCheckBox(pname, pdesc, defaultValue);
 			}
 		}
 	}
 
+	// All "string" parameters are required
+	String _checkRequiredParameters() {
+		if ( parInfo != null ) {
+			int numpars = parInfo.getNumParameters();
+			for ( int i = 0; i < numpars; i++ ) {
+				String pname = parInfo.getName(i);
+				String pdesc = parInfo.getDescription(i);
+				Object obj = parValues.get(pname);
+				if ( obj instanceof String ) {
+					String pval = (String) obj;
+					if ( pval.trim().length() == 0 )
+						return "parameter required: " +pdesc;
+				}
+			}
+		}
+		return null;
+	}
+	
+	void _notifyUpdate(String comp_name, Object value) {
+		//System.out.println("notifyUpdate: " +comp_name+ "->" +value);
+		if ( comp_name != null && comp_name.startsWith("::") )
+			parValues.put(comp_name.substring(2), value);
+	}
+	
 	abstract class BaseForm {
 		StringBuffer task_message = new StringBuffer();
 		boolean task_isDone;
 		Timer timer;
-		JProgressBar progressBar;
-		JTextArea taskOutput;
+		JProgressBar progressBar = new JProgressBar(0, 1000);
+		JTextArea taskOutput = new JTextArea(5, 30);
+		JTextField f_resultname;
+		JLabel status = new JLabel();
 		
 		BaseForm() {
+			status.setFont(status.getFont().deriveFont(Font.ITALIC));
+			progressBar.setValue(0);
+			progressBar.setStringPainted(true);
+			progressBar.setString("");
+			progressBar.setEnabled(false);
+			taskOutput.setMargin(new Insets(5,5,5,5));
+			taskOutput.setEditable(false);
+			taskOutput.setEnabled(false);
+			taskOutput.setBackground(null);
 			timer = new Timer(ONE_SECOND, new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					String s = task_message.toString();
@@ -130,7 +149,6 @@ public class Compute {
 						taskOutput.append(s + "\n");
 						taskOutput.setCaretPosition(taskOutput.getDocument().getLength());
 					}
-						
 					if ( task_isDone ) {
 						Toolkit.getDefaultToolkit().beep();
 						timer.stop();
@@ -155,19 +173,8 @@ public class Compute {
 			if ( db == null )
 				return;
 			
-			final JTextField f_resultname = new JTextField(20);
+			f_resultname = new JTextField(20);
 			f_resultname.setBorder(SamsGui.createTitledBorder("Computed signature name"));
-			final JLabel status = new JLabel();
-			status.setFont(status.getFont().deriveFont(Font.ITALIC));
-			progressBar = new JProgressBar(0, 1000);
-			progressBar.setValue(0);
-			progressBar.setStringPainted(true); //get space for the string
-			progressBar.setString("");          //but don't paint it
-			progressBar.setEnabled(false);
-			taskOutput = new JTextArea(5, 30);
-			taskOutput.setMargin(new Insets(5,5,5,5));
-			taskOutput.setEditable(false);
-			taskOutput.setEnabled(false);
 			
 			List array = new ArrayList();
 			array.add(f_resultname);
@@ -176,29 +183,14 @@ public class Compute {
 			array.add(progressBar);
 			array.add(new JScrollPane(taskOutput));
 			
-			String diag_title = sigOper.getName();
-			final BaseDialog form = new BaseDialog(frame, diag_title, array.toArray()) {
+			final BaseDialog form = new BaseDialog(frame, sigOper.getName(), array.toArray()) {
 				public boolean dataOk() {
 					String msg = null;
 					String resultname = f_resultname.getText();
 					if ( resultname.trim().length() == 0 )
 						msg = "Please specify a name for resulting signature";
-					
-					// All parameters are required:
-					/* PENDING (currently, no easy way to go from pname to component)
-					if ( parInfo != null ) {
-						int numpars = parInfo.getNumParameters();
-						for ( int i = 0; i < numpars; i++ ) {
-							String pname = parInfo.getName(i);
-							String pval = form.stringValue(pname);
-							String pdesc = parInfo.getDescription(i);
-							if ( pval.trim().length() == 0 ) {
-								msg = "parameter required: " +pdesc;
-								break;
-							}
-						}
-					}
-					*/
+					else
+						msg = _checkRequiredParameters();
 					
 					if ( msg == null ) {
 						status.setForeground(Color.gray);
@@ -211,9 +203,10 @@ public class Compute {
 					return msg == null;
 				}
 				
-				public void notifyUpdate() {
+				public void notifyUpdate(String comp_name, Object value) {
+					_notifyUpdate(comp_name, value);
 					if ( !timer.isRunning() )
-						super.notifyUpdate();
+						super.notifyUpdate(comp_name, value);
 				}
 				
 				int successful;
@@ -229,8 +222,7 @@ public class Compute {
 						int numpars = parInfo.getNumParameters();
 						for ( int i = 0; i < numpars; i++ ) {
 							String pname = parInfo.getName(i);
-							String pval = (String) parValues.get(pname);
-							parInfo.setValue(i, pval);
+							parInfo.setValue(i, parValues.get(pname));
 						}
 					}
 					final String resultname = f_resultname.getText();
@@ -263,7 +255,7 @@ public class Compute {
 								String path = "/computed/" +resultname;
 								
 								// b)
-								task_message.append("\nAdding result [" +path+ "]");
+								task_message.append("\nAdding result " +path);
 								progressBar.setValue(progressBar.getMaximum() -1);
 								ISpectrum s = db.addSpectrum(path, sig);
 								IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
@@ -305,13 +297,13 @@ public class Compute {
 		Signature[] getSignatures() throws Exception {
 			Signature[] sigs = new Signature[selectedSpectra.size()];
 			for ( int i = 0; i < selectedSpectra.size(); i++ ) {
-				IFile s = (IFile) selectedSpectra.get(i);
-				String path = s.getPath();
+				IFile f = (IFile) selectedSpectra.get(i);
+				String path = f.getPath();
 				task_message.append("processing " +path+ "\n");
 				progressBar.setValue(i+1);
 				Signature sig = dbgui.getDatabase().getSignature(path);
 				if ( sig.getUserObject() == null )
-					sig.setUserObject(s.getName());
+					sig.setUserObject(f.getName());
 				sigs[i] = sig;
 			}
 			return sigs;
@@ -334,50 +326,45 @@ public class Compute {
 			if ( db == null )
 				return;
 			
-			final JTextField f_resultname = new JTextField(20);
-			f_resultname.setBorder(SamsGui.createTitledBorder("Computed signature name"));
-			final JLabel status = new JLabel();
-			status.setFont(status.getFont().deriveFont(Font.ITALIC));
-			progressBar = new JProgressBar(0, 1000);
-			progressBar.setValue(0);
-			progressBar.setStringPainted(true); //get space for the string
-			progressBar.setString("");          //but don't paint it
-			progressBar.setEnabled(false);
-			taskOutput = new JTextArea(5, 30);
-			taskOutput.setMargin(new Insets(5,5,5,5));
-			taskOutput.setEditable(false);
-			taskOutput.setEnabled(false);
+			final JRadioButton r_inplace = new JRadioButton("Apply operation in-place");
+			r_inplace.setName("inplace");
+			r_inplace.setAlignmentX(0f);
+			r_inplace.setMnemonic(KeyEvent.VK_I);
+			r_inplace.setSelected(true);
+			final JRadioButton r_create = new JRadioButton("Create new resulting signatures with suffix");
+			r_create.setName("create");
+			r_create.setAlignmentX(0f);
+			r_create.setMnemonic(KeyEvent.VK_C);
+			r_create.setSelected(false);
+			JPanel panel_create = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			panel_create.setAlignmentX(0f);
+			panel_create.add(r_create);
+			f_resultname = new JTextField(10);
+			f_resultname.setName("suffix");
+			panel_create.add(f_resultname);
+			
+			ButtonGroup group = new ButtonGroup();
+			group.add(r_inplace);
+			group.add(r_create);
 			
 			List array = new ArrayList();
-			array.add(f_resultname);
+			array.add(r_inplace);
+			array.add(panel_create);
 			addParInfoComponents(array);
 			array.add(status);
 			array.add(progressBar);
 			array.add(new JScrollPane(taskOutput));
 			
-			String diag_title = sigOper.getName();
-			final BaseDialog form = new BaseDialog(frame, diag_title, array.toArray()) {
+			final BaseDialog form = new BaseDialog(frame, sigOper.getName(), array.toArray()) {
 				public boolean dataOk() {
 					String msg = null;
-					String resultname = f_resultname.getText();
-					if ( resultname.trim().length() == 0 )
-						msg = "Please specify a name for resulting signature";
-					
-					// All parameters are required:
-					/* PENDING (currently, no easy way to go from pname to component)
-					if ( parInfo != null ) {
-						int numpars = parInfo.getNumParameters();
-						for ( int i = 0; i < numpars; i++ ) {
-							String pname = parInfo.getName(i);
-							String pval = form.stringValue(pname);
-							String pdesc = parInfo.getDescription(i);
-							if ( pval.trim().length() == 0 ) {
-								msg = "parameter required: " +pdesc;
-								break;
-							}
-						}
+					if ( r_create.isSelected() ) {
+						String resultname = f_resultname.getText();
+						if ( resultname.trim().length() == 0 )
+							msg = "Please specify a suffix to compose names";
 					}
-					*/
+					else
+						msg = _checkRequiredParameters();
 					
 					if ( msg == null ) {
 						status.setForeground(Color.gray);
@@ -390,9 +377,10 @@ public class Compute {
 					return msg == null;
 				}
 				
-				public void notifyUpdate() {
+				public void notifyUpdate(String comp_name, Object value) {
+					_notifyUpdate(comp_name, value);
 					if ( !timer.isRunning() )
-						super.notifyUpdate();
+						super.notifyUpdate(comp_name, value);
 				}
 				
 				int successful;
@@ -412,7 +400,6 @@ public class Compute {
 							parInfo.setValue(i, pval);
 						}
 					}
-					final String resultname = f_resultname.getText();
 					
 					// do computation:
 					Thread thread = new Thread(new Runnable() {
@@ -434,20 +421,32 @@ public class Compute {
 
 							try {	
 								for ( int i = 0; i < selectedSpectra.size(); i++ ) {
-									IFile s = (IFile) selectedSpectra.get(i);
-									String path = s.getPath();
+									IFile f = (IFile) selectedSpectra.get(i);
+									String path = f.getPath();
 									task_message.append("processing " +path+ "\n");
 									progressBar.setValue(i+1);
 									Signature sig = dbgui.getDatabase().getSignature(path);
+									Signature sig_res;
+									if ( sigOper instanceof IBinarySignatureOperation )
+										sig_res = ((IBinarySignatureOperation) sigOper).operate(sig, reference_sig);
+									else
+										sig_res = ((ISingleSignatureOperation) sigOper).operate(sig);
 									
-									                    // PENDING to check specific type
-									//Signature sig_res = ((ISingleSignatureOperation) sigOper).operate(sig);
-									String path_res = "/computed/" +resultname;
-									
-									task_message.append("Adding result [" +path_res+ "]\n");
-									//ISpectrum s = db.addSpectrum(path, sig);
-									//IFile f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
-									//dbgui.getTree().addObject(computedNode, f, true);
+									if ( r_create.isSelected() ) {
+										String prefix = f.getName();
+										if ( prefix.endsWith(".txt") )
+											prefix = prefix.substring(0, prefix.length() - ".txt".length());
+										String resultname = f_resultname.getText();
+										String path_res = "/computed/" +prefix+resultname;
+										
+										task_message.append("Adding result " +path_res+ "\n");
+										ISpectrum s = db.addSpectrum(path_res, sig_res);
+										f = (IFile) db.getGroupingLocation().getRoot().findNode(s.getPath());
+										dbgui.getTree().addObject(computedNode, f, false);
+									}
+									else {
+										db.setSignature(path, sig_res);
+									}
 								}
 
 								progressBar.setValue(progressBar.getMaximum());
