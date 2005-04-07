@@ -59,6 +59,8 @@ public final class SignatureOperationManager {
 		binary_opers.add(new SimpleRatioOperation());
 		binary_opers.add(new SubtractionOperation());
 		binary_opers.add(new NormalizeOperation());
+		binary_opers.add(new FWHMSamplingOperation());
+		binary_opers.add(new Reflectance2RadianceOperation());
 			
 		_loadScriptedOperations();
 		_createMap();

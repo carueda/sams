@@ -1,0 +1,10 @@
+SAMS sigoper module DEVNOTES
+Carlos A. Rueda
+$Id$
+
+04/07/05
+ 	- Added operations:
+		FWHMSamplingOperation
+		Reflectance2RadianceOperation
+		
+
