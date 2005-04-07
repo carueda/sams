@@ -2,6 +2,11 @@ SAMS GUI DEVNOTES
 Carlos A. Rueda.
 $Id$
 
+ 04/07/05 - version 3.2
+ 	Operation FWHMSampling and Reflectance2Radiance are now
+	implemented in the sigoper module. Beanshell scripts to
+	be removed.
+	
  03/22/05 - version 3.2
 	- envifile module now supports reading from various envi
 	  data types in both little and big endian byte orders.
