@@ -2,6 +2,9 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 04/07/05 - version 3.2
+ 	Added operations in sigoper module. See sigoper dev notes.
+	
  03/17/05 - version 3.2
  	- Changes done to use new Envi output format management,
 	  in particular, through the new envifile.EnviDataType.
