@@ -50,9 +50,9 @@ public final class EnviFileManager {
 			);
 		}
 		
-		if ( ! header.interleave.equals("bip") ) {
+		if ( ! header.interleave.equalsIgnoreCase("bip") ) {
 			throw new InvalidEnviFormatException(
-				"SAMS only supports 'bip' interleave"
+				"SAMS only supports BIP interleave"
 			);
 		}
 
