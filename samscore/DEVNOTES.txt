@@ -2,6 +2,12 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 04/12/05 - version 3.2
+ 	envifile.EnviDataType: FIXME: management of byte order.
+	Currently there is a method EnviDataType.setByteOrder(int byte_order)
+	to specify the byte order; but this forces the client to keep
+	calling this method as the type instances are shared.
+ 
  04/07/05 - version 3.2
  	Added operations in sigoper module. See sigoper dev notes.
 	
