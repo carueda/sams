@@ -5,7 +5,10 @@ import sig.Signature;
 
 
 /**
- * FWHMSamplingOperation
+ * FWHMSamplingOperation.
+ *
+ * See http://mathworld.wolfram.com/GaussianFunction.html
+ *
  * @author C. Rueda, P. Zarco, Y. Cheng
  * @version $Id$ 
  */
