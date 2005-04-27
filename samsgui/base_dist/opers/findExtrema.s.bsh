@@ -1,0 +1,66 @@
+// Find max and min points on specified range
+// $Id$
+
+// This identifies this operation:
+name = "Find extrema";
+
+// A description:
+description = 
+  "<html>"+
+  "Finds maximum and/or minimum points in a specified range.<br>\n"+
+  "This is a one-to-one operation: for each selected signature the<br>\n"+
+  "desired points are added to the resulting signature."
+;
+
+addParameterInfo("doMax", "Compute maximum point", Boolean.TRUE);
+addParameterInfo("doMin", "Compute minimum point", Boolean.TRUE);
+
+// search range:
+addParameterInfo("lower", "Lower range limit:", "0");
+addParameterInfo("upper", "Upper range limit:", "0");
+
+
+// This is not yet provided by SAMS 3.2, so we define it here
+// in the meantime:
+__getBooleanParameter(parname) {
+	int index = ((Integer) __parIndex.get(parname)).intValue();
+	(((Boolean) __par_values[index])).booleanValue(); 
+}
+
+operate(sig) {
+	doMax = __getBooleanParameter("doMax");
+	doMin = __getBooleanParameter("doMin");
+	lower = getDoubleParameter("lower");
+	upper = getDoubleParameter("upper");
+	if ( lower > upper ) {
+		tmp = lower;
+		lower = upper;
+		upper = tmp;
+	}
+	
+	new_sig = new Signature();
+
+	if ( doMax ) {
+		index = OpUtil.findMaxIndex(sig, 0, lower, upper);
+		point = sig.getDatapoint(index);
+		obj = sig.getUserObject();
+		str = "Max" + (obj == null ? "" : " (" +obj+ ")");
+		new_sig.addDatapoint(point.x, point.y, str);
+	}
+	if ( doMin ) {
+		index = OpUtil.findMinIndex(sig, 0, lower, upper);
+		point = sig.getDatapoint(index);
+		obj = sig.getUserObject();
+		str = "Min" + (obj == null ? "" : " (" +obj+ ")");
+		new_sig.addDatapoint(point.x, point.y, str);
+		
+		
+		if ( doMax ) { // at least two points?
+			// then, sort by wavelength:
+			new_sig.sort();
+		}
+	}
+	
+	return new_sig;
+}
+

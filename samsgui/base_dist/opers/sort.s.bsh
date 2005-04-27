@@ -1,0 +1,18 @@
+// Sorts a signature by wavelength
+// $Id$
+
+// This identifies this operation:
+name = "Sort";
+
+// A description:
+description = "Sorting according to wavelength values";
+
+// This performs the operation:
+operate(sig) {
+	new_sig = sig.clone();
+	new_sig.sort();
+	return new_sig;
+}
+
+
+
