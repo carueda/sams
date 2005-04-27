@@ -20,16 +20,9 @@ addParameterInfo("lower", "Lower range limit:", "0");
 addParameterInfo("upper", "Upper range limit:", "0");
 
 
-// This is not yet provided by SAMS 3.2, so we define it here
-// in the meantime:
-__getBooleanParameter(parname) {
-	int index = ((Integer) __parIndex.get(parname)).intValue();
-	(((Boolean) __par_values[index])).booleanValue(); 
-}
-
 operate(sig) {
-	doMax = __getBooleanParameter("doMax");
-	doMin = __getBooleanParameter("doMin");
+	doMax = getBooleanParameter("doMax");
+	doMin = getBooleanParameter("doMin");
 	lower = getDoubleParameter("lower");
 	upper = getDoubleParameter("upper");
 	if ( lower > upper ) {
