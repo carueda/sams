@@ -86,7 +86,7 @@ public class ASDBinaryFile implements ISpectrumFile {
 		}
 	}
 	
-	
+	Header header;
 	Signature sig;
 
 	/**
@@ -101,7 +101,7 @@ public class ASDBinaryFile implements ISpectrumFile {
 		sig = new Signature();
 		RandomAccessFile file = new RandomAccessFile(filename, "r");
 		try {
-			Header header = new Header(file);
+			header = new Header(file);
 			if ( !header.company_name.equals("ASD") ) {
 				throw new InvalidSpectrumFormatException(
 					new File(filename).getName()+
@@ -162,5 +162,9 @@ public class ASDBinaryFile implements ISpectrumFile {
 	 */
 	public String getFormatName() {
 		return "ASDb";
+	}
+	
+	public String toString() {
+		return header.toString();
 	}
 }
