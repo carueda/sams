@@ -2,6 +2,10 @@ SAMS Core DEVNOTES
 Carlos A. Rueda
 $Id$
 
+ 11/16/05 - version 3.2
+ 	specfile.impl.ASDBinaryFile: now any data_type is accepted
+	(feature req# 200111)
+	
  04/12/05 - version 3.2
  	envifile.EnviDataType: FIXME: management of byte order.
 	Currently there is a method EnviDataType.setByteOrder(int byte_order)
