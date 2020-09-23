@@ -1,6 +1,0 @@
-SAMS GUI Known bugs
-Carlos A. Rueda.
-$Id$
-
-Check out the Bugs entry in http://casil.ucdavis.edu/tracker/?group_id=32		
-

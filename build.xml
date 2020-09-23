@@ -1,6 +1,5 @@
 <!--
 	Master Build for SAMS
-	$Id$
 
 	External dependencies:
 		- External required libraries for the final SAMS application
@@ -12,44 +11,67 @@
 <project name="sams" default="compile" >
 	<!-- Base dir for generated files.
 	     only used here for target clean-dist -->
-	<property name="generated" value="../_GENERATED/sams"/>
+	<property name="generated" value="out"/>
 
+	<property file="build.properties"/>
 	<property name="VERSION" value="3.2.1"/>
 
-    <target name="clean-dist">
-		<delete dir="${generated}"/>
-    </target>
+	<property name="build" value="${generated}/BUILD"/>
+	<property name="dist" value="${generated}/DIST"/>
+	<property name="src.dir" value="src"/>
+	<property name="dest.dir" value="${build}/classes"/>
 
-	<target name="compile">
-		<ant dir="fileutils" inheritAll="false"/>
-		<ant dir="sig" inheritAll="false"/>
-		<ant dir="sigoper" inheritAll="false"/>
-		<ant dir="specfile" inheritAll="false"/>
-		<ant dir="sfsys" inheritAll="false"/>
-		<ant dir="envifile" inheritAll="false"/>
-		<ant dir="samscore" inheritAll="false"/>
-		<ant dir="samsgui" inheritAll="false"/>
+	<target name="init">
+		<tstamp/>
+		<echo message="VERSION = ${VERSION}"/>
+		<mkdir dir="${build}/classes"/>
+		<delete file="${dest.dir}/info.properties"/>
+		<delete file="${dest.dir}/copyright.txt"/>
 	</target>
 
-	<target name="assembly" depends="compile">
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}"
+			   debug="on"
+			   deprecation="on"
+			   source="1.4"
+			   classpath="${plotapplication}:${bsh}"
+		/>
+	</target>
+
+	<target name="info">
+		<copy file="src/info.properties" todir="${dest.dir}"/>
+		<replace file="${dest.dir}/info.properties">
+			<replacefilter token="@VERSION@" value="${VERSION}"/>
+			<replacefilter token="@BUILD@" value="${DSTAMP}"/>
+		</replace>
+	</target>
+
+	<target name="license">
+		<copy file="src/copyright.txt" todir="${dest.dir}"/>
+	</target>
+
+	<target name="img">
+		<copy todir="${dest.dir}/img">
+			<fileset dir="${src.dir}/img"/>
+		</copy>
+	</target>
+
+	<target name="assembly" depends="compile, info, license, img">
 		<property name="dist" value="${generated}/DIST"/>
 		<property name="assemblage" value="${dist}/assemblage" />
 		<mkdir dir="${assemblage}" />
-
-		<copydir src="samsgui/base_dist/opers"   dest="${assemblage}/opers"/>
 
 		<unjar src="lib/bsh-1.3b2.jar"           dest="${assemblage}" />
 		<unjar src="lib/kunststoff.jar"          dest="${assemblage}" />
 		<unjar src="lib/plotapplication.jar"     dest="${assemblage}" />
 
-		<unjar src="${dist}/fileutils.jar"       dest="${assemblage}" />
-		<unjar src="${dist}/sig.jar"             dest="${assemblage}" />
-		<unjar src="${dist}/sigoper.jar"         dest="${assemblage}" />
-		<unjar src="${dist}/specfile.jar"        dest="${assemblage}" />
-		<unjar src="${dist}/sfsys.jar"           dest="${assemblage}" />
-		<unjar src="${dist}/envifile.jar"        dest="${assemblage}" />
-		<unjar src="${dist}/samscore.jar"        dest="${assemblage}" />
-		<unjar src="${dist}/sams.jar"            dest="${assemblage}" />
+		<copy todir="${assemblage}">
+			<fileset dir="${dest.dir}" />
+		</copy>
+
+		<copy todir="${assemblage}/opers">
+			<fileset dir="src/base_dist/opers" />
+		</copy>
 
 		<jar jarfile="${dist}/sams-${VERSION}.jar"
 			 basedir="${assemblage}"
@@ -59,6 +81,14 @@
 				<attribute name="Main-class" value="samsgui.Main"/>
 			</manifest>
 		</jar>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build}/classes/src"/>
+	</target>
+
+	<target name="clean-dist">
+		<delete dir="${generated}"/>
 	</target>
 
 </project>
