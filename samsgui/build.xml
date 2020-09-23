@@ -1,7 +1,6 @@
 <!--
 	Build for SAMS3 GUI
 	Carlos A. Rueda
-	$Id$
 -->
 <project name="sams" default="sams.jar" >
 	<!-- load basic properties -->
@@ -16,7 +15,7 @@
 	<property name="specfile"	 value="${generated}/DIST/specfile.jar"/>
 	<property name="sfsys"		 value="${generated}/DIST/sfsys.jar"/>
 
-	
+
 	<!-- Directory to put compiled classes -->
 	<property name="build" value="${generated}/BUILD"/>
 
@@ -73,43 +72,6 @@
 		<copy todir="${dest.dir}/samsgui/img">
 			<fileset dir="${src.dir}/img"/>
 		</copy>
-	</target>
-	
-	<target name="installer"  depends="sams.jar, prepare-inst"
-	 description="Makes an executable installer for SAMS">
-		<taskdef name="izpack" classpath="${izdir}/lib/compiler.jar"
-			classname="com.izforge.izpack.ant.IzPackTask"/>
-		<izpack input="izinstall.xml"
-			output="${dist}/install-sams-${VERSION}.jar"
-			installerType="standard-kunststoff"
-			basedir="${dist}/base_dist"
-			izPackDir="${izdir}/"/>
-	</target>
-
-	<target name="prepare-inst"	 depends="sams.jar">
-		<delete dir="${dist}/base_dist"/>
-		<copy todir="${dist}/base_dist">
-			<fileset dir="base_dist"/> 
-		</copy>
-		<copy file="${dist}/sams.jar" todir="${dist}/base_dist/bin"/>
-		<copy file="${plotapplication}" todir="${dist}/base_dist/lib"/>
-		<copy file="${samscore}" todir="${dist}/base_dist/lib"/>
-		<copy file="${fileutils}" todir="${dist}/base_dist/lib"/>
-		<copy file="${sig}" todir="${dist}/base_dist/lib"/>
-		<copy file="${sigoper}" todir="${dist}/base_dist/lib"/>
-		<copy file="${envifile}" todir="${dist}/base_dist/lib"/>
-		<copy file="${specfile}" todir="${dist}/base_dist/lib"/>
-		<copy file="${sfsys}" todir="${dist}/base_dist/lib"/>
-		<copy file="${kunststoff}" todir="${dist}/base_dist/lib"/>
-		<copy file="${bsh}" todir="${dist}/base_dist/lib"/>
-		<copy file="${src.dir}/img/splash.png" todir="${dist}/base_dist/img"/>
-		<copy file="${src.dir}/img/splashi.png" todir="${dist}/base_dist/img"/>
-		<copy file="copyright.txt" todir="${dist}/base_dist/doc"/>
-		<copy file="izshortcut.xml" todir="${dist}/base_dist/lib"/>
-	</target>
-
-	<target name="install">
-		<java jar="${dist}/install-sams-${VERSION}.jar" fork="true"/>
 	</target>
 
 	<target name="clean">

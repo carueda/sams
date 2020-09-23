@@ -1,6 +1,7 @@
 SAMS - Spectral Analysis and Management System Readme
 Carlos A. Rueda
-$Id$
+
+**NOTE**: OUT OF DATE  (as of release 3.2.1)
 
 Installer
 
@@ -10,7 +11,7 @@ Installer
 	of Izpack in your machine. Currently I'm using Izpack
 	version 3.5.4 (build 2004.06.05). The Izpack tool is the
 	only external required tool that needs to be provided.
-	
+
 Third-part libraries
 
 	Directory lib/ contains the third-part libraries used by
@@ -22,7 +23,7 @@ Third-part libraries
 	       http://ptolemy.eecs.berkeley.edu/java/ptplot/
 	kunststoff.jar:
 	       Look&Feel, http://www.incors.org/
-		
+
 Compilation
 
 All build.xml files define and use a ${generated} property
@@ -31,9 +32,9 @@ ${generated} is defined as "../_GENERATED/sams" relative to
 this README.
 
 The master build.xml in this directory can be used to create
-the complete SAMS system: 
+the complete SAMS system:
 	ant
-	
+
 To create the SAMS installer for end users:
 	cd samsgui
 	ant installer

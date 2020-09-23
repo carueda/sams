@@ -1,23 +1,20 @@
 <!--
 	Master Build for SAMS
 	$Id$
-	
+
 	External dependencies:
-		- The Izpack (http://izforge.com/izpack) tool is used
-		  to create the installer. See samsgui/build.properties.
 		- External required libraries for the final SAMS application
 		  are located in directory lib/.
-	
-	For a complete build of all modules comprising SAMS:
-		ant
-	To create the installer for end users:
-		cd samsgui
-		ant installer
+
+	For a complete build:
+		ant assembly
 -->
 <project name="sams" default="compile" >
 	<!-- Base dir for generated files.
 	     only used here for target clean-dist -->
 	<property name="generated" value="../_GENERATED/sams"/>
+
+	<property name="VERSION" value="3.2.1"/>
 
     <target name="clean-dist">
 		<delete dir="${generated}"/>
@@ -33,5 +30,35 @@
 		<ant dir="samscore" inheritAll="false"/>
 		<ant dir="samsgui" inheritAll="false"/>
 	</target>
-	
+
+	<target name="assembly" depends="compile">
+		<property name="dist" value="${generated}/DIST"/>
+		<property name="assemblage" value="${dist}/assemblage" />
+		<mkdir dir="${assemblage}" />
+
+		<copydir src="samsgui/base_dist/opers"   dest="${assemblage}/opers"/>
+
+		<unjar src="lib/bsh-1.3b2.jar"           dest="${assemblage}" />
+		<unjar src="lib/kunststoff.jar"          dest="${assemblage}" />
+		<unjar src="lib/plotapplication.jar"     dest="${assemblage}" />
+
+		<unjar src="${dist}/fileutils.jar"       dest="${assemblage}" />
+		<unjar src="${dist}/sig.jar"             dest="${assemblage}" />
+		<unjar src="${dist}/sigoper.jar"         dest="${assemblage}" />
+		<unjar src="${dist}/specfile.jar"        dest="${assemblage}" />
+		<unjar src="${dist}/sfsys.jar"           dest="${assemblage}" />
+		<unjar src="${dist}/envifile.jar"        dest="${assemblage}" />
+		<unjar src="${dist}/samscore.jar"        dest="${assemblage}" />
+		<unjar src="${dist}/sams.jar"            dest="${assemblage}" />
+
+		<jar jarfile="${dist}/sams-${VERSION}.jar"
+			 basedir="${assemblage}"
+		>
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Main-class" value="samsgui.Main"/>
+			</manifest>
+		</jar>
+	</target>
+
 </project>

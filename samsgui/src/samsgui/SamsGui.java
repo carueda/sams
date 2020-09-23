@@ -21,11 +21,11 @@ import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.util.List;
 
-/** 
+/**
  * Main Sams GUI component.
  * @author Carlos A. Rueda
- * @version $Id$ 
- */ 
+ * @version $Id$
+ */
 public class SamsGui {
 	// Names of resources loaded via a classloader:
 	private static final String INFO_PROPS_FILENAME = "samsgui/info.properties";
@@ -34,6 +34,8 @@ public class SamsGui {
 	
 	private static final String NO_DB_NAME = "<No database>";
 	
+	private static boolean verbose;
+	
 	static Info info = null;
 
 	static DbGui focusedDbGui;
@@ -41,18 +43,16 @@ public class SamsGui {
 	/** Mapping from filename -> DbGui */
 	static Map openDbGuis;
 	
-	public static void init(String operdirname) throws Exception {
+	public static void init(String samsDirectory, boolean verbose_) throws Exception {
+		verbose = verbose_;
 		info = new Info();
-		if ( operdirname == null ) {
-			operdirname = info.getSAMSDirectory()+ "/opers";
-			if ( !new File(operdirname).isDirectory() ) {
-				System.err.println(operdirname+ ": inexistent directory");
-				operdirname = null;
-			}
-		}
+		
+		File operatorDir = new File(samsDirectory, "opers");
+		prepareOperatorDirectory(operatorDir);
+
 		nextFrame = new DbFrame();
 		Splash splash = Splash.showSplash(nextFrame);
-		Sams.init(operdirname);
+		Sams.init(operatorDir.getPath());
 		openDbGuis = new HashMap();
 		_initSystemMonitoring();
 		_setLookAndFeel();
@@ -65,6 +65,80 @@ public class SamsGui {
 		splash.status(null);
 		ToolTipManager ttman = ToolTipManager.sharedInstance();
 		ttman.setDismissDelay(60*1000);
+	}
+	
+	private static void prepareOperatorDirectory(File operatorDir) {
+		if ( !operatorDir.isDirectory() ) {
+			boolean dirCreated = operatorDir.mkdir();
+			if (dirCreated) {
+				if (verbose) {
+					System.out.println(operatorDir + ": directory created");
+				}
+			}
+			else {
+				System.out.println("unexpected: cannot create directory: " + operatorDir);
+				return;
+			}
+		}
+		
+		InputStream is = null;
+		try {
+			is = ClassLoader.getSystemClassLoader().getResourceAsStream("opers/list.txt");
+			if ( is != null) {
+				InputStreamReader ir = new InputStreamReader(is);
+				BufferedReader br = new BufferedReader(ir);
+				String operScriptName;
+				while ((operScriptName = br.readLine()) != null) {
+					copyResource("opers/" + operScriptName, new File(operatorDir, operScriptName));
+				}
+			}
+		}
+		catch(Exception ex) {
+			if (is != null) {
+				try {
+					is.close();
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	private static void copyResource(String resName, File destFile) {
+		if (destFile.exists()) {
+			if (verbose) {
+				System.out.println(destFile + ": exists, skipping");
+			}
+			return;
+		}
+		try {
+			FileWriter out = new FileWriter(destFile);
+			InputStream is = null;
+			try {
+				is = ClassLoader.getSystemClassLoader().getResourceAsStream(resName);
+				if ( is != null) {
+					InputStreamReader ir = new InputStreamReader(is);
+					BufferedReader br = new BufferedReader(ir);
+					String line;
+					while ((line = br.readLine()) != null) {
+						out.append(line).append("\n");
+					}
+					out.close();
+					if (verbose) {
+						System.out.println(destFile + ": installed");
+					}
+				}
+			}
+			catch(Exception ex) {
+				if (is != null) {
+					is.close();
+				}
+			}
+		}
+		catch (IOException e) {
+			System.err.println("cannot create " + destFile + ": " + e.getMessage());
+		}
 	}
 
 	public static Info getInfo() {
@@ -266,7 +340,7 @@ public class SamsGui {
 
 	}
 	
-	public static DbGui getFocusedDbGui() { 
+	public static DbGui getFocusedDbGui() {
 		return focusedDbGui;
 	}
 	
@@ -380,7 +454,7 @@ public class SamsGui {
 		JMenu windowMenu;
 	
 		/** Constructor with no initialization. */
-		DbFrame() { 
+		DbFrame() {
 			super();
 		}
 		
@@ -398,7 +472,7 @@ public class SamsGui {
 			});
 			setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			URL url = getClass().getClassLoader().getResource("img/icon.jpg");
-			if ( url != null ) 
+			if ( url != null )
 				setIconImage(new ImageIcon(url).getImage());
 
 			if ( rect != null ) {
@@ -431,7 +505,7 @@ public class SamsGui {
 		};
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		toolkit.addAWTEventListener(listener, AWTEvent.KEY_EVENT_MASK);
-	}		
+	}
 
 	/** Shows the "About" message. */
 	public static void showAboutMessage() {
@@ -439,7 +513,7 @@ public class SamsGui {
 		String license = info.getLicense();
 		String msg = about+ "\n" +license;
 		JFrame parent = focusedDbGui == null ? null : focusedDbGui.getFrame();
-        final JDialog window = new JDialog(parent, "About", true); 
+        final JDialog window = new JDialog(parent, "About", true);
 		JTabbedPane tabs = new JTabbedPane();
 		window.getContentPane().add(tabs, BorderLayout.CENTER);
 		JButton ok = new JButton("OK");
@@ -599,7 +673,7 @@ public class SamsGui {
 			else
 				new Thread(getWaitRunner(1000)).start();
 		}
-		 
+		
 		/** Creates a splash window. */
 		private Splash(String text, Frame f) {
 			super(f);
@@ -620,7 +694,7 @@ public class SamsGui {
 			label.setIconTextGap(100);
 			getContentPane().add(label, BorderLayout.CENTER);
 	
-			JPanel fields = new JPanel(new GridLayout(2, 1)); 
+			JPanel fields = new JPanel(new GridLayout(2, 1));
 			getContentPane().add(fields, BorderLayout.SOUTH);
 			
 			JLabel text_label = new JLabel(text);
@@ -646,7 +720,7 @@ public class SamsGui {
 			if ( locy < 0 )
 				locy = 0;
 			setLocation( (screenSize.width - labelSize.width)/2, locy);
-			Runnable waitRunner = getWaitRunner(30*1000); 
+			Runnable waitRunner = getWaitRunner(30*1000);
 			setVisible(true);
 			new Thread(waitRunner, "SplashThread").start();
 		}
@@ -688,7 +762,7 @@ public class SamsGui {
 		
 		/** Loads the properties. */
 		Info()  {
-			Properties props = new Properties(); 
+			Properties props = new Properties();
 			InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(INFO_PROPS_FILENAME);
 			if ( is == null ) {
 				System.err.println(
@@ -702,8 +776,8 @@ public class SamsGui {
 					props.load(is);
 					is.close();
 				}
-				catch(IOException ex) { 
-					// ignore. 
+				catch(IOException ex) {
+					// ignore.
 				}
 				name    = props.getProperty("sams.name");
 				version = props.getProperty("sams.version");
@@ -727,14 +801,10 @@ public class SamsGui {
 			return build;
 		}
 		
-		public String getSAMSDirectory() {
-			return System.getProperty("sams.dir");
-		}
-		
 		public String getLicense() {
 			if ( licenseText == null ) {
 				InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(LICENSE_FILENAME);
-				StringBuffer sb = new StringBuffer(); 
+				StringBuffer sb = new StringBuffer();
 				if ( is == null ) {
 					sb.append(
 						"!!!!!! Resource " +LICENSE_FILENAME+ " not found.\n" +

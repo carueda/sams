@@ -14,13 +14,13 @@ import java.io.*;
  * Point of access to SAMS core.
  * Also offers a number of general utilities.
  * @author Carlos A. Rueda
- * @version $Id$ 
+ * @version $Id$
  */
 public class Sams {
 	
 	/** Opens a database. */
 	public static String getVersion() {
-		String version = "3.2";   // pending
+		String version = "3.2.1";   // pending
 		return version;
 	}
 	
@@ -82,7 +82,7 @@ public class Sams {
 					continue; // just ignore this line
 				
 				double x;
-				try {			
+				try {
 					x = Double.parseDouble(st.nextToken());
 				}
 				catch (NumberFormatException ex) {
@@ -91,7 +91,7 @@ public class Sams {
 				
 				// scan next columns-1 columns:
 				for ( int ii = 0; ii < columns - 1; ii++ ) {
-					try {			
+					try {
 						double y = Double.parseDouble(st.nextToken());
 						
 						// successfuly gotten y-value for ii-th signature
